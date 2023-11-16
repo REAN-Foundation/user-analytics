@@ -17,11 +17,7 @@ class Event(Base):
     EventType             = Column(String(256), default=None, nullable=False)
     Attributes            = Column(mutable_json_type(dbtype=JSONB, nested=True), default=None, nullable=True)
     Timestamp             = Column(DateTime(timezone=True), server_default=func.now())
-    AppVersion            = Column(String(16), default=None, nullable=True)
-    Platform              = Column(String(16), default=None, nullable=True)
-    DeviceType            = Column(String(64), default=None, nullable=True)
-    DeviceId              = Column(String(128), default=None, nullable=True)
-    DaysSinceRegistration = Column(Integer, default=None, nullable=True)
+    DaysSinceRegistration = Column(Integer, default=0, nullable=False)
 
     def __repr__(self):
         jsonStr = json.dumps(self.__dict__)
