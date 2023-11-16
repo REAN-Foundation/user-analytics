@@ -10,7 +10,7 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id                = Column(String(128), primary_key=True, index=True, nullable=False)
+    id                = Column(String(36), primary_key=True, index=True, default=generate_uuid4)
     TenantId          = Column(String(36), default=None, nullable=False)
     FirstName         = Column(String(128), default=None)
     LastName          = Column(String(128), default=None)
