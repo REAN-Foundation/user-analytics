@@ -70,12 +70,12 @@ def delete_cohort_(id, db_session):
     finally:
         db_session.close()
 
-@trace_span("handler: search_cohortes")
-def search_cohortes_(filter, db_session):
+@trace_span("handler: search_cohorts")
+def search_cohorts_(filter, db_session):
     try:
-        cohortes = cohort_service.search_cohortes(db_session, filter)
-        message = "Cohortes retrieved successfully"
-        resp = ResponseModel[CohortSearchResults](Message=message, Data=cohortes)
+        cohorts = cohort_service.search_cohorts(db_session, filter)
+        message = "cohorts retrieved successfully"
+        resp = ResponseModel[CohortSearchResults](Message=message, Data=cohorts)
         return resp
     except Exception as e:
         db_session.rollback()
