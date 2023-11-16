@@ -5,8 +5,8 @@ class Settings(BaseSettings):
 
     # App
     ENVIRONMENT: str = "development"
-    SERVICE_NAME="Order-Management-Service"
-    BASE_URL: str = "http://localhost:12345"
+    SERVICE_NAME="User-Analytics-Service"
+    BASE_URL: str = "http://localhost:23456"
     USER_ACCESS_TOKEN_SECRET="secret"
     CIPHER_SALT="salt"
     SERVICE_IDENTIFIER=f"{SERVICE_NAME}-{ENVIRONMENT}"
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     DB_USER_PASSWORD: str = "dbpassword"
     DB_HOST: str = "localhost"
     DB_PORT: int = 3306
-    DB_NAME: str = "order_management"
+    DB_NAME: str = "user_analytics"
     DB_POOL_SIZE: int = 10
     DB_POOL_RECYCLE: int = 1800
     DB_POOL_TIMEOUT: int = 30
