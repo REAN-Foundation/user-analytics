@@ -6,14 +6,14 @@ from app.api.cohort.cohort_handler import (
     get_cohort_by_id_,
     update_cohort_,
     delete_cohort_,
-    search_cohortes_
+    search_cohorts_
 )
 from app.domain_types.schemas.cohort import CohortCreateModel, CohortUpdateModel, CohortResponseModel, CohortSearchResults, CohortSearchFilter
 from app.domain_types.miscellaneous.response_model import ResponseModel, ResponseStatusTypes
 
 router = APIRouter(
-    prefix="/cohortes",
-    tags=["cohortes"],
+    prefix="/cohorts",
+    tags=["cohorts"],
     dependencies=[],
     responses={404: {"description": "Not found"}},
 )
@@ -27,7 +27,7 @@ async def search_cohort(
         query_params: CohortSearchFilter = Depends(),
         db_session = Depends(get_db_session)):
     filter = CohortSearchFilter(**query_params.dict())
-    return search_cohortes_(filter, db_session)
+    return search_cohorts_(filter, db_session)
 
 @router.get("/{id}", status_code=status.HTTP_200_OK, response_model=ResponseModel[CohortResponseModel] | None)
 async def get_cohort_by_id(id: str, db_session=Depends(get_db_session)):
