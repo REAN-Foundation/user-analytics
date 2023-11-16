@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, F
 from sqlalchemy.orm import relationship
 from sqlalchemy_json import mutable_json_type
 from app.database.base import Base
+from app.common.utils import generate_uuid4
 from sqlalchemy.sql import func
 
 class User(Base):
