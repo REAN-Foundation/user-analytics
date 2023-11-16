@@ -15,6 +15,7 @@ class CohortUpdateModel(BaseModel):
     Attributes  : Optional[dict] = Field(default=None)
 
 class CohortSearchFilter(BaseSearchFilter):
+    TenantId : Optional[str] = Field(description="Search by the tenant")
     Name     : Optional[str] = Field(description="Search by the name of the Cohort")
     Attribute: Optional[str] = Field(description="Search by the attribute of the Cohort")
     OwnerId  : Optional[str] = Field(description="Search by the owner id of the Cohort")
