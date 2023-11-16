@@ -1,10 +1,6 @@
 from enum import Enum
 
-class AddressTypes(Enum):
-    WORK        = "Work"
-    HOME        = "Home"
-    SHIPPING    = "Shipping"
-    BILLING     = "Billing"
+class EventTypes(Enum):
+    USER_ACTION = "User Action"
+    SYSTEM      = "System"
     UNSPECIFIED = "Unspecified"
-
-
