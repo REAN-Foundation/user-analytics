@@ -9,9 +9,19 @@ from .models.user import User
 from .models.cohort import Cohort
 from .models.filter import Filter
 from .models.cohort_users import CohortUser
+from .mysql_connector import MySQLConnector
 
 settings = get_settings()
+
 print(settings.DB_CONNECTION_STRING)
+connector = MySQLConnector(
+    host=settings.DB_HOST,
+    user=settings.DB_USER_NAME,
+    password=settings.DB_USER_PASSWORD,
+    database=settings.DB_NAME
+)
+connector.create_db()
+
 engine = create_engine(settings.DB_CONNECTION_STRING, echo=False)
 # or
 # engine = create_engine(
@@ -27,7 +37,7 @@ engine = create_engine(settings.DB_CONNECTION_STRING, echo=False)
 #     echo=True,
 # )
 
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine, checkfirst=True)
 
 LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
