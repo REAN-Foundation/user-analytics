@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 import uuid
 from fastapi import HTTPException, Query, Body
 from app.common.utils import print_colorized_json
@@ -12,16 +13,20 @@ from app.telemetry.tracing import trace_span
 
 @trace_span("service: create_user")
 def create_user(session: Session, model: UserCreateModel) -> UserResponseModel:
-    model_dict = model.dict()
-    db_model = User(**model_dict)
-    db_model.UpdatedAt = dt.datetime.now()
-    session.add(db_model)
-    session.commit()
-    temp = session.refresh(db_model)
-    user = db_model
-
-    print_colorized_json(user)
-    return user.__dict__
+    try:
+        model_dict = model.dict()
+        db_model = User(**model_dict)
+        db_model.Attributes = json.dumps(model.Attributes)
+        db_model.UpdatedAt = dt.datetime.now()
+        session.add(db_model)
+        session.commit()
+        temp = session.refresh(db_model)
+        user = db_model
+        user.Attributes = json.loads(user.Attributes)
+        print_colorized_json(user)
+        return user.__dict__
+    except Exception as e:
+        raise Conflict(f"Error creating user: {e.orig}")
 
 @trace_span("service: get_user_by_id")
 def get_user_by_id(session: Session, user_id: str) -> UserResponseModel:
