@@ -44,7 +44,8 @@ class UserSearchFilter(BaseSearchFilter):
     Email            : Optional[str]      = Field(description="Search by the email of the User")
     PhoneCode        : Optional[str]      = Field(description="Search by the phone code of the User")
     Phone            : Optional[str]      = Field(description="Search by the phone number of the User")
-    LastActiveBefore : Optional[datetime] = Field(description="Search by the tax number/code of the User")
+    LastActiveBefore : Optional[datetime] = Field(description="Search by the date before which the User was last active")
+    LastActiveAfter  : Optional[datetime] = Field(description="Search by the date after which the User was last active")
     RegisteredBefore : Optional[datetime] = Field(description="Search Users registered before the given date")
     RegisteredAfter  : Optional[datetime] = Field(description="Search Users registered after the given date")
 

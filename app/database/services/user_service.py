@@ -54,18 +54,24 @@ def search_useres(session: Session, filter: UserSearchFilter) -> UserSearchResul
 
     query = session.query(User)
 
-    if filter.UserLine1:
-        query = query.filter(User.UserLine1.like(f'%{filter.UserLine1}%'))
-    if filter.UserLine2:
-        query = query.filter(User.UserLine2.like(f'%{filter.UserLine2}%'))
-    if filter.City:
-        query = query.filter(User.City.like(f'%{filter.City}%'))
-    if filter.State:
-        query = query.filter(User.State.like(f'%{filter.State}%'))
-    if filter.Country:
-        query = query.filter(User.Country.like(f'%{filter.Country}%'))
-    if filter.ZipCode:
-        query = query.filter(User.ZipCode == filter.ZipCode)
+    if filter.Name:
+        query = query.filter(User.Name.like(f'%{filter.Name}%'))
+    if filter.Email:
+        query = query.filter(User.Email.like(f'%{filter.Email}%'))
+    if filter.PhoneCode:
+        query = query.filter(User.PhoneCode.like(f'%{filter.PhoneCode}%'))
+    if filter.Phone:
+        query = query.filter(User.Phone.like(f'%{filter.Phone}%'))
+
+    if filter.LastActiveBefore:
+        query = query.filter(User.LastActive < filter.LastActiveBefore)
+    if filter.LastActiveAfter:
+        query = query.filter(User.LastActive > filter.LastActiveAfter)
+
+    if filter.RegisteredBefore:
+        query = query.filter(User.RegistrationDate < filter.RegisteredBefore)
+    if filter.RegisteredAfter:
+        query = query.filter(User.RegistrationDate > filter.RegisteredAfter)
 
     if filter.OrderBy == None:
         filter.OrderBy = "CreatedAt"

@@ -56,22 +56,22 @@ def search_events(session: Session, filter:EventSearchFilter) -> EventSearchResu
 
     query = session.query(Event)
 
-    if filter.CustomerId:
-        query = query.filter(Event.CustomerId .like(f'%{filter.CustomerId}%'))
-    if filter.ProductId:
-        query = query.filter(Event.ProductId == filter.ProductId)
-    if filter.TotalItemsCountGreaterThan:
-        query = query.filter(Event.TotalItemsCount > filter.TotalItemsCountGreaterThan)
-    if filter.TotalItemsCountLessThan:
-        query = query.filter(Event.TotalItemsCount < filter.TotalItemsCountLessThan)
-    if filter.TotalAmountGreaterThan:
-       query = query.filter(Event.TotalAmount > filter.TotalAmountGreaterThan)
-    if filter.TotalAmountLessThan:
-       query = query.filter(Event.TotalAmount < filter.TotalAmountLessThan)
-    if filter.CreatedBefore:
-       query = query.filter(Event.CreatedAt < filter.CreatedBefore)
-    if filter.CreatedAfter:
-       query = query.filter(Event.CreatedAt > filter.CreatedAfter)
+    if filter.Action:
+        query = query.filter(Event.Action .like(f'%{filter.Action}%'))
+    if filter.UserId:
+        query = query.filter(Event.UserId == filter.UserId)
+    if filter.TenantId:
+        query = query.filter(Event.TenantId == filter.TenantId)
+    if filter.EventType:
+        query = query.filter(Event.EventType == filter.EventType)
+    if filter.FromDate:
+        query = query.filter(Event.Timestamp > filter.FromDate)
+    if filter.ToDate:
+        query = query.filter(Event.Timestamp < filter.ToDate)
+    if filter.FromDaysSinceRegistration:
+       query = query.filter(Event.DaysSinceRegistration > filter.FromDaysSinceRegistration)
+    if filter.ToDaysSinceRegistration:
+       query = query.filter(Event.DaysSinceRegistration < filter.ToDaysSinceRegistration)
 
     if filter.OrderBy == None:
         filter.OrderBy = "CreatedAt"

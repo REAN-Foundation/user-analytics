@@ -49,20 +49,14 @@ def search_filters(session: Session, filter: FilterSearchFilter) -> FilterSearch
     query = session.query(Filter)
     if filter.Name:
         query = query.filter(Filter.Name.like(f'%{filter.Name}%'))
-    if filter.FilterCode:
-        query = query.filter(Filter.FilterCode.like(f'%{filter.FilterCode}%'))
-    if filter.DiscountType:
-        query = query.filter(Filter.DiscountType.like(f'%{filter.DiscountType}%'))
-    if filter.Discount:
-        query = query.filter(Filter.Discount == filter.Discount)
-    if filter.DiscountPercentage:
-        query = query.filter(Filter.DiscountPercentage == filter.DiscountPercentage)
-    if filter.MinOrderAmount:
-        query = query.filter(Filter.MinOrderAmount == filter.MinOrderAmount)
-    if filter.IsActive:
-        query = query.filter(Filter.IsActive == filter.IsActive)
-    if filter.StartDate:
-        query = query.filter(Filter.StartDate == filter.StartDate)
+    # if filter.Description:
+    #     query = query.filter(Filter.Description.like(f'%{filter.Description}%'))
+    if filter.OwnerId:
+        query = query.filter(Filter.OwnerId == filter.OwnerId)
+    if filter.UserId:
+        query = query.filter(Filter.UserId == filter.UserId)
+    if filter.TenantId:
+        query = query.filter(Filter.TenantId == filter.TenantId)
 
     if filter.OrderBy == None:
         filter.OrderBy = "CreatedAt"

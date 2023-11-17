@@ -6,6 +6,7 @@ from app.database.models.cohort_users import CohortUsers
 from app.database.models.user import User
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
+from app.domain_types.miscellaneous.exceptions import NotFound
 from app.domain_types.schemas.cohort import CohortCreateModel, CohortResponseModel, CohortSearchResults, CohortSearchFilter
 from app.telemetry.tracing import trace_span
 
@@ -42,24 +43,14 @@ def search_cohorts(session: Session, filter: CohortSearchFilter) -> CohortSearch
 
     query = session.query(Cohort)
 
-    if filter.DisplayCode:
-        query = query.filter(Cohort.DisplayCode.like(f'%{filter.DisplayCode}%'))
-    if filter.InvoiceNumber:
-        query = query.filter(Cohort.InvoiceNumber == filter.InvoiceNumber)
-    if filter.BankTransactionId:
-        query = query.filter(Cohort.BankTransactionId == filter.BankTransactionId)
-    if filter.CustomerId:
-        query = query.filter(Cohort.CustomerId.like(f'%{filter.CustomerId}%'))
-    if filter.OrderId:
-        query = query.filter(Cohort.OrderId.like(f'%{filter.OrderId}%'))
-    if filter.PaymentMode:
-        query = query.filter(Cohort.PaymentMode.like(f'%{filter.PaymentMode}%'))
-    if filter.PaymentAmount:
-        query = query.filter(Cohort.PaymentAmount.like(f'%{filter.PaymentAmount}%'))
-    if filter.IsRefund:
-        query = query.filter(Cohort.IsRefund == filter.IsRefund)
-    if filter.InitiatedDate:
-        query = query.filter(Cohort.InitiatedDate == filter.InitiatedDate)
+    if filter.Name:
+        query = query.filter(Cohort.Name.like(f'%{filter.Name}%'))
+    if filter.Description:
+        query = query.filter(Cohort.Description.like(f'%{filter.Description}%'))
+    if filter.TenantId:
+        query = query.filter(Cohort.TenantId == filter.TenantId)
+    if filter.OwnerId:
+        query = query.filter(Cohort.OwnerId == filter.OwnerId)
 
     if filter.OrderBy == None:
         filter.OrderBy = "CreatedAt"
