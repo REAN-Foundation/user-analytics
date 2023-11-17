@@ -2,7 +2,7 @@ import datetime as dt
 import uuid
 from app.common.utils import print_colorized_json
 from app.database.models.cohort import Cohort
-from app.database.models.cohort_users import CohortUsers
+from app.database.models.cohort_users import CohortUser
 from app.database.models.user import User
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc

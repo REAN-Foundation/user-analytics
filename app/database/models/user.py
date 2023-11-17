@@ -1,8 +1,7 @@
 import json
 import uuid
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Float, JSONB
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Float, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy_json import mutable_json_type
 from app.database.base import Base
 from app.common.utils import generate_uuid4
 from sqlalchemy.sql import func
@@ -24,7 +23,7 @@ class User(Base):
     LastActive        = Column(DateTime(timezone=True), default=None)
     OnboardingSource  = Column(String(128), default=None)
     Role              = Column(String(128), default=None)
-    Attributes        = Column(mutable_json_type(dbtype=JSONB, nested=True))
+    Attributes        = Column(Text, default=None, nullable=True)
     TimezoneOffsetMin = Column(Integer, default=None, nullable=True)
     RegistrationDate  = Column(DateTime(timezone=True), default=None)
     CreatedAt         = Column(DateTime(timezone=True), server_default=func.now())

@@ -1,6 +1,5 @@
 import json
-from sqlalchemy import Column, String, DateTime, func, JSONB
-from sqlalchemy_json import mutable_json_type
+from sqlalchemy import Column, String, DateTime, Text, func
 from app.common.utils import generate_uuid4
 from app.database.base import Base
 
@@ -13,7 +12,7 @@ class Cohort(Base):
     Description          = Column(String(1024), nullable=True)
     TenantId             = Column(String(36), default=None, nullable=False)
     OwnerId              = Column(String(36), default=None, nullable=False)
-    Attributes           = Column(mutable_json_type(dbtype=JSONB, nested=True))
+    Attributes           = Column(Text, default=None, nullable=True)
     CreatedAt            = Column(DateTime(timezone=True), server_default=func.now())
     UpdatedAt            = Column(DateTime(timezone=True), onupdate=func.now())
 

@@ -1,8 +1,7 @@
 import json
 import uuid
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, func, JSONB
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, func
 from sqlalchemy.orm import relationship
-from sqlalchemy_json import mutable_json_type
 from app.common.utils import generate_uuid4
 from app.database.base import Base
 
@@ -16,7 +15,7 @@ class Filter(Base):
     UserId           = Column(String(36), ForeignKey("users.id"), default=None, nullable=False)
     OwnerId          = Column(String(36), default=None, nullable=False)
     TenantId         = Column(String(36), default=None, nullable=False)
-    Filters          = Column(mutable_json_type(dbtype=JSONB, nested=True))
+    Filters          = Column(Text, default=None, nullable=True)
     CreatedAt        = Column(DateTime(timezone=True), server_default=func.now())
     UpdatedAt        = Column(DateTime(timezone=True), onupdate=func.now())
 

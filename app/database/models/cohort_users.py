@@ -1,6 +1,5 @@
 import json
-from sqlalchemy import Column, String, DateTime, func, JSONB
-from sqlalchemy_json import mutable_json_type
+from sqlalchemy import Column, String, DateTime, func
 from app.common.utils import generate_uuid4
 from app.database.base import Base
 

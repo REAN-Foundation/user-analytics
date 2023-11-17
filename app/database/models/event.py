@@ -1,8 +1,7 @@
 import json
 import uuid
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, func, JSONB
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, func
 from sqlalchemy.orm import relationship
-from sqlalchemy_json import mutable_json_type
 from app.common.utils import generate_uuid4
 from app.database.base import Base
 
@@ -15,7 +14,7 @@ class Event(Base):
     TenantId              = Column(String(36), default=None, nullable=False)
     Action                = Column(String(256), default=None, nullable=False)
     EventType             = Column(String(256), default=None, nullable=False)
-    Attributes            = Column(mutable_json_type(dbtype=JSONB, nested=True), default=None, nullable=True)
+    Attributes            = Column(Text, default=None, nullable=True)
     Timestamp             = Column(DateTime(timezone=True), server_default=func.now())
     DaysSinceRegistration = Column(Integer, nullable=False)
 
