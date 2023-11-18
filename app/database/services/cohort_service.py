@@ -6,12 +6,20 @@ from app.database.models.cohort_users import CohortUser
 from app.database.models.user import User
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
-from app.domain_types.miscellaneous.exceptions import NotFound
+from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
 from app.domain_types.schemas.cohort import CohortCreateModel, CohortResponseModel, CohortSearchResults, CohortSearchFilter
 from app.telemetry.tracing import trace_span
 
+###############################################################################
+
 @trace_span("service: create_cohort")
 def create_cohort(session: Session, model: CohortCreateModel) -> CohortResponseModel:
+    cohort = session.query(Cohort).filter(
+        Cohort.Name == str(model.Name),
+        Cohort.TenantId == str(model.TenantId) 
+    ).first()
+    if cohort is not None:
+        raise Conflict(f"Cohort with name `{model.Name}` and tenant with id {model.TenantId} already exists!")
     model_dict = model.dict()
     db_model = Cohort(**model_dict)
     db_model.UpdatedAt = dt.datetime.now()

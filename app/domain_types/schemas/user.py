@@ -4,7 +4,7 @@ from pydantic import UUID4, BaseModel, Field
 from app.domain_types.schemas.base_search_types import BaseSearchFilter, BaseSearchResults
 
 class UserCreateModel(BaseModel):
-    id                : str                       = Field(description="Id of the User")
+    id                : UUID4                     = Field(description="Id of the User")
     TenantId          : UUID4                     = Field(description="Tenant Id of the User")
     FirstName         : str                       = Field(min_length=2, max_length=128, description="First name of the User")
     LastName          : str                       = Field(min_length=2, max_length=128, description="Last name of the User")
@@ -51,7 +51,7 @@ class UserSearchFilter(BaseSearchFilter):
     RegisteredAfter  : Optional[datetime] = Field(description="Search Users registered after the given date")
 
 class UserResponseModel(BaseModel):
-    id                : str                       = Field(description="Id of the User")
+    id                : UUID4                     = Field(description="Id of the User")
     TenantId          : UUID4                     = Field(description="Tenant Id of the User")
     FirstName         : str                       = Field(min_length=2, max_length=128, description="First name of the User")
     LastName          : str                       = Field(min_length=2, max_length=128, description="Last name of the User")

@@ -1,22 +1,34 @@
 import datetime as dt
+import json
 import uuid
 from app.common.utils import print_colorized_json
 from app.database.models.event import Event
+from app.database.models.user import User
 from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
 from app.domain_types.schemas.event import EventCreateModel, EventResponseModel, EventUpdateModel, EventSearchFilter, EventSearchResults
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, asc
 from app.telemetry.tracing import trace_span
+from datetime import datetime, timezone
+
+###############################################################################
 
 @trace_span("service: create_event")
 def create_event(session: Session, model: EventCreateModel) -> EventResponseModel:
+    user = session.query(User).filter(User.id == str(model.UserId)).first()
+    if user is None:
+        raise NotFound(f"User with id {model.UserId} not found")
+    registration_date = user.RegistrationDate.replace(tzinfo=timezone.utc)
     model_dict = model.dict()
     db_model = Event(**model_dict)
     db_model.UpdatedAt = dt.datetime.now()
+    db_model.DaysSinceRegistration = (model.Timestamp - registration_date).days
+    db_model.Attributes = json.dumps(model.Attributes)
     session.add(db_model)
     session.commit()
     temp = session.refresh(db_model)
     event = db_model
+    event.Attributes = json.loads(event.Attributes)
 
     return event.__dict__
 

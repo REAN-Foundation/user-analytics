@@ -13,10 +13,9 @@ from app.telemetry.tracing import trace_span
 
 @trace_span("service: create_user")
 def create_user(session: Session, model: UserCreateModel) -> UserResponseModel:
-    user = session.query(User).filter(User.id == model.id).first()
+    user = session.query(User).filter(User.id == str(model.id)).first()
     if user != None:
         raise Conflict(f"User with id `{model.id}` already exists!")
-    
     model_dict = model.dict()
     db_model = User(**model_dict)
     db_model.Attributes = json.dumps(model.Attributes)
