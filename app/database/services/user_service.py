@@ -1,15 +1,14 @@
 import datetime as dt
 import json
-import uuid
-from fastapi import HTTPException, Query, Body
 from app.common.utils import print_colorized_json
-from app.database.database_accessor import LocalSession
 from app.database.models.user import User
 from app.domain_types.schemas.user import UserCreateModel, UserResponseModel, UserUpdateModel, UserSearchFilter, UserSearchResults
 from sqlalchemy.orm import Session
 from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
-from sqlalchemy import asc, desc, func
+from sqlalchemy import asc, desc
 from app.telemetry.tracing import trace_span
+
+###############################################################################
 
 @trace_span("service: create_user")
 def create_user(session: Session, model: UserCreateModel) -> UserResponseModel:

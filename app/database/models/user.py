@@ -1,10 +1,9 @@
 import json
-import uuid
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Float, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, DateTime, Integer, String, Float, Text
 from app.database.base import Base
-from app.common.utils import generate_uuid4
 from sqlalchemy.sql import func
+
+###############################################################################
 
 class User(Base):
 

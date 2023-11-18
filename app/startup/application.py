@@ -44,8 +44,8 @@ async def api_error_handler(request: Request, exc: HTTPError):
         status_code=exc.status_code,
         content={
             "Message": exc.message,
-            "Status": "Failure",
-            "Data" : None
+            "Status" : "Failure",
+            "Data"   : None
         },
     )
 
@@ -61,10 +61,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=jsonable_encoder(
             {
-                "Message": "Validation Error",
-                "Status": "Failure",
-                "Errors": exc.errors(), 
-                                "RequestBody": exc.body
+                "Message"    : "Validation Error",
+                "Status"     : "Failure",
+                "Errors"     : exc.errors(),
+                "RequestBody": exc.body
             }
         ),
     )
@@ -84,8 +84,8 @@ async def database_exception_handler(request: Request, exc: SQLAlchemyError):
         content=jsonable_encoder(
             {
                 "Message": "Database Error",
-                "Status": "Failure",
-                "Errors": exc.args,
+                "Status" : "Failure",
+                "Errors" : exc.args,
             }
         ),
     )
@@ -102,8 +102,8 @@ async def generic_exception_handler(request: Request, exc: Exception):
         content=jsonable_encoder(
             {
                 "Message": "Internal Server Error",
-                "Status": "Failure",
-                "Errors": exc.args,
+                "Status" : "Failure",
+                "Errors" : exc.args,
             }
         ),
     )

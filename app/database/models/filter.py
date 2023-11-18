@@ -1,9 +1,9 @@
 import json
-import uuid
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKey, String, DateTime, Text, func
 from app.common.utils import generate_uuid4
 from app.database.base import Base
+
+###############################################################################
 
 class Filter(Base):
 

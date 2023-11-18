@@ -3,6 +3,8 @@ from sqlalchemy import Column, String, DateTime, Text, func
 from app.common.utils import generate_uuid4
 from app.database.base import Base
 
+###############################################################################
+
 class Cohort(Base):
 
     __tablename__ = "cohorts"

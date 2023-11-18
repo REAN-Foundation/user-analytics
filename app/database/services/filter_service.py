@@ -1,14 +1,13 @@
 import datetime as dt
 import json
-import uuid
-# from fastapi import HTTPException, Query, Body
-from app.common.utils import print_colorized_json
 from app.database.models.filter import Filter
 from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
 from app.domain_types.schemas.filter import FilterCreateModel, FilterResponseModel, FilterUpdateModel, FilterSearchFilter, FilterSearchResults
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, asc
+from sqlalchemy import desc, asc
 from app.telemetry.tracing import trace_span
+
+###############################################################################
 
 @trace_span("service: create_filter")
 def create_filter(session: Session, model: FilterCreateModel) -> FilterResponseModel:
