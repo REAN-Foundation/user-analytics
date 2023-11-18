@@ -12,9 +12,11 @@ from app.telemetry.tracing import trace_span
 
 @trace_span("service: create_filter")
 def create_filter(session: Session, model: FilterCreateModel) -> FilterResponseModel:
-    filter = session.query(Filter).filter(Filter.Name == model.Name and Filter.TenantId == model.TenantId).first()
+    filter = session.query(Filter).filter(
+        Filter.Name == model.Name,
+        Filter.TenantId == str(model.TenantId)).first()
     if filter != None:
-        raise Conflict(f"Filter with name `{model.Name}` already exists for tenant `{model.TenantId}`!")
+        raise Conflict(f"Filter with name `{model.Name}` already exists for tenant `{str(model.TenantId)}`!")
     model_dict = model.dict()
     db_model = Filter(**model_dict)
     db_model.Filters = json.dumps(model.Filters)
