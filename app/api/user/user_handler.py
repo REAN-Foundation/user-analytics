@@ -5,6 +5,7 @@ from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.user import UserResponseModel, UserSearchResults
 from app.telemetry.tracing import trace_span
 
+###############################################################################
 
 @trace_span("handler: create_user")
 def create_user_(model, db_session):
