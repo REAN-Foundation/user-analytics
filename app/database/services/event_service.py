@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 import uuid
 from app.common.utils import print_colorized_json
 from app.database.models.event import Event
@@ -12,12 +13,13 @@ from app.telemetry.tracing import trace_span
 def create_event(session: Session, model: EventCreateModel) -> EventResponseModel:
     model_dict = model.dict()
     db_model = Event(**model_dict)
+    db_model.Attributes = json.dumps(model.Attributes)
     db_model.UpdatedAt = dt.datetime.now()
     session.add(db_model)
     session.commit()
     temp = session.refresh(db_model)
     event = db_model
-
+    event.Attributes = json.loads(event.Attributes)
     return event.__dict__
 
 @trace_span("service: get_event_by_id")
@@ -25,6 +27,7 @@ def get_event_by_id(session: Session, event_id: str) -> EventResponseModel:
     event = session.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise NotFound(f"Event with id {event_id} not found")
+    event.Attributes = json.loads(event.Attributes)
     return event.__dict__
 
 @trace_span("service: update_event")
@@ -40,10 +43,12 @@ def update_event(session: Session, event_id: str, model: EventUpdateModel) -> Ev
 
     session.commit()
     session.refresh(event)
+
+    event.Attributes = json.loads(event.Attributes)
     return event.__dict__
 
 @trace_span("service: delete_event")
-def delete_event(session: Session, event_id: str):
+def delete_event(session: Session, event_id: str) -> bool:
     event = session.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise NotFound(f"Event with id {event_id} not found")
@@ -90,6 +95,8 @@ def search_events(session: Session, filter:EventSearchFilter) -> EventSearchResu
     events = query.all()
 
     items = list(map(lambda x: x.__dict__, events))
+    for item in items:
+        item["Attributes"] = json.loads(item["Attributes"])
 
     results = EventSearchResults(
         TotalCount=len(events),

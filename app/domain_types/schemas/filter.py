@@ -20,6 +20,7 @@ class FilterUpdateModel(BaseModel):
 
 class FilterSearchFilter(BaseSearchFilter):
     Name               : Optional[str]           = Field(description="Search filter by name")
+    Desription         : Optional[str]           = Field(description="Search filter by description")
     UserId             : Optional[UUID4]         = Field(description="Search filter by user id")
     TenantId           : Optional[UUID4]         = Field(description="Search filter by tenant id")
     OwnerId            : Optional[UUID4]         = Field(description="Search filter by owner id")

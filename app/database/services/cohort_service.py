@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 import uuid
 from app.common.utils import print_colorized_json
 from app.database.models.cohort import Cohort
@@ -6,20 +7,24 @@ from app.database.models.cohort_users import CohortUser
 from app.database.models.user import User
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
-from app.domain_types.miscellaneous.exceptions import NotFound
+from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
 from app.domain_types.schemas.cohort import CohortCreateModel, CohortResponseModel, CohortSearchResults, CohortSearchFilter
 from app.telemetry.tracing import trace_span
 
 @trace_span("service: create_cohort")
 def create_cohort(session: Session, model: CohortCreateModel) -> CohortResponseModel:
+    cohort = session.query(Cohort).filter(Cohort.Name == model.Name and Cohort.TenantId == model.TenantId).first()
+    if cohort != None:
+        raise Conflict(f"Cohort with name `{model.Name}` already exists for tenant `{model.TenantId}`!")
     model_dict = model.dict()
     db_model = Cohort(**model_dict)
+    db_model.Attributes = json.dumps(model.Attributes)
     db_model.UpdatedAt = dt.datetime.now()
     session.add(db_model)
     session.commit()
     temp = session.refresh(db_model)
     cohort = db_model
-
+    cohort.Attributes = json.loads(cohort.Attributes)
     return cohort.__dict__
 
 @trace_span("service: get_cohort_by_id")
@@ -27,10 +32,11 @@ def get_cohort_by_id(session: Session, cohort_id: str) -> CohortResponseModel:
     cohort = session.query(Cohort).filter(Cohort.id == cohort_id).first()
     if not cohort:
         raise NotFound(f"cohort with id {cohort_id} not found")
+    cohort.Attributes = json.loads(cohort.Attributes)
     return cohort.__dict__
 
 @trace_span("service: delete_cohort")
-def delete_cohort(session: Session, cohort_id: str):
+def delete_cohort(session: Session, cohort_id: str) -> bool:
     cohort = session.query(Cohort).filter(Cohort.id == cohort_id).first()
     if not cohort:
         raise NotFound(f"cohort with id {cohort_id} not found")
@@ -66,12 +72,14 @@ def search_cohorts(session: Session, filter: CohortSearchFilter) -> CohortSearch
 
     query = query.offset(filter.PageIndex * filter.ItemsPerPage).limit(filter.ItemsPerPage)
 
-    paymentTransactions = query.all()
+    cohorts = query.all()
 
-    items = list(map(lambda x: x.__dict__, paymentTransactions))
+    items = list(map(lambda x: x.__dict__, cohorts))
+    for item in items:
+        item["Attributes"] = json.loads(item["Attributes"])
 
     results = CohortSearchResults(
-        TotalCount=len(paymentTransactions),
+        TotalCount=len(cohorts),
         ItemsPerPage=filter.ItemsPerPage,
         PageIndex=filter.PageIndex,
         OrderBy=filter.OrderBy,

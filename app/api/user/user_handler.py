@@ -13,7 +13,6 @@ def create_user_(model, db_session):
         user = user_service.create_user(db_session, model)
         message = "User created successfully"
         resp = ResponseModel[UserResponseModel](Message=message, Data=user)
-        # print_colorized_json(model)
         return resp
     except Exception as e:
         db_session.rollback()
@@ -65,7 +64,7 @@ def delete_user_(id, db_session):
         db_session.close()
         raise e
     finally:
-        db_session.close()    
+        db_session.close()
 
 @trace_span("handler: search_users")
 def search_users_(filter, db_session):

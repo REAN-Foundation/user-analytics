@@ -10,9 +10,7 @@ def create_filter_(model, db_session):
         filter = filter_service.create_filter(db_session, model)
         message = "Filter created successfully"
         resp = ResponseModel[FilterResponseModel](Message=message, Data=filter)
-        # print_colorized_json(model)
         return resp
-
     except Exception as e:
         db_session.rollback()
         db_session.close()
@@ -24,10 +22,9 @@ def create_filter_(model, db_session):
 def get_filter_by_id_(id, db_session):
     try:
         filter_id = validate_uuid4(id)
-        customer = filter_service.get_customer_by_id(db_session, filter_id)
+        filter = filter_service.get_filter_by_id(db_session, filter_id)
         message = "Filter retrieved successfully"
-        resp = ResponseModel[FilterResponseModel](Message=message, Data=customer)
-        # print_colorized_json(model)
+        resp = ResponseModel[FilterResponseModel](Message=message, Data=filter)
         return resp
     except Exception as e:
         db_session.rollback()
@@ -44,7 +41,6 @@ def update_filter_(id, model, db_session):
         filter = filter_service.update_filter(db_session, filter_id, model)
         message = "Filter updated successfully"
         resp = ResponseModel[FilterResponseModel](Message=message, Data=filter)
-        # print_colorized_json(model)
         return resp
     except Exception as e:
         db_session.rollback()
@@ -60,7 +56,6 @@ def delete_filter_(id, db_session):
         filter = filter_service.delete_filter(db_session, filter_id)
         message = "Filter deleted successfully"
         resp = ResponseModel[bool](Message=message, Data=filter)
-        # print_colorized_json(model)
         return resp
     except Exception as e:
         db_session.rollback()
@@ -75,7 +70,6 @@ def search_filters_(filter, db_session):
         filters = filter_service.search_filters(db_session, filter)
         message = "Filters retrieved successfully"
         resp = ResponseModel[FilterSearchResults](Message=message, Data=filters)
-        # print_colorized_json(model)
         return resp
     except Exception as e:
         db_session.rollback()
