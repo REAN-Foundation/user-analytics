@@ -17,6 +17,8 @@ class Event(Base):
     Attributes            = Column(Text, default=None, nullable=True)
     Timestamp             = Column(DateTime(timezone=True), server_default=func.now())
     DaysSinceRegistration = Column(Integer, nullable=False)
+    CreatedAt             = Column(DateTime(timezone=True), server_default=func.now())
+    UpdatedAt             = Column(DateTime(timezone=True), onupdate=func.now())
 
     def __repr__(self):
         jsonStr = json.dumps(self.__dict__)

@@ -35,6 +35,8 @@ class EventResponseModel(BaseModel):
     Timestamp             : datetime              = Field(default=None, description="Timestamp of the Event")
     Attributes            : Optional[dict | None] = Field(default=None, description="Attributes of the Event")
     DaysSinceRegistration : Optional[int | None]  = Field(default=None, description="Days since registration of the Event")
+    CreatedAt             : datetime              = Field(default=None, description="Created At timestamp of the Event")
+    UpdatedAt             : datetime              = Field(default=None, description="Updated At timestamp of the Event")
 
 class EventSearchResults(BaseSearchResults):
     Items: List[EventResponseModel] = []
