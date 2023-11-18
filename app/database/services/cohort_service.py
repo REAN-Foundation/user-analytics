@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 import uuid
 from app.common.utils import print_colorized_json
 from app.database.models.cohort import Cohort
@@ -22,12 +23,13 @@ def create_cohort(session: Session, model: CohortCreateModel) -> CohortResponseM
         raise Conflict(f"Cohort with name `{model.Name}` and tenant with id {model.TenantId} already exists!")
     model_dict = model.dict()
     db_model = Cohort(**model_dict)
+    db_model.Attributes = json.dumps(model.Attributes)
     db_model.UpdatedAt = dt.datetime.now()
     session.add(db_model)
     session.commit()
     temp = session.refresh(db_model)
     cohort = db_model
-
+    cohort.Attributes = json.loads(cohort.Attributes)
     return cohort.__dict__
 
 @trace_span("service: get_cohort_by_id")
@@ -35,10 +37,11 @@ def get_cohort_by_id(session: Session, cohort_id: str) -> CohortResponseModel:
     cohort = session.query(Cohort).filter(Cohort.id == cohort_id).first()
     if not cohort:
         raise NotFound(f"cohort with id {cohort_id} not found")
+    cohort.Attributes = json.loads(cohort.Attributes)
     return cohort.__dict__
 
 @trace_span("service: delete_cohort")
-def delete_cohort(session: Session, cohort_id: str):
+def delete_cohort(session: Session, cohort_id: str) -> bool:
     cohort = session.query(Cohort).filter(Cohort.id == cohort_id).first()
     if not cohort:
         raise NotFound(f"cohort with id {cohort_id} not found")
@@ -74,12 +77,14 @@ def search_cohorts(session: Session, filter: CohortSearchFilter) -> CohortSearch
 
     query = query.offset(filter.PageIndex * filter.ItemsPerPage).limit(filter.ItemsPerPage)
 
-    paymentTransactions = query.all()
+    cohorts = query.all()
 
-    items = list(map(lambda x: x.__dict__, paymentTransactions))
+    items = list(map(lambda x: x.__dict__, cohorts))
+    for item in items:
+        item["Attributes"] = json.loads(item["Attributes"])
 
     results = CohortSearchResults(
-        TotalCount=len(paymentTransactions),
+        TotalCount=len(cohorts),
         ItemsPerPage=filter.ItemsPerPage,
         PageIndex=filter.PageIndex,
         OrderBy=filter.OrderBy,
