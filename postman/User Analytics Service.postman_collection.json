@@ -28,20 +28,16 @@
 									"pm.test(\"Request is successfull\", function () {\r",
 									"    pm.response.to.have.status(201);\r",
 									"    var jsonRes = pm.response.json();\r",
-									"    pm.expect(jsonRes.Status).to.eql('success');\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
 									"});\r",
 									"\r",
 									"pm.test(\"User is created\", function () {\r",
 									"    var jsonRes = pm.response.json();\r",
-									"    pm.expect(jsonRes.Data).to.have.property('Tenant');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.not.be.empty;\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('id');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Name');\r",
-									"    pm.expect(jsonRes.Data.Tenant.Name).to.not.be.empty;\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Description');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Code');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Phone');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Email');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('FirstName');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('LastName');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Phone');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Email');\r",
 									"    \r",
 									"});\r",
 									"\r",
@@ -88,34 +84,20 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"try {\r",
-									"    var jsonRes = pm.response.json();\r",
-									"    pm.environment.set(\"USER_ID\", jsonRes.Data.Tenant.id);\r",
-									"}\r",
-									"catch (error) {\r",
-									"    console.log(error.message);\r",
-									"}\r",
-									"\r",
 									"pm.test(\"Request is successfull\", function () {\r",
 									"    pm.response.to.have.status(200);\r",
 									"    var jsonRes = pm.response.json();\r",
-									"    pm.expect(jsonRes.Status).to.eql('success');\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
 									"});\r",
 									"\r",
 									"pm.test(\"User is retrieved\", function () {\r",
 									"    var jsonRes = pm.response.json();\r",
-									"    pm.expect(jsonRes.Data).to.have.property('Tenant');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.not.be.empty;\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('id');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Name');\r",
-									"    pm.expect(jsonRes.Data.Tenant.Name).to.not.be.empty;\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Description');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Code');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Phone');\r",
-									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Email');\r",
-									"    \r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('FirstName');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('LastName');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Phone');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Email');\r",
 									"});\r",
-									"\r",
 									""
 								],
 								"type": "text/javascript"
@@ -156,18 +138,18 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"try {\r",
-									"    var respData = pm.response.json();\r",
-									"    pm.environment.set(\"API_CLIENT_ID\", respData.Data.id);\r",
-									"}\r",
-									"catch (error) {\r",
-									"    console.log(error.message);\r",
-									"}\r",
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
 									"\r",
-									"pm.test('Request is successfull', function () {\r    pm.response.to.have.status(200);\r    var jsonRes = pm.response.json();\r    pm.expect(jsonRes.Status).to.eql('success');\r});\r",
-									"\r",
-									"pm.test('New api client record is created', function () {\r    var jsonRes = pm.response.json();\r    //pm.expect(jsonRes.Data).to.have.property('xyz');\r    //let expectedXyz = ;\r    //pm.expect(jsonRes.Data.xyz).equals(expectedXyz);\r});\r",
-									"\r"
+									"pm.test(\"User is updated\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Role');\r",
+									"    pm.expect(jsonRes.Data.Role).equals('Doctor');\r",
+									"});\r",
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -206,6 +188,27 @@
 				},
 				{
 					"name": "Search with filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"User records are returned\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data.Items.length).greaterThan(0);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -246,6 +249,27 @@
 				},
 				{
 					"name": "Delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"User is deleted\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).equals(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "DELETE",
 						"header": [
@@ -268,6 +292,827 @@
 							"path": [
 								"users",
 								"{{USER_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Event",
+			"item": [
+				{
+					"name": "Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.environment.set(\"EVENT_ID\", jsonRes.Data.id);\r",
+									"}\r",
+									"catch (error) {\r",
+									"    console.log(error.message);\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Event is created\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('UserId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Action');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('EventType');\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"UserId\": \"{{USER_ID}}\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"Action\": \"add-biometrics-blood-pressure\",\r\n    \"EventType\": \"biometrics\",\r\n    \"Timestamp\": \"2023-11-20T13:41:49.985Z\",\r\n    \"Attributes\": {\r\n        \"sample_attribute\": 3232\r\n    }\r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/events",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Event is retrieved\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('UserId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Action');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('EventType');\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/events/{{EVENT_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"events",
+								"{{EVENT_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search with filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Event records are returned\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data.Items.length).greaterThan(0);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/events/search?Action=add-biometrics-blood-pressure",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"events",
+								"search"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "xyz",
+									"disabled": true
+								},
+								{
+									"key": "Action",
+									"value": "add-biometrics-blood-pressure"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"User is deleted\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).equals(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/events/{{EVENT_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"events",
+								"{{EVENT_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Filters",
+			"item": [
+				{
+					"name": "Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.environment.set(\"FILTER_ID\", jsonRes.Data.id);\r",
+									"}\r",
+									"catch (error) {\r",
+									"    console.log(error.message);\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Filter is created\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Name');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Description');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('OwnerId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('UserId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Filters');\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"OwnerId\": \"a84e09b6-339a-4340-a9bd-9567a17200ef\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"UserId\": \"{{USER_ID}}\",\r\n    \"Name\": \"my-filter-z\",\r\n    \"Description\": \"This is a filter to find user engagement of users beyond 10 days.\",\r\n    \"Filters\": {\r\n        \"sample_attribute\": 3232\r\n    }\r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/filters",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"filters"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Filter is retrieved\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Name');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Description');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('OwnerId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('UserId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Filters');\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/filters/{{FILTER_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"filters",
+								"{{FILTER_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Filter is updated\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Name');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Description');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('OwnerId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('UserId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Filters');\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Name\": \"filter-z\",\r\n    \"Description\": \"This is a filter to find user engagement of users beyond 10 days.\",\r\n    \"Filters\": {\r\n        \"sample_attribute_1\": 3333,\r\n        \"sample_attribute_2\": \"dfdsfds\"\r\n    }\r\n}\r\n"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/filters/{{FILTER_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"filters",
+								"{{FILTER_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search with filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Filter records are returned\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data.Items.length).greaterThan(0);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/filters/search?Name=z",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"filters",
+								"search"
+							],
+							"query": [
+								{
+									"key": "Name",
+									"value": "z"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Filter is deleted\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).equals(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/filters/{{FILTER_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"filters",
+								"{{FILTER_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cohorts",
+			"item": [
+				{
+					"name": "Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.environment.set(\"COHORT_ID\", jsonRes.Data.id);\r",
+									"}\r",
+									"catch (error) {\r",
+									"    console.log(error.message);\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Cohort is created\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Name');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Description');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Attributes');\r",
+									"    \r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"OwnerId\": \"a84e09b6-339a-4340-a9bd-9567a17200ef\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"Name\": \"my-cohort\",\r\n    \"Description\": \"This is a cohort segmented by my-filter.\",\r\n    \"Attributes\": {\r\n        \"sample_attribute\": 3232\r\n    }\r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/cohorts",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"cohorts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Cohort is retrieved\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Name');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Description');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Attributes');\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/cohorts/{{COHORT_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"cohorts",
+								"{{COHORT_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Cohort is updated\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Name');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Description');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Attributes');\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Name\": \"my-cohort-x\",\r\n    \"Description\": \"This is a cohort.\",\r\n    \"Attributes\": {\r\n        \"sample_attribute_1\": 3333,\r\n        \"sample_attribute_2\": \"dfdsfds\"\r\n    }\r\n}\r\n"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/cohorts/{{COHORT_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"cohorts",
+								"{{COHORT_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search with filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Cohort records are returned\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data.Items.length).greaterThan(0);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/cohorts/search?Name=my",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"cohorts",
+								"search"
+							],
+							"query": [
+								{
+									"key": "Name",
+									"value": "my"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Cohort is deleted\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).equals(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/cohorts/{{COHORT_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"cohorts",
+								"{{COHORT_ID}}"
 							]
 						}
 					},

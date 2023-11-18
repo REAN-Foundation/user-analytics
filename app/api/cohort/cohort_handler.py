@@ -1,7 +1,10 @@
 from app.common.utils import validate_uuid4
 from app.database.services import cohort_service
 from app.domain_types.miscellaneous.response_model import ResponseModel
+from app.domain_types.schemas.cohort import CohortResponseModel, CohortSearchResults
 from app.telemetry.tracing import trace_span
+
+###############################################################################
 
 @trace_span("handler: create_cohort")
 def create_cohort_(model, db_session):
@@ -10,7 +13,6 @@ def create_cohort_(model, db_session):
         message = "Cohort created successfully"
         resp = ResponseModel[CohortResponseModel](
             Message=message, Data=cohort)
-        # logger.info(resp)
         return resp
     except Exception as e:
         print(e)
@@ -27,7 +29,6 @@ def get_cohort_by_id_(id, db_session):
         message = "Cohort retrieved successfully"
         resp = ResponseModel[CohortResponseModel](
             Message=message, Data=cohort)
-        # logger.info(resp)
         return resp
     except Exception as e:
         print(e)
@@ -42,9 +43,7 @@ def update_cohort_(id, model, db_session):
         cohort_id = validate_uuid4(id)
         cohort = cohort_service.update_cohort(db_session, cohort_id, model)
         message = "Cohort updated successfully"
-        resp = ResponseModel[CohortResponseModel](
-            Message=message, Data=cohort)
-        # logger.info(resp)
+        resp = ResponseModel[CohortResponseModel](Message=message, Data=cohort)
         return resp
     except Exception as e:
         print(e)
@@ -56,12 +55,10 @@ def update_cohort_(id, model, db_session):
 @trace_span("handler: delete_cohort")
 def delete_cohort_(id, db_session):
     try:
-        customer_id = validate_uuid4(id)
-        customer = cohort_service.delete_cohort(db_session, customer_id)
+        cohort_id = validate_uuid4(id)
+        deleted = cohort_service.delete_cohort(db_session, cohort_id)
         message = "Cohort deleted successfully"
-        resp = ResponseModel[CohortResponseModel](
-            Message=message, Data=customer)
-        # logger.info(resp)
+        resp = ResponseModel[bool](Message=message, Data=deleted)
         return resp
     except Exception as e:
         print(e)

@@ -40,12 +40,10 @@ def update_filter(session: Session, filter_id: str, model: FilterUpdateModel) ->
     filter = session.query(Filter).filter(Filter.id == filter_id).first()
     if not filter:
         raise NotFound(f"Filter with id {filter_id} not found")
-
     update_data = model.dict(exclude_unset=True)
     update_data["UpdatedAt"] = dt.datetime.now()
-    session.query(Filter).filter(Filter.id == filter_id).update(
-        update_data, synchronize_session="auto")
-
+    update_data["Filters"] = json.dumps(model.Filters)
+    session.query(Filter).filter(Filter.id == filter_id).update(update_data, synchronize_session="auto")
     session.commit()
     session.refresh(filter)
     filter.Filters = json.loads(filter.Filters)

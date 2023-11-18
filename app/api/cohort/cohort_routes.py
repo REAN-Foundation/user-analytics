@@ -33,11 +33,11 @@ async def search_cohort(
 async def get_cohort_by_id(id: str, db_session=Depends(get_db_session)):
     return get_cohort_by_id_(id, db_session)
 
-@router.put("/{id}", status_code=status.HTTP_200_OK, response_model=CohortResponseModel | None)
+@router.put("/{id}", status_code=status.HTTP_200_OK, response_model=ResponseModel[CohortResponseModel] | None)
 async def update_cohort(id: str, model: CohortUpdateModel, db_session=Depends(get_db_session)):
     return update_cohort_(id, model, db_session)
 
-@router.delete("/{id}", status_code=status.HTTP_200_OK, response_model=ResponseModel[CohortResponseModel] | None)
+@router.delete("/{id}", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool] | None)
 async def delete_cohort(id: str, db_session=Depends(get_db_session)):
-    return delete_cohort(id, db_session)
+    return delete_cohort_(id, db_session)
 

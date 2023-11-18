@@ -54,9 +54,9 @@ def update_event_(id, model, db_session):
 def delete_event_(id, db_session):
     try:
         event_id = validate_uuid4(id)
-        event = event_service.delete_event(db_session, event_id)
+        deleted = event_service.delete_event(db_session, event_id)
         message = "Event deleted successfully"
-        resp = ResponseModel[bool](Message=message, Data=event)
+        resp = ResponseModel[bool](Message=message, Data=deleted)
         return resp
     except Exception as e:
         db_session.rollback()

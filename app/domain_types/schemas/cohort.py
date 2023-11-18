@@ -6,6 +6,7 @@ from app.domain_types.schemas.base_search_types import BaseSearchFilter, BaseSea
 class CohortCreateModel(BaseModel):
     Name        : str            = Field(min_length=2, max_length=256)
     Description : str            = Field(min_length=2, max_length=1024)
+    OwnerId     : UUID4          = Field(default=None)
     TenantId    : UUID4          = Field(default=None)
     Attributes  : Optional[dict] = Field(default=None)
 
@@ -15,10 +16,11 @@ class CohortUpdateModel(BaseModel):
     Attributes  : Optional[dict] = Field(default=None)
 
 class CohortSearchFilter(BaseSearchFilter):
-    TenantId : Optional[str] = Field(description="Search by the tenant")
-    Name     : Optional[str] = Field(description="Search by the name of the Cohort")
-    Attribute: Optional[str] = Field(description="Search by the attribute of the Cohort")
-    OwnerId  : Optional[str] = Field(description="Search by the owner id of the Cohort")
+    TenantId    : Optional[str] = Field(description="Search by the tenant")
+    Description : Optional[str] = Field(description="Search by the description of the Cohort")
+    Name        : Optional[str] = Field(description="Search by the name of the Cohort")
+    Attribute  : Optional[str]  = Field(description="Search by the attribute of the Cohort")
+    OwnerId     : Optional[str] = Field(description="Search by the owner id of the Cohort")
 
 class CohortResponseModel(BaseModel):
     id          : UUID4
@@ -27,7 +29,6 @@ class CohortResponseModel(BaseModel):
     TenantId    : UUID4
     OwnerId     : UUID4
     Attributes  : Optional[dict]
-    Users       : Optional[List[dict]]
     CreatedAt   : datetime
     UpdatedAt   : datetime
 
