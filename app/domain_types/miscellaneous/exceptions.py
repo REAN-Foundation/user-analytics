@@ -1,5 +1,7 @@
 from fastapi import HTTPException, status
-        
+import traceback2 as traceback
+from sqlalchemy.exc import SQLAlchemyError
+
 ###############################################################################
 
 class HTTPError(HTTPException):
@@ -92,14 +94,29 @@ class UnsupportedMediaType(HTTPError):
         self.status_code = status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
         self.message = message
 
+class DbError(HTTPError):
+    def __init__(self, message: str):
+        super().__init__(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Database Error: {message}")
+
 ###############################################################################
 
-def handle_failure(e: Exception):
-    if isinstance(e, HTTPError):
-        status_code = e.status_code
-        message = e.message
-        print(f"HTTPError: {status_code} - {message}")
-        raise HTTPException(status_code=status_code, detail=str(message))
-    else:
-        print(f"Exception: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+class ServiceError:
+    def __init__(self, exc: Exception, depth: int = 3):
+        traces = self.get_traces(exc, depth, 0)
+        message = ""
+        if isinstance(exc, SQLAlchemyError):
+            message = exc.orig
+        else:
+            message = hasattr(exc, "message") and exc.message or str(exc)
+        status_code = hasattr(exc, "status_code") and exc.status_code or status.HTTP_500_INTERNAL_SERVER_ERROR
+        self.message = message
+        self.traces = traces
+        self.status_code = status_code
+
+    def get_traces(self, exc:Exception, depth: int = 3, offset: int = 0):
+        traces = traceback.format_exception(type(exc), exc, exc.__traceback__)
+        traces.reverse()
+        traces = traces[offset:depth]
+        return traces
+
+###############################################################################

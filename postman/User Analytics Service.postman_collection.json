@@ -1,0 +1,279 @@
+{
+	"info": {
+		"_postman_id": "a7aa76a8-a0c8-4705-b963-1700587bd00a",
+		"name": "User Analytics Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "5510218",
+		"_collection_link": "https://solar-water-153775.postman.co/workspace/ReanCare~dff1f95d-5219-4d23-8d2c-af292e5a25ae/collection/5510218-a7aa76a8-a0c8-4705-b963-1700587bd00a?action=share&source=collection_link&creator=5510218"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.environment.set(\"USER_ID\", jsonRes.Data.Tenant.id);\r",
+									"}\r",
+									"catch (error) {\r",
+									"    console.log(error.message);\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"User is created\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Tenant');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.not.be.empty;\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Name');\r",
+									"    pm.expect(jsonRes.Data.Tenant.Name).to.not.be.empty;\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Description');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Code');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Phone');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Email');\r",
+									"    \r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": \"{{USER_ID}}\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"FirstName\": \"Kiran\",\r\n    \"LastName\": \"Kharade\",\r\n    \"Gender\": \"Male\",\r\n    \"Email\": \"kiran.kharade@inflectionzone.com\",\r\n    \"PhoneCode\": \"+91\",\r\n    \"Phone\": \"9900990099\",\r\n    \"LocationLongitude\": \"28.7041\",\r\n    \"LocationLatitude\": \"77.1025\",\r\n    \"LastActive\": \"2023-11-10T13:41:49.985Z\",\r\n    \"OnboardingSource\": \"Patient App\",\r\n    \"Role\": \"Patient\",\r\n    \"Attributes\": {\r\n        \"sample_attribute\": 3232\r\n    },\r\n    \"TimezoneOffsetMin\": 330,\r\n    \"RegistrationDate\": \"2023-11-17T13:41:49.985Z\"\r\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/users",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.environment.set(\"USER_ID\", jsonRes.Data.Tenant.id);\r",
+									"}\r",
+									"catch (error) {\r",
+									"    console.log(error.message);\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Request is successfull\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Status).to.eql('success');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"User is retrieved\", function () {\r",
+									"    var jsonRes = pm.response.json();\r",
+									"    pm.expect(jsonRes.Data).to.have.property('Tenant');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.not.be.empty;\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('id');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Name');\r",
+									"    pm.expect(jsonRes.Data.Tenant.Name).to.not.be.empty;\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Description');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Code');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Phone');\r",
+									"    pm.expect(jsonRes.Data.Tenant).to.have.property('Email');\r",
+									"    \r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/users/{{USER_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"users",
+								"{{USER_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {\r",
+									"    var respData = pm.response.json();\r",
+									"    pm.environment.set(\"API_CLIENT_ID\", respData.Data.id);\r",
+									"}\r",
+									"catch (error) {\r",
+									"    console.log(error.message);\r",
+									"}\r",
+									"\r",
+									"pm.test('Request is successfull', function () {\r    pm.response.to.have.status(200);\r    var jsonRes = pm.response.json();\r    pm.expect(jsonRes.Status).to.eql('success');\r});\r",
+									"\r",
+									"pm.test('New api client record is created', function () {\r    var jsonRes = pm.response.json();\r    //pm.expect(jsonRes.Data).to.have.property('xyz');\r    //let expectedXyz = ;\r    //pm.expect(jsonRes.Data.xyz).equals(expectedXyz);\r});\r",
+									"\r"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"LocationLongitude\": \"28.0000\",\r\n    \"LocationLatitude\": \"77.0000\",\r\n    \"LastActive\": \"2023-11-10T00:00:00.000Z\",\r\n    \"OnboardingSource\": \"Doctor App\",\r\n    \"Role\": \"Doctor\",\r\n    \"Attributes\": {\r\n        \"sample_attribute_1\": 3333,\r\n        \"sample_attribute_2\": \"dfdsfds\"\r\n    },\r\n    \"TimezoneOffsetMin\": -300\r\n}\r\n"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/users/{{USER_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"users",
+								"{{USER_ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search with filters",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/users/search?phone=99",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "phone",
+									"value": "99"
+								},
+								{
+									"key": "email",
+									"value": "xyz",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{USER_JWT}}"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/users/{{USER_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"users",
+								"{{USER_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -28,7 +28,6 @@ def get_user_by_id_(id, db_session):
         user = user_service.get_user_by_id(db_session, user_id)
         message = "User retrieved successfully"
         resp = ResponseModel[UserResponseModel](Message=message, Data=user)
-        # print_colorized_json(model)
         return resp
     except Exception as e:
         db_session.rollback()
@@ -44,7 +43,6 @@ def update_user_(id, model, db_session):
         user = user_service.update_user(db_session, user_id, model)
         message = "User updated successfully"
         resp = ResponseModel[UserResponseModel](Message=message, Data=user)
-        # print_colorized_json(model)
         return resp
     except Exception as e:
         db_session.rollback()
@@ -60,7 +58,6 @@ def delete_user_(id, db_session):
         user = user_service.delete_user(db_session, user_id)
         message = "User deleted successfully"
         resp = ResponseModel[bool](Message=message, Data=user)
-        # print_colorized_json(model)
         return resp
     except Exception as e:
         db_session.rollback()

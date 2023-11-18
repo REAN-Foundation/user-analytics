@@ -13,27 +13,29 @@ from app.telemetry.tracing import trace_span
 
 @trace_span("service: create_user")
 def create_user(session: Session, model: UserCreateModel) -> UserResponseModel:
-    try:
-        model_dict = model.dict()
-        db_model = User(**model_dict)
-        db_model.Attributes = json.dumps(model.Attributes)
-        db_model.UpdatedAt = dt.datetime.now()
-        session.add(db_model)
-        session.commit()
-        temp = session.refresh(db_model)
-        user = db_model
-        user.Attributes = json.loads(user.Attributes)
-        print_colorized_json(user)
-        return user.__dict__
-    except Exception as e:
-        raise Conflict(f"Error creating user: {e.orig}")
+    user = session.query(User).filter(User.id == model.id).first()
+    if user != None:
+        raise Conflict(f"User with id `{model.id}` already exists!")
+    
+    model_dict = model.dict()
+    db_model = User(**model_dict)
+    db_model.Attributes = json.dumps(model.Attributes)
+    db_model.UpdatedAt = dt.datetime.now()
+    session.add(db_model)
+    session.commit()
+    temp = session.refresh(db_model)
+    user = db_model
+    user.Attributes = json.loads(user.Attributes)
+    print_colorized_json(user)
+    return user.__dict__
+
 
 @trace_span("service: get_user_by_id")
 def get_user_by_id(session: Session, user_id: str) -> UserResponseModel:
     user = session.query(User).filter(User.id == user_id).first()
     if not user:
         raise NotFound(f"User with id {user_id} not found")
-
+    user.Attributes = json.loads(user.Attributes)
     print_colorized_json(user)
     return user.__dict__
 
@@ -45,17 +47,21 @@ def update_user(session: Session, user_id: str, model: UserUpdateModel) -> UserR
 
     update_data = model.dict(exclude_unset=True)
     update_data["UpdatedAt"] = dt.datetime.now()
+    if model.Attributes:
+        update_data["Attributes"] = json.dumps(model.Attributes)
     session.query(User).filter(User.id == user_id).update(
         update_data, synchronize_session="auto")
 
     session.commit()
     session.refresh(user)
 
+    user.Attributes = json.loads(user.Attributes)
     print_colorized_json(user)
+
     return user.__dict__
 
-@trace_span("service: search_useres")
-def search_useres(session: Session, filter: UserSearchFilter) -> UserSearchResults:
+@trace_span("service: search_users")
+def search_users(session: Session, filter: UserSearchFilter) -> UserSearchResults:
 
     query = session.query(User)
 
@@ -67,6 +73,8 @@ def search_useres(session: Session, filter: UserSearchFilter) -> UserSearchResul
         query = query.filter(User.PhoneCode.like(f'%{filter.PhoneCode}%'))
     if filter.Phone:
         query = query.filter(User.Phone.like(f'%{filter.Phone}%'))
+    if filter.Attribute:
+        query = query.filter(User.Attributes.like(f'%{filter.Attribute}%'))
 
     if filter.LastActiveBefore:
         query = query.filter(User.LastActive < filter.LastActiveBefore)
@@ -92,12 +100,13 @@ def search_useres(session: Session, filter: UserSearchFilter) -> UserSearchResul
 
     query = query.offset(filter.PageIndex * filter.ItemsPerPage).limit(filter.ItemsPerPage)
 
-    useres = query.all()
-
-    items = list(map(lambda x: x.__dict__, useres))
+    users = query.all()
+    items = list(map(lambda x: x.__dict__, users))
+    for item in items:
+        item["Attributes"] = json.loads(item["Attributes"])
 
     results = UserSearchResults(
-        TotalCount=len(useres),
+        TotalCount=len(users),
         ItemsPerPage=filter.ItemsPerPage,
         PageIndex=filter.PageIndex,
         OrderBy=filter.OrderBy,
@@ -108,14 +117,10 @@ def search_useres(session: Session, filter: UserSearchFilter) -> UserSearchResul
     return results
 
 @trace_span("service: delete_user")
-def delete_user(session: Session, user_id: str) -> UserResponseModel:
+def delete_user(session: Session, user_id: str) -> bool:
     user = session.query(User).get(user_id)
     if not user:
         raise NotFound(f"User with id {user_id} not found")
-
     session.delete(user)
-
     session.commit()
-
-    print_colorized_json(user)
-    return user.__dict__
+    return True
