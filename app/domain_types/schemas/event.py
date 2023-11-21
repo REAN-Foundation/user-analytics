@@ -6,6 +6,7 @@ from app.domain_types.schemas.base_search_types import BaseSearchFilter, BaseSea
 class EventCreateModel(BaseModel):
     UserId     : UUID4                        = Field(description="Id of the User")
     TenantId   : UUID4                        = Field(description="Tenant Id of the User")
+    SessionId  : Optional[UUID4]              = Field(default=None, description="Session Id of the Event")
     Action     : str                          = Field(min_length=2, max_length=256, description="Action of the Event")
     EventType  : str                          = Field(min_length=2, max_length=128, description="Type of the Event")
     Timestamp  : datetime                     = Field(default=None, description="Timestamp of the Event")
@@ -18,6 +19,7 @@ class EventUpdateModel(BaseModel):
 class EventSearchFilter(BaseSearchFilter):
     UserId                   : Optional[UUID4]
     TenantId                 : Optional[UUID4]
+    SessionId                : Optional[UUID4]
     Action                   : Optional[str]
     EventType                : Optional[str]
     Attribute                : Optional[str]
@@ -30,6 +32,7 @@ class EventResponseModel(BaseModel):
     id                    : UUID4                 = Field(description="Id of the Event")
     UserId                : UUID4                 = Field(description="Id of the User")
     TenantId              : UUID4                 = Field(description="Tenant Id of the User")
+    SessionId             : Optional[UUID4]       = Field(default=None, description="Session Id of the Event")
     Action                : str                   = Field(min_length=2, max_length=256, description="Action of the Event")
     EventType             : str                   = Field(min_length=2, max_length=128, description="Type of the Event")
     Timestamp             : datetime              = Field(default=None, description="Timestamp of the Event")

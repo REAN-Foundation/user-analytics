@@ -63,6 +63,12 @@ def search_filters(session: Session, filter: FilterSearchFilter) -> FilterSearch
         query = query.filter(Filter.UserId == filter.UserId)
     if filter.TenantId:
         query = query.filter(Filter.TenantId == filter.TenantId)
+    if filter.AnalysisType:
+        query = query.filter(Filter.AnalysisType == filter.AnalysisType)
+    if filter.Frequency:
+        query = query.filter(Filter.Frequency == filter.Frequency)
+    if filter.Duration:
+        query = query.filter(Filter.Duration == filter.Duration)
 
     if filter.OrderBy == None:
         filter.OrderBy = "CreatedAt"

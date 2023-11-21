@@ -12,6 +12,7 @@ class Event(Base):
     id                    = Column(String(36), primary_key=True, index=True, default=generate_uuid4)
     UserId                = Column(String(36), ForeignKey("users.id"), default=None, nullable=False)
     TenantId              = Column(String(36), default=None, nullable=False)
+    SessionId             = Column(String(36), default=None, nullable=True)
     Action                = Column(String(256), default=None, nullable=False)
     EventType             = Column(String(256), default=None, nullable=False)
     Attributes            = Column(Text, default=None, nullable=True)
