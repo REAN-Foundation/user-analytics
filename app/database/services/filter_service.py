@@ -1,6 +1,7 @@
 import datetime as dt
 import json
 from app.database.models.filter import Filter
+from app.domain_types.enums.types import AnalysisType, Duration, Frequency
 from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
 from app.domain_types.schemas.filter import FilterCreateModel, FilterResponseModel, FilterUpdateModel, FilterSearchFilter, FilterSearchResults
 from sqlalchemy.orm import Session
@@ -19,6 +20,12 @@ def create_filter(session: Session, model: FilterCreateModel) -> FilterResponseM
     model_dict = model.dict()
     db_model = Filter(**model_dict)
     db_model.Filters = json.dumps(model.Filters)
+    if not db_model.AnalysisType:
+        db_model.AnalysisType = AnalysisType.TotalUsers
+    if not db_model.Frequency:
+        db_model.Frequency = Frequency.PerDay
+    if not db_model.Duration:
+        db_model.Duration = Duration.LastWeek
     db_model.UpdatedAt = dt.datetime.now()
     session.add(db_model)
     session.commit()

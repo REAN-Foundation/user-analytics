@@ -592,7 +592,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"OwnerId\": \"a84e09b6-339a-4340-a9bd-9567a17200ef\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"UserId\": \"{{USER_ID}}\",\r\n    \"Name\": \"my-filter-z\",\r\n    \"Description\": \"This is a filter to find user engagement of users beyond 10 days.\",\r\n    \"Filters\": {\r\n        \"sample_attribute\": 3232\r\n    }\r\n}"
+							"raw": "{\r\n    \"OwnerId\": \"a84e09b6-339a-4340-a9bd-9567a17200ef\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"UserId\": \"{{USER_ID}}\",\r\n    \"Name\": \"my-filter-b\",\r\n    \"Description\": \"This is a filter to find user engagement of users beyond 10 days.\",\r\n    \"Filters\": {\r\n        \"sample_attribute\": 3232\r\n    },\r\n    \"Frequency\" : \"Per-day\",\r\n    \"Duration\" : \"Last-week\"\r\n}"
 						},
 						"url": {
 							"raw": "{{BASE_URL}}/filters",
@@ -707,7 +707,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"Name\": \"filter-z\",\r\n    \"Description\": \"This is a filter to find user engagement of users beyond 10 days.\",\r\n    \"Filters\": {\r\n        \"sample_attribute_1\": 3333,\r\n        \"sample_attribute_2\": \"dfdsfds\"\r\n    }\r\n}\r\n"
+							"raw": "{\r\n    \"Name\": \"filter-z\",\r\n    \"Description\": \"This is a filter to find user engagement of users beyond 10 days.\",\r\n    \"Filters\": {\r\n        \"sample_attribute_1\": 3333,\r\n        \"sample_attribute_2\": \"dfdsfds\"\r\n    },\r\n    \"AnalysisType\": \"Active-users\"\r\n}\r\n"
 						},
 						"url": {
 							"raw": "{{BASE_URL}}/filters/{{FILTER_ID}}",
@@ -760,7 +760,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{BASE_URL}}/filters/search?Name=z",
+							"raw": "{{BASE_URL}}/filters/search?Name=filter",
 							"host": [
 								"{{BASE_URL}}"
 							],
@@ -771,7 +771,7 @@
 							"query": [
 								{
 									"key": "Name",
-									"value": "z"
+									"value": "filter"
 								}
 							]
 						}

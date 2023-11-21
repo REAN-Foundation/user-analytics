@@ -12,10 +12,12 @@ class FilterCreateModel(BaseModel):
     OwnerId      : UUID4         = Field(default=None)
     UserId       : UUID4         = Field(default=None)
     TenantId     : UUID4         = Field(default=None)
-    AnalysisType : AnalysisType  = AnalysisType.active_users
-    Frequency    : Frequency     = Frequency.per_day
-    Duration     : Duration      = Duration.last_7_days
+    AnalysisType : Optional[AnalysisType]
+    Frequency    : Optional[Frequency]
+    Duration     : Optional[Duration]
     Filters      : Optional[Any] = Field(default=None)
+
+FilterCreateModel.update_forward_refs()
 
 class FilterUpdateModel(BaseModel):
     Name        : Optional[str]            = Field(..., min_length=2, max_length=256)
@@ -27,6 +29,8 @@ class FilterUpdateModel(BaseModel):
     Duration    : Optional[Duration]
     Filters     : Optional[Any] = Field(default=None)
 
+FilterUpdateModel.update_forward_refs()
+
 class FilterSearchFilter(BaseSearchFilter):
     Name         : Optional[str]          = Field(description="Search filter by name")
     Description  : Optional[str]          = Field(description="Search filter by description")
@@ -37,6 +41,8 @@ class FilterSearchFilter(BaseSearchFilter):
     Frequency    : Optional[Frequency]
     Duration     : Optional[Duration]
 
+FilterSearchFilter.update_forward_refs()
+
 class FilterResponseModel(BaseModel):
     id           : UUID4         = Field(description="Id of the filter")
     Name         : str           = Field(description="Name of the filter")
@@ -44,12 +50,15 @@ class FilterResponseModel(BaseModel):
     OwnerId      : UUID4         = Field(description="Id of the owner", default=None)
     UserId       : UUID4         = Field(description="Id of the user", default=None)
     TenantId     : UUID4         = Field(description="Id of the tenant", default=None)
-    AnalysisType : AnalysisType  = AnalysisType.active_users
-    Frequency    : Frequency     = Frequency.per_day
-    Duration     : Duration      = Duration.last_7_days
+    AnalysisType : AnalysisType  #= None #AnalysisType.TotalUsers
+    Frequency    : Frequency     #= None #Frequency.PerDay
+    Duration     : Duration      #= None #Duration.LastWeek
     Filters      : Optional[Any] = Field(description="Filters key value pairs", default=None)
     CreatedAt    : datetime      = Field(description="Created at")
     UpdatedAt    : datetime      = Field(description="Updated at")
 
+FilterResponseModel.update_forward_refs()
+
 class FilterSearchResults(BaseSearchResults):
     Items : List[FilterResponseModel] = Field(description="List of filters")
+
