@@ -1,7 +1,8 @@
 import json
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text, func
+from sqlalchemy import Column, ForeignKey, Enum, Integer, String, DateTime, Text, func
 from app.common.utils import generate_uuid4
 from app.database.base import Base
+from app.domain_types.enums.types import EventActionType
 
 ###############################################################################
 
@@ -13,8 +14,11 @@ class Event(Base):
     UserId                = Column(String(36), ForeignKey("users.id"), default=None, nullable=False)
     TenantId              = Column(String(36), default=None, nullable=False)
     SessionId             = Column(String(36), default=None, nullable=True)
-    Action                = Column(String(256), default=None, nullable=False)
-    EventType             = Column(String(256), default=None, nullable=False)
+    ResourceId            = Column(String(36), default=None, nullable=True)
+    EventName             = Column(String(256), default=None, nullable=False)
+    EventCategory         = Column(String(256), default=None, nullable=False)
+    ActionType            = Column(Enum(EventActionType), default=None, nullable=False)
+    ActionStatement       = Column(String(512), default=None, nullable=False)
     Attributes            = Column(Text, default=None, nullable=True)
     Timestamp             = Column(DateTime(timezone=True), server_default=func.now())
     DaysSinceRegistration = Column(Integer, nullable=False)

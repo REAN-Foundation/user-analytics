@@ -1,25 +1,24 @@
 from enum import Enum
 
-class EventTypes(str, Enum):
-    user_action = "User Action"
-    system      = "System"
-    unspecified = "Unspecified"
+class EventActionType(str, Enum):
+    UserAction   = "User-Action"
+    SystemAction = "System-Action"
+    Unspecified  = "Unspecified"
 
 class Operators(str, Enum):
     Equals             = 'Equals'
-    NotEquals          = 'Not Equals'
+    NotEquals          = 'Not-Equals'
     Contains           = 'Contains'
-    DoesNotContain     = 'Does Not Contain'
+    DoesNotContain     = 'Does-Not-Contain'
     Truthy             = 'True'
     Falsy              = 'False'
-    GreaterThan        = 'Greater Than'
-    LessThan           = 'Less Than'
-    GreaterThanOrEqual = 'Greater Than or Equal'
-    LessThanOrEqual    = 'Less Than or Equal'
+    GreaterThan        = 'Greater-Than'
+    LessThan           = 'Less-Than'
+    GreaterThanOrEqual = 'Greater-Than-Or-Equal'
+    LessThanOrEqual    = 'Less-Than-Or-Equal'
     Before             = 'Before'
     After              = 'After'
     Between            = 'Between'
-
 
 class CompositeOperators(str, Enum):
     And = 'And'

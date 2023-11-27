@@ -328,8 +328,13 @@
 									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
 									"    pm.expect(jsonRes.Data).to.have.property('UserId');\r",
 									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('Action');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('EventType');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('ActionType');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('ActionStatement');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('EventCategory');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('EventName');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('ResourceId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('SessionId');\r",
+									"    \r",
 									"});\r",
 									"\r",
 									""
@@ -354,7 +359,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"UserId\": \"{{USER_ID}}\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"Action\": \"add-biometrics-blood-pressure\",\r\n    \"EventType\": \"biometrics\",\r\n    \"Timestamp\": \"2023-11-20T13:41:49.985Z\",\r\n    \"Attributes\": {\r\n        \"sample_attribute\": 3232\r\n    }\r\n}"
+							"raw": "{\r\n    \"UserId\": \"{{USER_ID}}\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"ResourceId\": \"{{RESOURCE_ID}}\",\r\n    \"SessionId\": \"{{SESSION_ID}}\",\r\n    \"ActionType\": \"User-Action\",\r\n    \"ActionStatement\": \"User x has added blood-pressure values\",\r\n    \"EventName\": \"add-biometrics-blood-pressure\",\r\n    \"EventCategory\": \"Biometrics\",\r\n    \"Timestamp\": \"2023-11-20T13:41:49.985Z\",\r\n    \"Attributes\": {\r\n        \"systolic\": 120,\r\n        \"diastolic\": 80\r\n    }\r\n}"
 						},
 						"url": {
 							"raw": "{{BASE_URL}}/events",
@@ -386,8 +391,12 @@
 									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
 									"    pm.expect(jsonRes.Data).to.have.property('UserId');\r",
 									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('Action');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('EventType');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('ActionType');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('ActionStatement');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('EventCategory');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('EventName');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('ResourceId');\r",
+									"    pm.expect(jsonRes.Data).to.have.property('SessionId');\r",
 									"});\r",
 									""
 								],
@@ -460,7 +469,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{BASE_URL}}/events/search?Action=add-biometrics-blood-pressure",
+							"raw": "{{BASE_URL}}/events/search?EventName=blood-pressure",
 							"host": [
 								"{{BASE_URL}}"
 							],
@@ -475,8 +484,8 @@
 									"disabled": true
 								},
 								{
-									"key": "Action",
-									"value": "add-biometrics-blood-pressure"
+									"key": "EventName",
+									"value": "blood-pressure"
 								}
 							]
 						}

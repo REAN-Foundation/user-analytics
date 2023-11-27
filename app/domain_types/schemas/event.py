@@ -1,17 +1,22 @@
 from datetime import datetime
 from typing import Any, List, Optional
 from pydantic import UUID4, BaseModel, Field
+from app.domain_types.enums.types import EventActionType
 from app.domain_types.schemas.base_search_types import BaseSearchFilter, BaseSearchResults
 
 class EventCreateModel(BaseModel):
-    UserId     : UUID4                        = Field(description="Id of the User")
-    TenantId   : UUID4                        = Field(description="Tenant Id of the User")
-    SessionId  : Optional[UUID4]              = Field(default=None, description="Session Id of the Event")
-    Action     : str                          = Field(min_length=2, max_length=256, description="Action of the Event")
-    EventType  : str                          = Field(min_length=2, max_length=128, description="Type of the Event")
-    Timestamp  : datetime                     = Field(default=None, description="Timestamp of the Event")
-    Attributes : Optional[dict | list | None] = Field(default=None, description="Attributes of the Event")
-    # DaysSinceRegistration : int                   = Field(description="Days since registration of the Event")
+    UserId          : UUID4              = Field(description="Id of the User")
+    TenantId        : UUID4              = Field(description="Tenant Id of the User")
+    ResourceId      : Optional[UUID4]    = Field(default=None, description="Resource Id of the Event")
+    SessionId       : Optional[UUID4]    = Field(default=None, description="Session Id of the Event")
+    EventName       : str                = Field(min_length=2, max_length=256, description="Name of the Event")
+    EventCategory   : str                = Field(min_length=2, max_length=128, description="Type of the Event")
+    ActionType      : EventActionType   = Field(min_length=2, max_length=128, description="Type of the Action")
+    ActionStatement : str                = Field(min_length=2, max_length=512, description="ActionStatement statement of event. Used for history tracking.")
+    Timestamp       : datetime           = Field(default=None, description="Timestamp of the Event")
+    Attributes      : Optional[Any|None] = Field(default=None, description="Attributes of the Event")
+
+EventCreateModel.update_forward_refs()
 
 class EventUpdateModel(BaseModel):
     pass
@@ -19,27 +24,36 @@ class EventUpdateModel(BaseModel):
 class EventSearchFilter(BaseSearchFilter):
     UserId                   : Optional[UUID4]
     TenantId                 : Optional[UUID4]
+    ResourceId               : Optional[UUID4]
     SessionId                : Optional[UUID4]
-    Action                   : Optional[str]
-    EventType                : Optional[str]
+    EventName                : Optional[str]
+    EventCategory            : Optional[str]
+    ActionType               : Optional[EventActionType]
     Attribute                : Optional[str]
     FromDate                 : Optional[datetime]
     ToDate                   : Optional[datetime]
     FromDaysSinceRegistration: Optional[int]
     ToDaysSinceRegistration  : Optional[int]
 
+EventSearchFilter.update_forward_refs()
+
 class EventResponseModel(BaseModel):
     id                    : UUID4                 = Field(description="Id of the Event")
     UserId                : UUID4                 = Field(description="Id of the User")
     TenantId              : UUID4                 = Field(description="Tenant Id of the User")
+    ResourceId            : Optional[UUID4]       = Field(default=None, description="Resource Id of the Event")
     SessionId             : Optional[UUID4]       = Field(default=None, description="Session Id of the Event")
-    Action                : str                   = Field(min_length=2, max_length=256, description="Action of the Event")
-    EventType             : str                   = Field(min_length=2, max_length=128, description="Type of the Event")
+    EventName             : str                   = Field(min_length=2, max_length=256, description="Name of the Event")
+    EventCategory         : str                   = Field(min_length=2, max_length=128, description="Type of the Event")
+    ActionType            : EventActionType      = Field(min_length=2, max_length=128, description="Type of the Action")
+    ActionStatement       : str                   = Field(min_length=2, max_length=512, description="Action statement of the Event")
     Timestamp             : datetime              = Field(default=None, description="Timestamp of the Event")
-    Attributes            : Optional[dict | None] = Field(default=None, description="Attributes of the Event")
+    Attributes            : Optional[Any | None] = Field(default=None, description="Attributes of the Event")
     DaysSinceRegistration : Optional[int | None]  = Field(default=None, description="Days since registration of the Event")
     CreatedAt             : datetime              = Field(default=None, description="Created At timestamp of the Event")
     UpdatedAt             : datetime              = Field(default=None, description="Updated At timestamp of the Event")
+
+EventResponseModel.update_forward_refs()
 
 class EventSearchResults(BaseSearchResults):
     Items: List[EventResponseModel] = []
