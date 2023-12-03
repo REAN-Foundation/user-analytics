@@ -1,36 +1,57 @@
 import datetime as dt
 import json
-import uuid
-from app.common.utils import print_colorized_json
+import asyncio
 from app.database.models.event import Event
 from app.database.models.user import User
-from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
+from app.domain_types.miscellaneous.exceptions import NotFound
 from app.domain_types.schemas.event import EventCreateModel, EventResponseModel, EventUpdateModel, EventSearchFilter, EventSearchResults
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, asc
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import Engine, desc, asc
 from app.telemetry.tracing import trace_span
-from datetime import datetime, timezone
+from datetime import timezone
+from app.database.database_accessor import engine
 
+###############################################################################
+queue_create_event = asyncio.Queue()
 ###############################################################################
 
 @trace_span("service: create_event")
-def create_event(session: Session, model: EventCreateModel) -> EventResponseModel:
-    user = session.query(User).filter(User.id == str(model.UserId)).first()
-    if user is None:
-        raise NotFound(f"User with id {model.UserId} not found")
-    registration_date = user.RegistrationDate.replace(tzinfo=timezone.utc)
-    model_dict = model.dict()
-    db_model = Event(**model_dict)
-    db_model.Attributes = json.dumps(model.Attributes)
-    db_model.UpdatedAt = dt.datetime.now()
-    db_model.DaysSinceRegistration = (model.Timestamp - registration_date).days
-    db_model.Attributes = json.dumps(model.Attributes)
-    session.add(db_model)
-    session.commit()
-    temp = session.refresh(db_model)
-    event = db_model
-    event.Attributes = json.loads(event.Attributes)
-    return event.__dict__
+async def create_event(model: EventCreateModel):
+    asyncio.create_task(worker_create_event(queue_create_event, engine))
+    await queue_create_event.put(model)
+    return True
+
+async def worker_create_event(create_event_queue: asyncio.Queue, engine: Engine):
+    session_ = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)()
+    while True:
+        model = await create_event_queue.get()
+        if model is None:
+            break
+        add_event_to_db(session_, model)
+
+def add_event_to_db(session_, model):
+    try:
+        user = session_.query(User).filter(User.id == str(model.UserId)).first()
+        if user is None:
+            raise NotFound(f"User with id {model.UserId} not found")
+        registration_date = user.RegistrationDate.replace(tzinfo=timezone.utc)
+        model_dict = model.dict()
+        db_model = Event(**model_dict)
+        db_model.Attributes = json.dumps(model.Attributes)
+        db_model.UpdatedAt = dt.datetime.now()
+        db_model.DaysSinceRegistration = (model.Timestamp - registration_date).days
+        db_model.Attributes = json.dumps(model.Attributes)
+        session_.add(db_model)
+        session_.commit()
+        temp = session_.refresh(db_model)
+        event = db_model
+        event.Attributes = json.loads(event.Attributes)
+    except Exception as e:
+        session_.rollback()
+        session_.close()
+        raise e
+    finally:
+        session_.close()
 
 @trace_span("service: get_event_by_id")
 def get_event_by_id(session: Session, event_id: str) -> EventResponseModel:

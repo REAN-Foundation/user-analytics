@@ -1,24 +1,21 @@
+import tracemalloc
 from app.common.utils import validate_uuid4
 from app.database.services import event_service
 from app.domain_types.miscellaneous.response_model import ResponseModel
+from app.domain_types.schemas.base_types import SuccessResponseModel
 from app.domain_types.schemas.event import EventResponseModel, EventSearchResults
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
 @trace_span("handler: create_event")
-def create_event_(model, db_session):
-    try:
-        event = event_service.create_event(db_session, model)
-        message = "Event created successfully"
-        resp = ResponseModel[EventResponseModel](Message=message, Data=event)
-        return resp
-    except Exception as e:
-        db_session.rollback()
-        db_session.close()
-        raise e
-    finally:
-        db_session.close()
+async def create_event_(model):
+    tracemalloc.start()
+    await event_service.create_event(model)
+    message = "Events created successfully"
+    resp = ResponseModel[SuccessResponseModel](Message=message, Data=SuccessResponseModel())
+    tracemalloc.stop()
+    return resp
 
 @trace_span("handler: get_event_by_id")
 def get_event_by_id_(id, db_session):

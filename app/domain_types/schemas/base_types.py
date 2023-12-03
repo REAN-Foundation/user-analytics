@@ -2,6 +2,9 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+class SuccessResponseModel(BaseModel):
+    Success: bool = Field(default=True, description="Success")
+
 class BaseSearchFilter(BaseModel):
     CreatedDateFrom  : Optional[datetime] = Field(default=None, description="Search by created date after this with date format: YYYY-MM-DD")
     CreatedDateTo    : Optional[datetime] = Field(default=None, description="Search by created date before this with date format: YYYY-MM-DD")

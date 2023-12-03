@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from pydantic import UUID4, BaseModel, Field
-from app.domain_types.schemas.base_search_types import BaseSearchFilter, BaseSearchResults
+from app.domain_types.schemas.base_types import BaseSearchFilter, BaseSearchResults
 
 class UserCreateModel(BaseModel):
     id                : UUID4                     = Field(description="Id of the User")

@@ -1,3 +1,4 @@
+from typing import Any
 from fastapi import APIRouter, Depends, status
 from app.api.event.event_handler import (
     create_event_,
@@ -8,6 +9,7 @@ from app.api.event.event_handler import (
 )
 from app.database.database_accessor import get_db_session
 from app.domain_types.miscellaneous.response_model import ResponseModel
+from app.domain_types.schemas.base_types import SuccessResponseModel
 from app.domain_types.schemas.event import EventCreateModel, EventResponseModel, EventUpdateModel, EventSearchFilter, EventSearchResults
 
 ###############################################################################
@@ -19,9 +21,11 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseModel[EventResponseModel|None])
-async def create_event(model: EventCreateModel, db_session = Depends(get_db_session)):
-    return create_event_(model, db_session)
+
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseModel[SuccessResponseModel])
+async def create_event(model: EventCreateModel):
+    resp = await create_event_(model)
+    return resp
 
 @router.get("/search", status_code=status.HTTP_200_OK, response_model=ResponseModel[EventSearchResults|None])
 async def search_event(

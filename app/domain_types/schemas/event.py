@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 from pydantic import UUID4, BaseModel, Field
 from app.domain_types.enums.types import EventActionType
-from app.domain_types.schemas.base_search_types import BaseSearchFilter, BaseSearchResults
+from app.domain_types.schemas.base_types import BaseSearchFilter, BaseSearchResults
 
 class EventCreateModel(BaseModel):
     UserId          : UUID4              = Field(description="Id of the User")

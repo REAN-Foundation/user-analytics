@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from pydantic import UUID4, BaseModel, Field
-from app.domain_types.schemas.base_search_types import BaseSearchFilter, BaseSearchResults
+from app.domain_types.schemas.base_types import BaseSearchFilter, BaseSearchResults
 
 class CohortCreateModel(BaseModel):
     Name        : str            = Field(min_length=2, max_length=256)

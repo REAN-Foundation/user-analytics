@@ -2,12 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from app.config.config import get_settings
 from .base import Base
-
-# from .models.event import Event
-# from .models.user import User
-# from .models.cohort import Cohort
-# from .models.filter import Filter
-# from .models.cohort_users import CohortUser
 from .mysql_connector import MySQLConnector
 
 ###############################################################################
