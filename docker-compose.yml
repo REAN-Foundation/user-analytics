@@ -17,7 +17,7 @@ services:
     networks:
       - internalnet
 
-  orderapp:
+  analyticsapp:
     container_name: user-analytics-service-container
     build: .
     image: user-analytics-service:1.0

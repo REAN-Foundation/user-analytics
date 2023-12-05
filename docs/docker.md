@@ -3,38 +3,40 @@
 
 2. Write configurations as given in this [file](../Dockerfile).
 
-3. Save the file. Open terminal and run command:
+3. If you want to connect to your system's mysql database server, from your container, you need to change environment variable `DB_HOST` value from `localhost` to `host.docker.internal`.
+
+4. Save the file. Open terminal and run command:
     ```
-    docker build -t order-service .
+    docker build -t analytics-service .
     ```
-    This will build a docker image named `order-service` from Dockerfile. It may take few minutes to finish the process.
+    This will build a docker image named `analytics-service` from Dockerfile. It may take few minutes to finish the process.
 &nbsp;<br>
-4. Once finished, verify the image you built. To do so, run following command in terminal:
+5. Once finished, verify the image you built. To do so, run following command in terminal:
     ```
     docker images
     ```
-    This will list out all docker images you have so far. Check whether `order-service` is there in the list.
+    This will list out all docker images you have so far. Check whether `analytics-service` is there in the list.
 &nbsp;<br>
 
-5. To run docker container using this image, run command:
+6. To run docker container using this image, run command:
     ```
-    docker run -d -p 12345:12345 --name order-container order-service
+    docker run -d -p 23456:23456 --name analytics-container analytics-service
     ```
-6. To see the running containes, execute following command:
+7. To see the running containes, execute following command:
     ```
     docker ps
     ```
-    You may see your `order-container` there.
+    You may see your `analytics-container` there.
 
-7. To test application, go to browser and browse for `http://localhost:12345`. You may see a message like `Order-Management-Service is running on port 12345`. You may now test api routes for various models using `Postman`.
+8. To test application, go to browser and browse for `http://localhost:23456`. You may see a message like `Order-Management-Service is running on port 23456`. You may now test api routes for various models using `Postman`.
 &nbsp;<br>
-8. To stop container, use command:
+9. To stop container, use command:
     ```
-    docker stop order-container
+    docker stop analytics-container
     ```
     To remove container, run command:
     ```
-    docker rm order-container
+    docker rm analytics-container
     ```
 
 ## Docker Compose
@@ -53,7 +55,7 @@ To test whole application in containerized environment, you need to use `Docker-
     docker compose ps
     ```
 
-5. Now you may access application at `http://localhost:12345` and Zipkin UI at `http://localhost:9411`. Test application by sending `Postman` requests. You may see thr traces of your requests on Zipkin UI.
+5. Now you may access application at `http://localhost:23456` and Zipkin UI at `http://localhost:9411`. Test application by sending `Postman` requests. You may see the traces of your requests on Zipkin UI.
 
 6. To stop and remove all containers, run command:
     ```
