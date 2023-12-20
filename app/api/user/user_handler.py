@@ -1,5 +1,5 @@
 from typing import Optional
-from app.common.utils import validate_uuid4
+from app.common.validators import validate_uuid4
 from app.database.services import user_service
 from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.user import UserResponseModel, UserSearchResults

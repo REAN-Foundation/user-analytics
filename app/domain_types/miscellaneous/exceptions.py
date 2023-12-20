@@ -1,10 +1,8 @@
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.exc import SQLAlchemyError
 import traceback2 as traceback
-from sqlalchemy.exc import SQLAlchemyError
 from fastapi import Request, status
 from app.common.logger import logger
 from app.common.utils import print_colorized_json
@@ -147,8 +145,8 @@ def add_exception_handlers(app):
 
     # Validation Errors
 
-    @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    @app.exception_handler(ValidationError)
+    async def validation_exception_handler(request: Request, exc: ValidationError):
 
         err_obj = ServiceError(exc)
         print_colorized_json(err_obj)

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status, Query, Body
-from app.common.utils import print_colorized_json, validate_uuid4
+from app.common.utils import print_colorized_json
+from app.common.validators import validate_uuid4
 from app.database.database_accessor import get_db_session
 from app.api.cohort.cohort_handler import (
     create_cohort_,

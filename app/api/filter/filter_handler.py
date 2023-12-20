@@ -1,4 +1,4 @@
-from app.common.utils import validate_uuid4
+from app.common.validators import validate_uuid4
 from app.database.services import filter_service
 from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.filter import FilterResponseModel, FilterSearchResults
