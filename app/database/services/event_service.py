@@ -100,10 +100,16 @@ def search_events(session: Session, filter:EventSearchFilter) -> EventSearchResu
         query = query.filter(Event.TenantId == filter.TenantId)
     if filter.ResourceId:
         query = query.filter(Event.ResourceId == filter.ResourceId)
+    if filter.ResourceType:
+        query = query.filter(Event.ResourceType.like(f'%{filter.ResourceType}%'))
     if filter.EventCategory:
         query = query.filter(Event.EventCategory == filter.EventCategory)
     if filter.EventName:
         query = query.filter(Event.EventName.like(f'%{filter.EventName}%'))
+    if filter.SourceName:
+        query = query.filter(Event.SourceName.like(f'%{filter.SourceName}%'))
+    if filter.SourceVersion:
+        query = query.filter(Event.SourceVersion.like(f'%{filter.SourceVersion}%'))
     if filter.FromDate:
         query = query.filter(Event.Timestamp > filter.FromDate)
     if filter.ToDate:

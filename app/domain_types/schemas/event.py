@@ -8,11 +8,14 @@ class EventCreateModel(BaseModel):
     UserId          : UUID4              = Field(description="Id of the User")
     TenantId        : UUID4              = Field(description="Tenant Id of the User")
     ResourceId      : Optional[UUID4]    = Field(default=None, description="Resource Id of the Event")
+    ResourceType    : Optional[str]      = Field(min_length=2, max_length=256, description="Type of the resource")
     SessionId       : Optional[UUID4]    = Field(default=None, description="Session Id of the Event")
+    SourceName      : str                = Field(min_length=2, max_length=256, description="Name of the Event")
+    SourceVersion   : Optional[str]      = Field(min_length=2, max_length=256, description="Version of the Event")
     EventName       : str                = Field(min_length=2, max_length=256, description="Name of the Event")
     EventCategory   : str                = Field(min_length=2, max_length=128, description="Type of the Event")
-    ActionType      : EventActionType   = Field(min_length=2, max_length=128, description="Type of the Action")
-    ActionStatement : str                = Field(min_length=2, max_length=512, description="ActionStatement statement of event. Used for history tracking.")
+    ActionType      : EventActionType    = Field(min_length=2, max_length=128, description="Type of the Action")
+    ActionStatement : str                = Field(min_length=2, max_length=512, description="Action Statement statement of event. Used for history tracking.")
     Timestamp       : datetime           = Field(default=None, description="Timestamp of the Event")
     Attributes      : Optional[Any|None] = Field(default=None, description="Attributes of the Event")
 
@@ -25,8 +28,11 @@ class EventSearchFilter(BaseSearchFilter):
     UserId                   : Optional[UUID4]
     TenantId                 : Optional[UUID4]
     ResourceId               : Optional[UUID4]
+    ResourceType             : Optional[str]
     SessionId                : Optional[UUID4]
     EventName                : Optional[str]
+    SourceName               : Optional[str]
+    SourceVersion            : Optional[str]
     EventCategory            : Optional[str]
     ActionType               : Optional[EventActionType]
     Attribute                : Optional[str]
@@ -42,8 +48,11 @@ class EventResponseModel(BaseModel):
     UserId                : UUID4                 = Field(description="Id of the User")
     TenantId              : UUID4                 = Field(description="Tenant Id of the User")
     ResourceId            : Optional[UUID4]       = Field(default=None, description="Resource Id of the Event")
+    ResourceType          : Optional[str]         = Field(min_length=2, max_length=256, description="Type of the resource")
     SessionId             : Optional[UUID4]       = Field(default=None, description="Session Id of the Event")
     EventName             : str                   = Field(min_length=2, max_length=256, description="Name of the Event")
+    SourceName            : str                   = Field(min_length=2, max_length=256, description="Name of the Event")
+    SourceVersion         : Optional[str]         = Field(min_length=2, max_length=256, description="Version of the Event")
     EventCategory         : str                   = Field(min_length=2, max_length=128, description="Type of the Event")
     ActionType            : EventActionType      = Field(min_length=2, max_length=128, description="Type of the Action")
     ActionStatement       : str                   = Field(min_length=2, max_length=512, description="Action statement of the Event")
