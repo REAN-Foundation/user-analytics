@@ -78,3 +78,8 @@ class AnalysisType(str, Enum):
     Exits                       = 'Exits'
     DeviceCountPerUser          = 'Device-count-per-user'
     BrowserCountPerUser         = 'Browser-count-per-user'
+
+class MilestoneType(str, Enum):
+    Registration = 'Registration'
+    Careplan = 'Careplan'
+

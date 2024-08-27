@@ -1,0 +1,33 @@
+import json
+from sqlalchemy import Column, String, DateTime, Text, func
+from app.common.utils import generate_uuid4
+from app.database.base import Base
+
+###############################################################################
+
+class Milestone(Base):
+
+    __tablename__ = "milestones"
+
+    id                    = Column(String(36), primary_key=True, index=True, default=generate_uuid4)
+    UserId                = Column(String(36), default=None, nullable=False)
+    TenantId              = Column(String(36), default=None, nullable=False)
+    # SessionId             = Column(String(36), default=None, nullable=True)
+    # ResourceId            = Column(String(36), default=None, nullable=True)
+    # ResourceType          = Column(String(256), default=None, nullable=True)
+    # SourceName            = Column(String(256), default=None, nullable=False)
+    # SourceVersion         = Column(String(256), default=None, nullable=True)
+    MilestoneName             = Column(String(256), default=None, nullable=False)
+    MilestoneCategory         = Column(String(256), default=None, nullable=True)
+    # ActionType            = Column(Enum(EventActionType), default=None, nullable=False)
+    # ActionStatement       = Column(String(512), default=None, nullable=False)
+    Attributes            = Column(Text, default=None, nullable=True)
+    Timestamp             = Column(DateTime(timezone=True), server_default=func.now())
+    # DaysSinceRegistration = Column(Integer, nullable=False)
+    CreatedAt             = Column(DateTime(timezone=True), server_default=func.now())
+    UpdatedAt             = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def __repr__(self):
+        jsonStr = json.dumps(self.__dict__)
+        return jsonStr
+
