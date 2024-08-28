@@ -33,6 +33,7 @@ def add_event_to_db(session_, model):
     try:
         user = session_.query(User).filter(User.id == str(model.UserId)).first()
         if user is None:
+            
             raise NotFound(f"User with id {model.UserId} not found")
         registration_date = user.RegistrationDate.replace(tzinfo=timezone.utc)
         model_dict = model.dict()
