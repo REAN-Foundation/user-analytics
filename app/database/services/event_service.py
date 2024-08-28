@@ -7,6 +7,7 @@ from app.domain_types.miscellaneous.exceptions import NotFound
 from app.domain_types.schemas.event import EventCreateModel, EventResponseModel, EventUpdateModel, EventSearchFilter, EventSearchResults
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import Engine, desc, asc
+from app.startup.user_seeder import Seeder
 from app.telemetry.tracing import trace_span
 from datetime import timezone
 from app.database.database_accessor import engine
@@ -33,13 +34,19 @@ def add_event_to_db(session_, model):
     try:
         user = session_.query(User).filter(User.id == str(model.UserId)).first()
         if user is None:
-            raise NotFound(f"User with id {model.UserId} not found")
+            user = Seeder. fetch_reancare_user_by_user_id(model.UserId)
+            inserted_row_count = Seeder.insert_data_into_users(user)
+            if inserted_row_count == 0:
+                print(f"User with id {model.UserId} not found")
+                raise NotFound(f"User with id {model.UserId} not found")
+            
         registration_date = user.RegistrationDate.replace(tzinfo=timezone.utc)
         model_dict = model.dict()
         db_model = Event(**model_dict)
         db_model.Attributes = json.dumps(model.Attributes)
         db_model.UpdatedAt = dt.datetime.now()
         db_model.DaysSinceRegistration = (model.Timestamp - registration_date).days
+        # db_model.DaysSinceRegistration = 10,
         db_model.Attributes = json.dumps(model.Attributes)
         session_.add(db_model)
         session_.commit()
