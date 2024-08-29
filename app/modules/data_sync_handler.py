@@ -2,18 +2,19 @@
 import os
 from app.common.cache import LocalMemoryCache
 from app.database.mysql_connector import MySQLConnector
+import mysql.connector
 
 ############################################################
 
-reancare_db_host = os.getenv("REANCARE_DB_HOST")
+reancare_db_host     = os.getenv("REANCARE_DB_HOST")
 reancare_db_database = os.getenv("REANCARE_DB_NAME")
-reancare_db_user = os.getenv("REANCARE_DB_USER_NAME")
+reancare_db_user     = os.getenv("REANCARE_DB_USER_NAME")
 reancare_db_password = os.getenv("REANCARE_DB_USER_PASSWORD")
 
-this_db_host = os.getenv("DB_HOST")
-this_db_database = os.getenv("DB_NAME")
-this_db_user = os.getenv("DB_USER_NAME")
-this_db_password = os.getenv("DB_USER_PASSWORD")
+analytics_db_host     = os.getenv("DB_HOST")
+analytics_db_database = os.getenv("DB_NAME")
+analytics_db_user     = os.getenv("DB_USER_NAME")
+analytics_db_password = os.getenv("DB_USER_PASSWORD")
 
 ############################################################
 
@@ -23,16 +24,19 @@ class DataSyncHandler:
     _userCache = LocalMemoryCache()
     _apiKeysCache = LocalMemoryCache()
 
+    #region User
+
     @staticmethod
     def get_analytics_user(user_id):
         try:
-            db_connector = MySQLConnector(this_db_host, this_db_user, this_db_password, this_db_database)
+            analytics_db_connector = MySQLConnector(
+                analytics_db_host, analytics_db_user, analytics_db_password, analytics_db_database)
             query = f"""
             SELECT * from users
             WHERE
                 id = "{user_id}"
             """
-            rows = db_connector.execute_query(query)
+            rows = analytics_db_connector.execute_query(query)
             if len(rows) > 0:
                 return rows[0]
             else:
@@ -42,25 +46,7 @@ class DataSyncHandler:
             return None
 
     @staticmethod
-    def get_analytics_tenant(tenant_id):
-        try:
-            db_connector = MySQLConnector(this_db_host, this_db_user, this_db_password, this_db_database)
-            query = f"""
-            SELECT * from tenants
-            WHERE
-                id = "{tenant_id}"
-            """
-            rows = db_connector.execute_query(query)
-            if len(rows) > 0:
-                return rows[0]
-            else:
-                return None
-        except Exception as error:
-            print("Error retrieving API keys:", error)
-            return None
-
-    @staticmethod
-    def fetch_user_from_reancare(user_id):
+    def get_reancare_user(user_id):
         user = None
         try:
             rean_db_connector = MySQLConnector(
@@ -83,7 +69,76 @@ class DataSyncHandler:
         return user
 
     @staticmethod
-    def fetch_tenant_from_reancare(tenant_id):
+    def add_analytics_user(user_id, user):
+        try:
+            analytics_db_connector = MySQLConnector(
+                analytics_db_host, analytics_db_user, analytics_db_password, analytics_db_database)
+            insert_query = """
+            INSERT INTO users (
+            id, TenantId, BirthDate, Gender, Role, RegistrationDate, TimezoneOffsetMin
+            ) VALUES (
+            %s, %s, %s, %s, %s, %s, %s
+            )
+            """
+            timezoneOffsetMin = user['TimezoneOffsetMin'] if 'TimezoneOffsetMin' in user else None
+            row = (user_id, user['TenantId'], user['BirthDate'], user['Gender'], user['Role'], user['RegistrationDate'], timezoneOffsetMin)
+            result = analytics_db_connector.execute_query(insert_query, row)
+            if result is None:
+                print(f"Not inserted data {row}.")
+                return None
+            else:
+                DataSyncHandler._userCache.set(user_id, result)
+                print(f"Inserted row into the users table.")
+                return result
+        except mysql.connector.Error as error:
+            print(f"Failed to insert records: {error}")
+            return None
+        except Exception as error:
+            print(f"Failed to insert records: {error}")
+            return None
+
+    @staticmethod
+    def get_user(user_id):
+        user = DataSyncHandler._userCache.get(user_id)
+        if user is not None:
+            return user
+        else:
+            user = DataSyncHandler.get_analytics_user(user_id)
+            if user is not None:
+                DataSyncHandler._userCache.set(user_id, user)
+                return user
+            else:
+                user_ = DataSyncHandler.get_reancare_user(user_id)
+                if user_ is not None:
+                    user = DataSyncHandler.add_analytics_user(user_id, user_)
+                    return user
+        return None
+
+    #endregion
+
+    #region Tenant
+
+    @staticmethod
+    def get_analytics_tenant(tenant_id):
+        try:
+            analytics_db_connector = MySQLConnector(
+                analytics_db_host, analytics_db_user, analytics_db_password, analytics_db_database)
+            query = f"""
+            SELECT * from tenants
+            WHERE
+                id = "{tenant_id}"
+            """
+            rows = analytics_db_connector.execute_query(query)
+            if len(rows) > 0:
+                return rows[0]
+            else:
+                return None
+        except Exception as error:
+            print("Error retrieving API keys:", error)
+            return None
+
+    @staticmethod
+    def get_reancare_tenant(tenant_id):
         tenant = None
         try:
             rean_db_connector = MySQLConnector(
@@ -103,90 +158,84 @@ class DataSyncHandler:
         return tenant
 
     @staticmethod
-    def fetch_reancare_users_not_in_users():
-        rows_to_insert = []
-
+    def add_analytics_tenant(tenant_id, tenant):
         try:
-            db_manager = MySQLConnector(
-                    host = os.getenv("REANCARE_DB_HOST"),
-                    user = os.getenv("REANCARE_DB_USER_NAME"),
-                    password = os.getenv("REANCARE_DB_USER_PASSWORD"),
-                    database = os.getenv("REANCARE_DB_NAME")
-                    )
-            # # Fetch all UserId values from users table
-            # cursor.execute("SELECT id FROM users")
-            # user_ids = cursor.fetchall()
-            # user_ids_list = [user_id[0] for user_id in user_ids]  # Flatten the list of tuples to a list of ids
-
-            if Seeder._user_id:
-                # Fetch rows from reancare_users where the id is not in users
-                print('type: ', type(Seeder._user_id[0]))
-                quoted_id_list = [f"'{id}'" for id in Seeder._user_id]
-                format_strings = ','.join(quoted_id_list)
-                select_query = f"""
-                SELECT user.id, user.TenantId, person.FirstName, person.LastName, person.Gender, person.Email, person.Phone, user.LastLogin, user.RoleId, user.CreatedAt from users as user
-                JOIN persons as person ON user.PersonId = person.id
-                WHERE
-                    user.DeletedAt IS null
-                    AND
-                    user.id NOT IN ({format_strings})
-                """
-                print('select query:', select_query)
-                rows_to_insert = db_manager.execute_query(select_query)
-            else:
-                select_query = f"""
-                SELECT user.id, user.TenantId, person.FirstName, person.LastName, person.Gender, person.Email, person.Phone, user.LastLogin, user.RoleId, user.CreatedAt from users as user
-                JOIN persons as person ON user.PersonId = person.id
-                WHERE
-                    user.DeletedAt IS null
-                """
-                print('select query:', select_query)
-                rows_to_insert = db_manager.execute_query(select_query)
-
-
-        except Exception as e:
-            print(f"Failed to fetch records: {e}")
-        finally:
-            db_manager.close_connection()
-
-        return rows_to_insert
-
-
-
-    @staticmethod
-    def insert_data_into_users(data):
-
-        try:
-            db_manager = MySQLConnector(
-                    host = os.getenv("DB_HOST"),
-                    user = os.getenv("DB_USER_NAME"),
-                    password = os.getenv("DB_USER_PASSWORD"),
-                    database = os.getenv("DB_NAME")
-                    )
-            # Insert rows into users table
-            # insert_query = "INSERT INTO users (id, name, email) VALUES (%s, %s, %s)"
+            analytics_db_connector = MySQLConnector(
+                analytics_db_host, analytics_db_user, analytics_db_password, analytics_db_database)
             insert_query = """
-            INSERT INTO users (
-            id, TenantId, FirstName, LastName, Gender, Email, Phone, LastActive, Role, RegistrationDate
+            INSERT INTO tenants (
+            id, TenantName, TenantCode, RegistrationDate
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s
             )
             """
-            count = 0
-            for row in data:
-                result = db_manager.execute_query(insert_query, row)
-                if result is None:
-                    print(f"Not inserted data {row}.")
-                else:
-                    count = count + 1
-                    if f"{row[0]}" not in Seeder._user_id:
-                        print('row[0]', row[0])
-                        Seeder._user_id.append(f"{row[0]}")
-
-            # rows_to_insert = db_manager.execute_query(insert_query)
-            print(f"Inserted {len(data)} rows into the users table.")
-            return count
-
+            row = (tenant_id, tenant['Name'], tenant['Code'], tenant['CreatedAt'])
+            result = analytics_db_connector.execute_query(insert_query, row)
+            if result is None:
+                print(f"Not inserted data {row}.")
+                return None
+            else:
+                DataSyncHandler._tenantCache.set(tenant_id, result)
+                print(f"Inserted row into the tenants table.")
+                return result
         except mysql.connector.Error as error:
             print(f"Failed to insert records: {error}")
-            return 0
+            return None
+        except Exception as error:
+            print(f"Failed to insert records: {error}")
+            return None
+
+    @staticmethod
+    def get_tenant(tenant_id):
+        tenant = DataSyncHandler._tenantCache.get(tenant_id)
+        if tenant is not None:
+            return tenant
+        else:
+            tenant = DataSyncHandler.get_analytics_tenant(tenant_id)
+            if tenant is not None:
+                DataSyncHandler._tenantCache.set(tenant_id, tenant)
+                return tenant
+            else:
+                tenant_ = DataSyncHandler.get_reancare_tenant(tenant_id)
+                if tenant_ is not None:
+                    tenant = DataSyncHandler.add_analytics_tenant(tenant_id, tenant_)
+                    return tenant
+        return None
+
+    #endregion
+
+    #region Client App API Keys
+
+    @staticmethod
+    def get_reancare_api_clients():
+        try:
+            rean_db_connector = MySQLConnector(
+                reancare_db_host, reancare_db_user, reancare_db_password, reancare_db_database)
+            query = f"""
+            SELECT * from api_clients
+            WHERE
+                DeletedAt IS NULL
+            """
+            rows = rean_db_connector.execute_query(query)
+            return rows
+        except Exception as error:
+            print("Error retrieving API keys:", error)
+            return None
+
+    @staticmethod
+    def populate_api_keys_cache():
+        api_clients = DataSyncHandler.get_reancare_api_clients()
+        if api_clients is not None:
+            for api_client in api_clients:
+                key = api_client['ApiKey']
+                client_app = {
+                    'ClientId': api_client['id'],
+                    'ClientName': api_client['ClientName'],
+                    'ClientCode': api_client['ClientCode'],
+                    'IsPrivileged': api_client['IsPrivileged'],
+                    'ClientInterfaceType': api_client['ClientInterfaceType'],
+                    'ApiKey': api_client['ApiKey'],
+                }
+                DataSyncHandler._apiKeysCache.set(key, client_app)
+
+    #endregion

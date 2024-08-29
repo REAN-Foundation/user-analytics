@@ -9,8 +9,6 @@ class TenantMilestoneCreateModel(BaseModel):
     MilestoneCategory           : str                = Field(min_length=2, max_length=256, description="Category of the Milestone")
     Attributes                  : Optional[Any|None] = Field(default=None, description="Attributes of the Milestone")
     Timestamp                   : datetime           = Field(default=None, description="Timestamp of the Milestone")
-    DaysSinceRegistration       : int                = Field(description="Days since registration")
-    TimeOffsetSinceRegistration : int                = Field(description="Time offset since registration")
 
 TenantMilestoneCreateModel.update_forward_refs()
 
@@ -20,8 +18,6 @@ class TenantMilestoneUpdateModel(BaseModel):
     MilestoneCategory           : Optional[str]      = Field(min_length=2, max_length=256, description="Category of the Milestone")
     Attributes                  : Optional[Any|None] = Field(default=None, description="Attributes of the Milestone")
     Timestamp                   : Optional[datetime] = Field(default=None, description="Timestamp of the Milestone")
-    DaysSinceRegistration       : Optional[int]      = Field(default=None, description="Days since registration")
-    TimeOffsetSinceRegistration : Optional[int]      = Field(default=None, description="Time offset since registration")
 
 TenantMilestoneUpdateModel.update_forward_refs()
 
@@ -32,10 +28,6 @@ class TenantMilestoneSearchFilter(BaseSearchFilter):
     Attribute                      : Optional[str]
     FromDate                       : Optional[datetime]
     ToDate                         : Optional[datetime]
-    FromDaysSinceRegistration      : Optional[int]
-    ToDaysSinceRegistration        : Optional[int]
-    FromTimeOffsetSinceRegistration: Optional[int]
-    ToTimeOffsetSinceRegistration  : Optional[int]
 
 TenantMilestoneSearchFilter.update_forward_refs()
 
@@ -46,8 +38,6 @@ class TenantMilestoneResponseModel(BaseModel):
     MilestoneCategory           : str                   = Field(min_length=2, max_length=256, description="Category of the Milestone")
     Attributes                  : Optional[Any | None]  = Field(default=None, description="Attributes of the Milestone")
     Timestamp                   : datetime              = Field(default=None, description="Timestamp of the Milestone")
-    DaysSinceRegistration       : Optional[int | None]  = Field(default=None, description="Days since registration")
-    TimeOffsetSinceRegistration : Optional[int | None]  = Field(default=None, description="Time offset since registration")
 
 TenantMilestoneResponseModel.update_forward_refs()
 
