@@ -1,7 +1,7 @@
 from pydantic import Field
 from enum import Enum
 from typing import TypeVar, Generic
-from pydantic.generics import GenericModel
+from pydantic import BaseModel
 
 T = TypeVar("T")
 
@@ -10,7 +10,7 @@ class ResponseStatusTypes(str, Enum):
     Failure = "Failure"
     Error = "Error"
 
-class ResponseModel(GenericModel, Generic[T]):
+class ResponseModel(BaseModel, Generic[T]):
     Status: ResponseStatusTypes = Field(description="Status of the response", default=ResponseStatusTypes.Success)
     Message: str = ""
     Data: T | None = None
