@@ -52,7 +52,7 @@ class DataSyncHandler:
             rean_db_connector = MySQLConnector(
                 reancare_db_host, reancare_db_user, reancare_db_password, reancare_db_database)
             query = f"""
-            SELECT user.id, user.TenantId, person.FirstName, person.LastName, person.Gender, person.Email, person.Phone, user.LastLogin, user.RoleId, user.CreatedAt from users as user
+            SELECT user.id, user.TenantId, person.BirthDate, person.Gender, user.RoleId, user.CurrentTimeZone, user.CreatedAt from users as user
             JOIN persons as person ON user.PersonId = person.id
             WHERE
                 user.DeletedAt IS null
@@ -80,8 +80,11 @@ class DataSyncHandler:
             %s, %s, %s, %s, %s, %s, %s
             )
             """
-            timezoneOffsetMin = user['TimezoneOffsetMin'] if 'TimezoneOffsetMin' in user else None
-            row = (user_id, user['TenantId'], user['BirthDate'], user['Gender'], user['Role'], user['RegistrationDate'], timezoneOffsetMin)
+            timezoneOffsetMin = 0
+            timezone = user['CurrentTimeZone']
+            if timezone is not None:
+                timezoneOffsetMin = int(timezone.split(":")[0]) * 60 + int(timezone.split(":")[1])
+            row = (user['id'], user['TenantId'], user['BirthDate'], user['Gender'], user['RoleId'], user['CreatedAt'], timezoneOffsetMin)
             result = analytics_db_connector.execute_query(insert_query, row)
             if result is None:
                 print(f"Not inserted data {row}.")
@@ -169,7 +172,7 @@ class DataSyncHandler:
             %s, %s, %s, %s
             )
             """
-            row = (tenant_id, tenant['Name'], tenant['Code'], tenant['CreatedAt'])
+            row = (tenant['id'], tenant['Name'], tenant['Code'], tenant['CreatedAt'])
             result = analytics_db_connector.execute_query(insert_query, row)
             if result is None:
                 print(f"Not inserted data {row}.")

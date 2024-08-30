@@ -41,7 +41,7 @@ def add_event_to_db(session_, model):
             if tenant is None:
                 raise NotFound(f"Tenant with id {model.TenantId} not found")
 
-        registration_date = user.RegistrationDate.replace(tzinfo=timezone.utc)
+        registration_date = user['CreatedAt'].replace(tzinfo=timezone.utc)
 
         model_dict = model.dict()
         db_model = Event(**model_dict)

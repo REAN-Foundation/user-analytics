@@ -10,7 +10,6 @@ class Tenant(Base):
     __tablename__ = "tenants"
 
     id                = Column(String(36), primary_key=True, index=True)
-    TenantId          = Column(String(36), nullable=False)
     TenantName        = Column(String(128), default=None)
     TenantCode        = Column(String(128), default=None)
     RegistrationDate  = Column(DateTime(timezone=True), default=None)

@@ -14,9 +14,9 @@ class ClientAuthMiddleware(BaseHTTPMiddleware):
         client_app = DataSyncHandler._apiKeysCache.get(api_key)
         if not client_app:
             return Response("Invalid x-api-key", status_code=400)
-        request.state.client_name = client_app.ClientName
-        request.state.client_code = client_app.ClientCode
-        request.state.is_privileged = client_app.IsPrivileged
+        request.state.client_name = client_app['ClientName']
+        request.state.client_code = client_app['ClientCode']
+        request.state.is_privileged = True if client_app['IsPrivileged'] == 0 else False
         # Optionally, you can perform additional checks or actions with the api_key here
         response = await call_next(request)
         return response
