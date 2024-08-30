@@ -1,13 +1,7 @@
 poetry.lock
-
 venv/
-
 postman/
-
 docs/
-
 .vscode/
-
 .pytest_cache/
-
 tests/

@@ -1,15 +1,20 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 class Settings(BaseSettings):
 
     # App
     ENVIRONMENT: str = "development"
-    SERVICE_NAME="User-Analytics-Service"
+    SERVICE_NAME: str ="User-Analytics-Service"
     BASE_URL: str = "http://localhost:23456"
-    USER_ACCESS_TOKEN_SECRET="secret"
-    CIPHER_SALT="salt"
-    SERVICE_IDENTIFIER=f"{SERVICE_NAME}-{ENVIRONMENT}"
+    USER_ACCESS_TOKEN_SECRET: str ="secret"
+    CIPHER_SALT: str="salt"
+    SERVICE_IDENTIFIER: str =f"{SERVICE_NAME}-{ENVIRONMENT}"
+
+    API_VERSION: str="0.0.1"
+    API_PREFIX: str = "/api/v1"
+    PORT: int = 23456
+    SERVICE_NAME: str = "User-Analytics-Service"
 
     #Database
     DB_USER_NAME: str = "dbuser"
@@ -24,6 +29,12 @@ class Settings(BaseSettings):
     DB_DRIVER: str = "pymysql"
     DB_CONNECTION_STRING: str = f"{DB_DIALECT}+{DB_DRIVER}://{DB_USER_NAME}:{DB_USER_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
+
+    REANCARE_DB_HOST: str ="localhost"
+    REANCARE_DB_NAME: str ="reancare"
+    REANCARE_DB_USER_NAME: str ="root"
+    REANCARE_DB_USER_PASSWORD: str ="root"
+
     # Open-telemetry
     TRACING_ENABLED: bool = False
     TRACING_EXPORTER_TYPE: str = 'NoExporter'
@@ -34,6 +45,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra="forbid"
 
 @lru_cache()
 def get_settings():

@@ -7,6 +7,7 @@ from app.domain_types.miscellaneous.exceptions import NotFound
 from app.domain_types.schemas.event import EventCreateModel, EventResponseModel, EventUpdateModel, EventSearchFilter, EventSearchResults
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import Engine, desc, asc
+from app.modules.data_sync_handler import DataSyncHandler
 from app.telemetry.tracing import trace_span
 from datetime import timezone
 from app.database.database_accessor import engine
@@ -31,16 +32,25 @@ async def worker_create_event(create_event_queue: asyncio.Queue, engine: Engine)
 
 def add_event_to_db(session_, model):
     try:
-        user = session_.query(User).filter(User.id == str(model.UserId)).first()
+        user = DataSyncHandler.get_user(model.UserId)
         if user is None:
             raise NotFound(f"User with id {model.UserId} not found")
-        registration_date = user.RegistrationDate.replace(tzinfo=timezone.utc)
+
+        if model.TenantId is not None:
+            tenant = DataSyncHandler.get_tenant(model.TenantId)
+            if tenant is None:
+                raise NotFound(f"Tenant with id {model.TenantId} not found")
+
+        registration_date = user['CreatedAt'].replace(tzinfo=timezone.utc)
+
         model_dict = model.dict()
         db_model = Event(**model_dict)
         db_model.Attributes = json.dumps(model.Attributes)
         db_model.UpdatedAt = dt.datetime.now()
         db_model.DaysSinceRegistration = (model.Timestamp - registration_date).days
+        db_model.TimeOffsetSinceRegistration = (model.Timestamp - registration_date).total_seconds()
         db_model.Attributes = json.dumps(model.Attributes)
+
         session_.add(db_model)
         session_.commit()
         temp = session_.refresh(db_model)

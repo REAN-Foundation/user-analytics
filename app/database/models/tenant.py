@@ -5,21 +5,13 @@ from sqlalchemy.sql import func
 
 ###############################################################################
 
-class User(Base):
+class Tenant(Base):
 
-    __tablename__ = "users"
+    __tablename__ = "tenants"
 
     id                = Column(String(36), primary_key=True, index=True)
-    TenantId          = Column(String(36), nullable=False)
-    BirthDate         = Column(DateTime(timezone=False), default=None)
-    Gender            = Column(String(32), default=None)
-    LocationLongitude = Column(Float, default=None)
-    LocationLatitude  = Column(Float, default=None)
-    LastActive        = Column(DateTime(timezone=True), default=None)
-    OnboardingSource  = Column(String(128), default=None)
-    Role              = Column(String(128), default=None)
-    Attributes        = Column(Text, default=None, nullable=True)
-    TimezoneOffsetMin = Column(Integer, default=None, nullable=True)
+    TenantName        = Column(String(128), default=None)
+    TenantCode        = Column(String(128), default=None)
     RegistrationDate  = Column(DateTime(timezone=True), default=None)
     CreatedAt         = Column(DateTime(timezone=True), server_default=func.now())
     UpdatedAt         = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
