@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from app.api.event.event_handler import (
     create_event_,
     get_event_by_id_,
@@ -23,7 +23,9 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseModel[SuccessResponseModel])
-async def create_event(model: EventCreateModel):
+async def create_event(model: EventCreateModel, request: Request):
+    model.SourceName = model.SourceName if model.SourceName is not None else request.state.client_name
+    model.ResourceType = model.ResourceType if model.ResourceType is not None else "Unknown"
     resp = await create_event_(model)
     return resp
 
