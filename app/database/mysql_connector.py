@@ -44,13 +44,18 @@ class MySQLConnector:
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
                 if read_only_query:
-                    result = cursor.fetchall()
+                    rows = cursor.fetchall()
+                    column_names = [i[0] for i in cursor.description]
+                    result = [dict(zip(column_names, row)) for row in rows]
+                    cursor.close()
                     self.close_connection(connection)
                     return result
                 else:
                     connection.commit()
                     self.close_connection(connection)
-                    return cursor.rowcount
+                    rowcount = cursor.rowcount
+                    cursor.close()
+                    return rowcount
         except (Exception, mysql.connector.Error) as error:
             print("Error executing the query:", error)
             if not read_only_query:
