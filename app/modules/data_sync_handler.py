@@ -85,13 +85,45 @@ class DataSyncHandler:
             return None
 
     @staticmethod
+    def get_reancare_user_role(user_id):
+        try:
+            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            query = f"""
+            SELECT Role from users
+            WHERE
+                id = "{user_id}"
+            """
+            rows = rean_db_connector.execute_read_query(query)
+            if len(rows) > 0:
+                role_id = rows[0]['Role']
+                role = DataSyncHandler._role_type_cache.get(role_id)
+                return role
+            else:
+                return None
+        except Exception as error:
+            print("Error retrieving User Role:", error)
+
+    @staticmethod
     def get_reancare_user(user_id):
         user = None
         try:
             rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            role = DataSyncHandler.get_reancare_user_role(user_id)
+            if role is None:
+                return None
+
             query = f"""
-            SELECT user.id, user.TenantId, person.BirthDate, person.Gender, user.RoleId, user.CurrentTimeZone, user.CreatedAt from users as user
+            SELECT
+                user.id,
+                user.TenantId,
+                person.BirthDate,
+                person.Gender,
+                user.RoleId,
+                user.CurrentTimeZone,
+                user.CreatedAt
+            from users as user
             JOIN persons as person ON user.PersonId = person.id
+            JOIN patient_health_profiles as health_profile ON user.id = patient.UserId
             WHERE
                 user.DeletedAt IS null
                 AND
@@ -99,6 +131,27 @@ class DataSyncHandler:
                 AND
                 user.id = "{user_id}"
             """
+
+            if role['Name'] is not "Patient": # For non-patient users
+                query = f"""
+                SELECT
+                    user.id,
+                    user.TenantId,
+                    person.BirthDate,
+                    person.Gender,
+                    user.RoleId,
+                    user.CurrentTimeZone,
+                    user.CreatedAt
+                from users as user
+                JOIN persons as person ON user.PersonId = person.id
+                WHERE
+                    user.DeletedAt IS null
+                    AND
+                    user.IsTestUser = 0
+                    AND
+                    user.id = "{user_id}"
+                """
+
             rows = rean_db_connector.execute_read_query(query)
             if len(rows) > 0:
                 user = rows[0]
@@ -114,7 +167,13 @@ class DataSyncHandler:
             analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
             insert_query = """
             INSERT INTO users (
-            id, TenantId, BirthDate, Gender, Role, RegistrationDate, TimezoneOffsetMin
+                id,
+                TenantId,
+                RoleId,
+                OnboardingSource,
+                RegistrationDate,
+                TimezoneOffsetMin,
+                DeletedAt
             ) VALUES (
             %s, %s, %s, %s, %s, %s, %s
             )
@@ -123,7 +182,16 @@ class DataSyncHandler:
             timezone = user['CurrentTimeZone']
             if timezone is not None:
                 timezoneOffsetMin = int(timezone.split(":")[0]) * 60 + int(timezone.split(":")[1])
-            row = (user['id'], user['TenantId'], user['BirthDate'], user['Gender'], user['RoleId'], user['CreatedAt'], timezoneOffsetMin)
+            deleted_at = None if user['DeletedAt'] is None else user['DeletedAt']
+            row = (
+                user['id'],
+                user['TenantId'],
+                user['RoleId'],
+                "ReanCare",
+                user['CreatedAt'],
+                timezoneOffsetMin,
+                deleted_at
+            )
             result = analytics_db_connector.execute_write_query(insert_query, row)
             if result is None:
                 print(f"Not inserted data {row}.")
@@ -405,24 +473,24 @@ class DataSyncHandler:
             analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
             insert_query = """
             INSERT INTO events (
-            id,
-            UserId,
-            TenantId,
-            SessionId,
-            ResourceId,
-            ResourceType,
-            SourceName,
-            SourceVersion,
-            EventName,
-            EventCategory,
-            ActionType,
-            ActionStatement,
-            Attributes,
-            Timestamp,
-            DaysSinceRegistration,
-            TimeOffsetSinceRegistration,
-            CreatedAt,
-            UpdatedAt
+                id,
+                UserId,
+                TenantId,
+                SessionId,
+                ResourceId,
+                ResourceType,
+                SourceName,
+                SourceVersion,
+                EventName,
+                EventCategory,
+                ActionType,
+                ActionStatement,
+                Attributes,
+                Timestamp,
+                DaysSinceRegistration,
+                TimeOffsetSinceRegistration,
+                CreatedAt,
+                UpdatedAt
             ) VALUES (
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
