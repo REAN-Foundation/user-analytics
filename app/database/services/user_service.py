@@ -2,7 +2,7 @@ import datetime as dt
 import json
 from app.common.utils import print_colorized_json
 from app.database.models.user import User
-from app.domain_types.schemas.user import UserCreateModel, UserResponseModel, UserUpdateModel, UserSearchFilter, UserSearchResults
+from app.domain_types.schemas.user import UserCreateModel, UserMetadataUpdateModel, UserResponseModel, UserUpdateModel, UserSearchFilter, UserSearchResults
 from sqlalchemy.orm import Session
 from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
 from sqlalchemy import asc, desc
@@ -17,8 +17,6 @@ def create_user(session: Session, model: UserCreateModel) -> UserResponseModel:
         raise Conflict(f"User with id `{model.id}` already exists!")
     model_dict = model.dict()
     db_model = User(**model_dict)
-    db_model.Attributes = json.dumps(model.Attributes)
-    db_model.UpdatedAt = dt.datetime.now()
     session.add(db_model)
     session.commit()
     temp = session.refresh(db_model)
@@ -33,20 +31,20 @@ def get_user_by_id(session: Session, user_id: str) -> UserResponseModel:
     user = session.query(User).filter(User.id == user_id).first()
     if not user:
         raise NotFound(f"User with id {user_id} not found")
-    user.Attributes = json.loads(user.Attributes)
+    # user.Attributes = json.loads(user.Attributes)
     print_colorized_json(user)
     return user.__dict__
 
-@trace_span("service: update_user")
-def update_user(session: Session, user_id: str, model: UserUpdateModel) -> UserResponseModel:
+@trace_span("service: update_user_metadata")
+def update_user_metadata(session: Session, user_id: str, model: UserMetadataUpdateModel) -> bool:
     user = session.query(User).filter(User.id == user_id).first()
     if not user:
         raise NotFound(f"User with id {user_id} not found")
 
     update_data = model.dict(exclude_unset=True)
-    update_data["UpdatedAt"] = dt.datetime.now()
     if model.Attributes:
         update_data["Attributes"] = json.dumps(model.Attributes)
+
     session.query(User).filter(User.id == user_id).update(
         update_data, synchronize_session="auto")
 
@@ -56,23 +54,15 @@ def update_user(session: Session, user_id: str, model: UserUpdateModel) -> UserR
     user.Attributes = json.loads(user.Attributes)
     print_colorized_json(user)
 
-    return user.__dict__
+    return True
 
 @trace_span("service: search_users")
 def search_users(session: Session, filter: UserSearchFilter) -> UserSearchResults:
 
     query = session.query(User)
 
-    if filter.Name:
-        query = query.filter(User.Name.like(f'%{filter.Name}%'))
-    if filter.Email:
-        query = query.filter(User.Email.like(f'%{filter.Email}%'))
-    if filter.PhoneCode:
-        query = query.filter(User.PhoneCode.like(f'%{filter.PhoneCode}%'))
-    if filter.Phone:
-        query = query.filter(User.Phone.like(f'%{filter.Phone}%'))
-    if filter.Attribute:
-        query = query.filter(User.Attributes.like(f'%{filter.Attribute}%'))
+    # if filter.Attribute:
+    #     query = query.filter(User.Attributes.like(f'%{filter.Attribute}%'))
 
     if filter.LastActiveBefore:
         query = query.filter(User.LastActive < filter.LastActiveBefore)
@@ -119,6 +109,10 @@ def delete_user(session: Session, user_id: str) -> bool:
     user = session.query(User).get(user_id)
     if not user:
         raise NotFound(f"User with id {user_id} not found")
-    session.delete(user)
+    update_data = {
+        "DeletedAt": dt.datetime.now()
+    }
+    session.query(User).filter(User.id == user_id).update(
+        update_data, synchronize_session="auto")
     session.commit()
     return True

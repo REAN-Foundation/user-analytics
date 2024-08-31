@@ -11,6 +11,7 @@ from app.startup.router import router
 def start():
 
     DataSyncHandler.populate_api_keys_cache()
+    DataSyncHandler.populate_role_type_cache()
 
     server = FastAPI()
 

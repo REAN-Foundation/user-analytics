@@ -62,3 +62,43 @@ class MySQLConnector:
                 connection.rollback()
             self.close_connection(connection)
             return None
+
+
+    def execute_read_query(self, query, params=None):
+        read_only_query = self.is_read_only_query(query)
+        if not read_only_query:
+            print("This method is only for read-only queries.")
+            return None
+        try:
+            connection = self.connect()
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                connection.commit()
+                self.close_connection(connection)
+                rowcount = cursor.rowcount
+                cursor.close()
+                return rowcount
+        except (Exception, mysql.connector.Error) as error:
+            print("Error executing the query:", error)
+            self.close_connection(connection)
+            return None
+
+    def execute_write_query(self, query, params=None):
+        read_only_query = self.is_read_only_query(query)
+        if read_only_query:
+            print("This method is only for write queries.")
+            return None
+        try:
+            connection = self.connect()
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                connection.commit()
+                cursor.close()
+                self.close_connection(connection)
+                rowcount = cursor.rowcount
+                return rowcount
+        except (Exception, mysql.connector.Error) as error:
+            print("Error executing the query:", error)
+            connection.rollback()
+            self.close_connection(connection)
+            return None

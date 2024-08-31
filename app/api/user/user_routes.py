@@ -4,11 +4,12 @@ from app.api.user.user_handler import (
     get_user_by_id_,
     update_user_,
     delete_user_,
-    search_users_
+    search_users_,
+    update_user_metadata_
 )
 from app.database.database_accessor import get_db_session
 from app.domain_types.miscellaneous.response_model import ResponseModel, ResponseStatusTypes
-from app.domain_types.schemas.user import UserCreateModel, UserSearchFilter, UserSearchResults, UserUpdateModel, UserResponseModel
+from app.domain_types.schemas.user import UserCreateModel, UserMetadataUpdateModel, UserSearchFilter, UserSearchResults, UserUpdateModel, UserResponseModel
 
 ###############################################################################
 
@@ -34,10 +35,14 @@ async def search_user(
 async def get_user_by_id(id: str, db_session = Depends(get_db_session)):
     return get_user_by_id_(id, db_session)
 
-@router.put("/{id}", status_code=status.HTTP_200_OK, response_model=ResponseModel[UserResponseModel|None])
-async def update_user(id: str, model: UserUpdateModel, db_session = Depends(get_db_session)):
-    return update_user_(id, model, db_session)
+# @router.put("/{id}", status_code=status.HTTP_200_OK, response_model=ResponseModel[UserResponseModel|None])
+# async def update_user(id: str, model: UserUpdateModel, db_session = Depends(get_db_session)):
+#     return update_user_(id, model, db_session)
 
 @router.delete("/{id}", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool])
 async def delete_user(id: str, db_session = Depends(get_db_session)):
     return delete_user_(id, db_session)
+
+@router.put("/{id}/user-metadata", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def update_user_metadata(id: str, model: UserMetadataUpdateModel, db_session = Depends(get_db_session)):
+    return update_user_metadata_(id, model, db_session)

@@ -11,7 +11,7 @@ class ClientAuthMiddleware(BaseHTTPMiddleware):
         api_key = request.headers.get("x-api-key")
         if not api_key:
             return Response("x-api-key header is missing", status_code=400)
-        client_app = DataSyncHandler._apiKeysCache.get(api_key)
+        client_app = DataSyncHandler._api_keys_cache.get(api_key)
         if not client_app:
             return Response("Invalid x-api-key", status_code=400)
         request.state.client_name = client_app['ClientName']
