@@ -5,6 +5,8 @@ from app.common.cache import LocalMemoryCache
 from app.database.mysql_connector import MySQLConnector
 import mysql.connector
 
+from app.domain_types.enums.event_types import EventType
+
 ############################################################
 
 reancare_db_host     = os.getenv("REANCARE_DB_HOST")
@@ -151,7 +153,8 @@ class DataSyncHandler:
                     person.Gender,
                     user.RoleId,
                     user.CurrentTimeZone,
-                    user.CreatedAt
+                    user.CreatedAt,
+                    user.DeletedAt
                 from users as user
                 JOIN persons as person ON user.PersonId = person.id
                 WHERE
@@ -208,7 +211,6 @@ class DataSyncHandler:
                 print(f"Not inserted data {row}.")
                 return None
             else:
-                DataSyncHandler._user_cache.set(user_id, result)
                 print(f"Inserted row into the users table.")
                 return result
         except mysql.connector.Error as error:
@@ -219,7 +221,7 @@ class DataSyncHandler:
             return None
 
     @staticmethod
-    def add_analytics_user_metadata(user_id, user):
+    def add_analytics_user_metadata(user):
         try:
             analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
             insert_query = """
@@ -260,15 +262,15 @@ class DataSyncHandler:
                     "ReanCare",
                     role_name,
                     "{}",
-                    user["Ethnicity"],
-                    user["Race"],
-                    user["HealthSystem"],
-                    user["AssociatedHospital"],
-                    user["StrokeSurvivorOrCaregiver"],
-                    user["MajorAilment"],
-                    user["IsSmoker"],
-                    user["IsDrinker"],
-                    user["SubstanceAbuse"]
+                    user["Ethnicity"] if user.get('Ethnicity') is not None else None,
+                    user["Race"] if user.get('Race') is not None else None,
+                    user["HealthSystem"] if user.get('HealthSystem') is not None else None,
+                    user["AssociatedHospital"] if user.get('AssociatedHospital') is not None else None,
+                    user["StrokeSurvivorOrCaregiver"] if user.get('StrokeSurvivorOrCaregiver') is not None else None,
+                    user["MajorAilment"] if user.get('MajorAilment') is not None else None,
+                    user["IsSmoker"] if user.get('IsSmoker') is not None else None,
+                    user["IsDrinker"] if user.get('IsDrinker') is not None else None,
+                    user["SubstanceAbuse"] if user.get('SubstanceAbuse') is not None else None
                 )
             row_count = analytics_db_connector.execute_write_query(insert_query, row)
             if row_count is None:
@@ -284,9 +286,9 @@ class DataSyncHandler:
 
     @staticmethod
     def add_analytics_user(user_id, user):
-        user_record = DataSyncHandler.add_analytics_user_record(user_id, user)
-        if user_record is not None:
-            user_metadata = DataSyncHandler.add_analytics_user_metadata(user_id, user)
+        added_row_count = DataSyncHandler.add_analytics_user_record(user_id, user)
+        if added_row_count == 1:
+            user_metadata = DataSyncHandler.add_analytics_user_metadata(user)
             return user_metadata
         return None
 
@@ -533,6 +535,92 @@ class DataSyncHandler:
 
     #endregion
 
+    #region Generic event methods
+
+    @staticmethod
+    def get_existing_event(user_id, resource_id, event_type):
+        try:
+            event_name = event_type.value
+            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            query = f"""
+            SELECT * from events
+            WHERE
+                UserId = "{user_id}"
+                AND
+                ResourceId = "{resource_id}"
+                AND
+                EventName = "{event_name}"
+            """
+            rows = analytics_db_connector.execute_read_query(query)
+            if len(rows) > 0:
+                return rows[0]
+            else:
+                return None
+        except Exception as error:
+            print("Error retrieving Event:", error)
+            return None
+
+    @staticmethod
+    def add_event(event):
+        try:
+            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            id_ = str(uuid.uuid4())
+            insert_query = """
+                INSERT INTO events (
+                    id,
+                    UserId,
+                    TenantId,
+                    SessionId,
+                    ResourceId,
+                    ResourceType,
+                    SourceName,
+                    SourceVersion,
+                    EventName,
+                    EventCategory,
+                    ActionType,
+                    ActionStatement,
+                    Attributes,
+                    Timestamp,
+                    DaysSinceRegistration,
+                    TimeOffsetSinceRegistration
+                ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+            """
+            diff = event['Timestamp'] - event['RegistrationDate']
+            days_since_registration = diff.days
+            time_offset_since_registration_seconds = int(diff.total_seconds())
+            row = (
+                id_,
+                event['UserId'],
+                event['TenantId'],
+                event['SessionId'],
+                event['ResourceId'],
+                event['ResourceType'],
+                event['SourceName'],
+                event['SourceVersion'],
+                event['EventName'],
+                event['EventCategory'],
+                event['ActionType'],
+                event['ActionStatement'],
+                event['Attributes'],
+                event['Timestamp'],
+                days_since_registration,
+                time_offset_since_registration_seconds,
+            )
+            result = analytics_db_connector.execute_write_query(insert_query, row)
+            if result is None:
+                print(f"Not inserted data {row}.")
+                return False
+            else:
+                print(f"Inserted row into the events table.")
+                return result == 1 # True if one row inserted
+        except mysql.connector.Error as error:
+            print(f"Failed to insert records: {error}")
+            return None
+
+    #endregion
+
     #region User login session sync
 
     @staticmethod
@@ -553,80 +641,36 @@ class DataSyncHandler:
     @staticmethod
     def add_login_session_events(session, user):
         try:
-            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
-            insert_query = """
-            INSERT INTO events (
-                id,
-                UserId,
-                TenantId,
-                SessionId,
-                ResourceId,
-                ResourceType,
-                SourceName,
-                SourceVersion,
-                EventName,
-                EventCategory,
-                ActionType,
-                ActionStatement,
-                Attributes,
-                Timestamp,
-                DaysSinceRegistration,
-                TimeOffsetSinceRegistration,
-                CreatedAt,
-                UpdatedAt
-            ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            )
-            """
-
-            diff = session['LoginDate'] - user['RegistrationDate']
-            days_since_registration = diff.days
-            time_offset_since_registration_seconds = diff.total_seconds()
-            id_ = str(uuid.uuid4())
-            session_id = session['id']
-            user_id = session['UserId']
-            tenant_id = user['TenantId']
-            resource_id = session_id
-            resource_type = "User-Login-Session"
-            source_name = "ReanCare"
-            source_version = "Unknown"
-            event_name = "User-Login"
-            event_category = "User-Login-Session"
-            action_type = "User-Action"
-            action_statement = "User logged in."
-            timestamp = session['StartedAt']
-
-            row = (
-                id_,
-                user_id,
-                tenant_id,
-                session_id,
-                resource_id,
-                resource_type,
-                source_name,
-                source_version,
-                event_name,
-                event_category,
-                action_type,
-                action_statement,
-                "{}",
-                timestamp,
-                days_since_registration,
-                time_offset_since_registration_seconds,
-                )
-            result = analytics_db_connector.execute_write_query(insert_query, row)
-            if result is None:
-                print(f"Not inserted data {row}.")
+            event_name = EventType.UserLogin.value
+            event = {
+                'UserId': session['UserId'],
+                'TenantId': user['TenantId'],
+                'SessionId': session['id'],
+                'ResourceId': session['id'],
+                'ResourceType': "User-Login-Session",
+                'SourceName': "ReanCare",
+                'SourceVersion': "Unknown",
+                'EventName': event_name,
+                'EventCategory': "User-Login-Session",
+                'ActionType': "User-Action",
+                'ActionStatement': "User logged in.",
+                'Attributes': "{}",
+                'Timestamp': session['StartedAt'],
+                'RegistrationDate': user['CreatedAt']
+            }
+            new_event_added = DataSyncHandler.add_event(event)
+            if not new_event_added:
+                print(f"Not inserted data.")
                 return None
             else:
                 print(f"Inserted row into the user_login_sessions table.")
-                return result
+                return new_event_added
         except mysql.connector.Error as error:
             print(f"Failed to insert records: {error}")
             return None
 
     @staticmethod
-    def sync_user_login_sessions():
+    def sync_user_login_events():
         try:
             existing_session_count = 0
             synched_session_count = 0
@@ -636,7 +680,8 @@ class DataSyncHandler:
                 print("No user login sessions found.")
                 return None
             for session in sessions:
-                if DataSyncHandler.get_event_by_id(session['id']) is not None:
+                existing_event = DataSyncHandler.get_existing_event(session['UserId'], session['id'], EventType.UserLogin)
+                if existing_event is not None:
                     existing_session_count += 1
                     continue
                 user = DataSyncHandler.get_user(session['UserId'])
