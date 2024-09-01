@@ -25,6 +25,7 @@ class UserMetadata(Base):
     MajorDiagnosis    = Column(String(128), default=None)
     Smoker            = Column(Boolean, default=None)
     Alcoholic         = Column(Boolean, default=None)
+    SubstanceAbuser   = Column(Boolean, default=None)
 
 
     def __repr__(self):

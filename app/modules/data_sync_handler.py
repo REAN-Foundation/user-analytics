@@ -120,10 +120,20 @@ class DataSyncHandler:
                 person.Gender,
                 user.RoleId,
                 user.CurrentTimeZone,
-                user.CreatedAt
+                user.CreatedAt,
+                health_profile.Race,
+                health_profile.Ethnicity,
+                health_profile.MajorAilment,
+                health_profile.IsSmoker,
+                health_profile.IsDrinker,
+                health_profile.SubstanceAbuse,
+                health_profile.StrokeSurvivorOrCaregiver,
+                patient.HealthSystem,
+                patient.AssociatedHospital
             from users as user
             JOIN persons as person ON user.PersonId = person.id
-            JOIN patient_health_profiles as health_profile ON user.id = patient.UserId
+            JOIN patient_health_profiles as health_profile ON user.id = health_profile.PatientUserId
+            JOIN patients as patient ON user.id = patient.UserId
             WHERE
                 user.DeletedAt IS null
                 AND
@@ -162,7 +172,7 @@ class DataSyncHandler:
         return user
 
     @staticmethod
-    def add_analytics_user(user_id, user):
+    def add_analytics_user_record(user_id, user):
         try:
             analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
             insert_query = """
@@ -206,6 +216,69 @@ class DataSyncHandler:
         except Exception as error:
             print(f"Failed to insert records: {error}")
             return None
+
+    @staticmethod
+    def add_analytics_user_metadata(user_id, user):
+        try:
+            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            insert_query = """
+            INSERT INTO user_metadata (
+                UserId,
+                BirthDate,
+                Gender,
+                LocationLongitude,
+                LocationLatitude,
+                OnboardingSource,
+                Role,
+                Attributes,
+                Ethnicity,
+                Race,
+                HealthSystem,
+                Hospital,
+                IsCareGiver,
+                MajorDiagnosis,
+                Smoker,
+                Alcoholic
+            ) VALUES (
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            """
+            timezoneOffsetMin = 0
+            timezone = user['CurrentTimeZone']
+            if timezone is not None:
+                timezoneOffsetMin = int(timezone.split(":")[0]) * 60 + int(timezone.split(":")[1])
+            deleted_at = None if user['DeletedAt'] is None else user['DeletedAt']
+            row = (
+                user['id'],
+                user['TenantId'],
+                user['RoleId'],
+                "ReanCare",
+                user['CreatedAt'],
+                timezoneOffsetMin,
+                deleted_at
+            )
+            result = analytics_db_connector.execute_write_query(insert_query, row)
+            if result is None:
+                print(f"Not inserted data {row}.")
+                return None
+            else:
+                DataSyncHandler._user_cache.set(user_id, result)
+                print(f"Inserted row into the users table.")
+                return result
+        except mysql.connector.Error as error:
+            print(f"Failed to insert records: {error}")
+            return None
+        except Exception as error:
+            print(f"Failed to insert records: {error}")
+            return None
+
+    @staticmethod
+    def add_analytics_user(user_id, user):
+        user_record = DataSyncHandler.add_analytics_user_record(user_id, user)
+        if user_record is not None:
+            user_metadata = DataSyncHandler.add_analytics_user_metadata(user_id, user)
+            return user_metadata
+        return None
 
     @staticmethod
     def get_user(user_id):
