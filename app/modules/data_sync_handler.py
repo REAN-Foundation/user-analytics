@@ -238,28 +238,40 @@ class DataSyncHandler:
                 IsCareGiver,
                 MajorDiagnosis,
                 Smoker,
-                Alcoholic
+                Alcoholic,
+                SubstanceAbuse
             ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             """
-            timezoneOffsetMin = 0
-            timezone = user['CurrentTimeZone']
-            if timezone is not None:
-                timezoneOffsetMin = int(timezone.split(":")[0]) * 60 + int(timezone.split(":")[1])
-            deleted_at = None if user['DeletedAt'] is None else user['DeletedAt']
-            row = (
-                user['id'],
-                user['TenantId'],
-                user['RoleId'],
-                "ReanCare",
-                user['CreatedAt'],
-                timezoneOffsetMin,
-                deleted_at
-            )
+
+            role_name = "Patient"
+            role = DataSyncHandler._role_type_cache.get(user.RoleId)
+            if role is not None:
+                role_name = role['RoleName']
+
+                row = (
+                    user['id'],
+                    user['BirthDate'],
+                    user['Gender'],
+                    0.0,
+                    0.0,
+                    "ReanCare",
+                    role_name,
+                    "{}",
+                    user["Ethnicity"],
+                    user["Race"],
+                    user["HealthSystem"],
+                    user["AssociatedHospital"],
+                    user["StrokeSurvivorOrCaregiver"],
+                    user["MajorAilment"],
+                    user["IsSmoker"],
+                    user["IsDrinker"],
+                    user["SubstanceAbuse"]
+                )
             result = analytics_db_connector.execute_write_query(insert_query, row)
             if result is None:
-                print(f"Not inserted data {row}.")
+                print(f"Not inserted metadata {row}.")
                 return None
             else:
                 DataSyncHandler._user_cache.set(user_id, result)
