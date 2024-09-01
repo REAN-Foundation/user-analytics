@@ -52,8 +52,8 @@ class MySQLConnector:
                     return result
                 else:
                     connection.commit()
-                    self.close_connection(connection)
                     rowcount = cursor.rowcount
+                    self.close_connection(connection)
                     cursor.close()
                     return rowcount
         except (Exception, mysql.connector.Error) as error:
@@ -62,7 +62,6 @@ class MySQLConnector:
                 connection.rollback()
             self.close_connection(connection)
             return None
-
 
     def execute_read_query(self, query, params=None):
         read_only_query = self.is_read_only_query(query)
@@ -73,13 +72,14 @@ class MySQLConnector:
             connection = self.connect()
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
-                connection.commit()
-                self.close_connection(connection)
-                rowcount = cursor.rowcount
+                rows = cursor.fetchall()
+                column_names = [i[0] for i in cursor.description]
+                result = [dict(zip(column_names, row)) for row in rows]
                 cursor.close()
-                return rowcount
+                self.close_connection(connection)
+                return result
         except (Exception, mysql.connector.Error) as error:
-            print("Error executing the query:", error)
+            print("Error executing the read query:", error)
             self.close_connection(connection)
             return None
 
@@ -93,12 +93,12 @@ class MySQLConnector:
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
                 connection.commit()
-                cursor.close()
-                self.close_connection(connection)
                 rowcount = cursor.rowcount
+                self.close_connection(connection)
+                cursor.close()
                 return rowcount
         except (Exception, mysql.connector.Error) as error:
-            print("Error executing the query:", error)
+            print("Error executing the write query:", error)
             connection.rollback()
             self.close_connection(connection)
             return None

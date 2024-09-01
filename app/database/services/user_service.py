@@ -2,7 +2,7 @@ import datetime as dt
 import json
 from app.common.utils import print_colorized_json
 from app.database.models.user import User
-from app.domain_types.schemas.user import UserCreateModel, UserMetadataUpdateModel, UserResponseModel, UserUpdateModel, UserSearchFilter, UserSearchResults
+from app.domain_types.schemas.user import UserCreateModel, UserMetadataUpdateModel, UserResponseModel, UserSearchFilter, UserSearchResults
 from sqlalchemy.orm import Session
 from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
 from sqlalchemy import asc, desc

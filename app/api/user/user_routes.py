@@ -2,14 +2,13 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from app.api.user.user_handler import (
     create_user_,
     get_user_by_id_,
-    update_user_,
     delete_user_,
     search_users_,
     update_user_metadata_
 )
 from app.database.database_accessor import get_db_session
 from app.domain_types.miscellaneous.response_model import ResponseModel, ResponseStatusTypes
-from app.domain_types.schemas.user import UserCreateModel, UserMetadataUpdateModel, UserSearchFilter, UserSearchResults, UserUpdateModel, UserResponseModel
+from app.domain_types.schemas.user import UserCreateModel, UserMetadataUpdateModel, UserSearchFilter, UserSearchResults, UserResponseModel
 
 ###############################################################################
 

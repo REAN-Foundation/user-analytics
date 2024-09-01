@@ -27,7 +27,6 @@ class UserMetadata(Base):
     Alcoholic         = Column(Boolean, default=None)
     SubstanceAbuser   = Column(Boolean, default=None)
 
-
     def __repr__(self):
         jsonStr = json.dumps(self.__dict__)
         return jsonStr

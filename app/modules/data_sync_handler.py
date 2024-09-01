@@ -89,13 +89,13 @@ class DataSyncHandler:
         try:
             rean_db_connector = DataSyncHandler.get_reancare_db_connector()
             query = f"""
-            SELECT Role from users
+            SELECT RoleId from users
             WHERE
                 id = "{user_id}"
             """
             rows = rean_db_connector.execute_read_query(query)
             if len(rows) > 0:
-                role_id = rows[0]['Role']
+                role_id = rows[0]['RoleId']
                 role = DataSyncHandler._role_type_cache.get(role_id)
                 return role
             else:
@@ -129,20 +129,20 @@ class DataSyncHandler:
                 health_profile.SubstanceAbuse,
                 health_profile.StrokeSurvivorOrCaregiver,
                 patient.HealthSystem,
-                patient.AssociatedHospital
+                patient.AssociatedHospital,
+                user.DeletedAt
             from users as user
             JOIN persons as person ON user.PersonId = person.id
             JOIN patient_health_profiles as health_profile ON user.id = health_profile.PatientUserId
             JOIN patients as patient ON user.id = patient.UserId
             WHERE
-                user.DeletedAt IS null
-                AND
                 user.IsTestUser = 0
                 AND
                 user.id = "{user_id}"
             """
+            # KK: Removing 'user.DeletedAt IS null' from where clause to fetch deleted users
 
-            if role['Name'] is not "Patient": # For non-patient users
+            if role['RoleName'] != "Patient": # For non-patient users
                 query = f"""
                 SELECT
                     user.id,
@@ -161,6 +161,7 @@ class DataSyncHandler:
                     AND
                     user.id = "{user_id}"
                 """
+            # KK: Removing 'user.DeletedAt IS null' from where clause to fetch deleted users
 
             rows = rean_db_connector.execute_read_query(query)
             if len(rows) > 0:
@@ -239,14 +240,14 @@ class DataSyncHandler:
                 MajorDiagnosis,
                 Smoker,
                 Alcoholic,
-                SubstanceAbuse
+                SubstanceAbuser
             ) VALUES (
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
             """
 
             role_name = "Patient"
-            role = DataSyncHandler._role_type_cache.get(user.RoleId)
+            role = DataSyncHandler._role_type_cache.get(user["RoleId"])
             if role is not None:
                 role_name = role['RoleName']
 
@@ -269,14 +270,11 @@ class DataSyncHandler:
                     user["IsDrinker"],
                     user["SubstanceAbuse"]
                 )
-            result = analytics_db_connector.execute_write_query(insert_query, row)
-            if result is None:
+            row_count = analytics_db_connector.execute_write_query(insert_query, row)
+            if row_count is None:
                 print(f"Not inserted metadata {row}.")
                 return None
-            else:
-                DataSyncHandler._user_cache.set(user_id, result)
-                print(f"Inserted row into the users table.")
-                return result
+            return row_count
         except mysql.connector.Error as error:
             print(f"Failed to insert records: {error}")
             return None

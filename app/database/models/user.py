@@ -11,7 +11,7 @@ class User(Base):
 
     id                = Column(String(36), primary_key=True, index=True)
     TenantId          = Column(String(36), nullable=False)
-    RoleId            = Column(String(36), nullable=False)
+    RoleId            = Column(Integer, nullable=True, default=None)
     LastActive        = Column(DateTime(timezone=True), default=None)
     OnboardingSource  = Column(String(128), default=None)
     TimezoneOffsetMin = Column(Integer, default=None, nullable=True)
