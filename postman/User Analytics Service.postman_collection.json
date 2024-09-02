@@ -43,7 +43,8 @@
 									"\r",
 									""
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -52,13 +53,18 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -78,12 +84,13 @@
 					"response": []
 				},
 				{
-					"name": "Get by id",
+					"name": "Get By Id",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
+									"\r",
 									"pm.test(\"Request is successfull\", function () {\r",
 									"    pm.response.to.have.status(200);\r",
 									"    var jsonRes = pm.response.json();\r",
@@ -97,27 +104,36 @@
 									"    pm.expect(jsonRes.Data).to.have.property('LastName');\r",
 									"    pm.expect(jsonRes.Data).to.have.property('Phone');\r",
 									"    pm.expect(jsonRes.Data).to.have.property('Email');\r",
+									"    \r",
 									"});\r",
+									"\r",
 									""
 								],
 								"type": "text/javascript"
 							}
 						}
 					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "GET",
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
 						"url": {
 							"raw": "{{BASE_URL}}/users/{{USER_ID}}",
 							"host": [
@@ -160,13 +176,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -214,13 +230,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -275,13 +291,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -339,7 +355,8 @@
 									"\r",
 									""
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -348,18 +365,18 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
-								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"UserId\": \"{{USER_ID}}\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"ResourceId\": \"{{RESOURCE_ID}}\",\r\n    \"SessionId\": \"{{SESSION_ID}}\",\r\n    \"ActionType\": \"User-Action\",\r\n    \"ActionStatement\": \"User x has added blood-pressure values\",\r\n    \"EventName\": \"add-biometrics-blood-pressure\",\r\n    \"EventCategory\": \"Biometrics\",\r\n    \"Timestamp\": \"2023-11-20T13:41:49.985Z\",\r\n    \"Attributes\": {\r\n        \"systolic\": 120,\r\n        \"diastolic\": 80\r\n    }\r\n}"
+							"raw": "{\r\n    \"UserId\": \"{{USER_ID}}\",\r\n    \"TenantId\": \"{{TENANT_ID}}\",\r\n    \"ResourceId\": \"54b7b09a-842b-42d2-a6ba-c3659aa748c7\",\r\n    \"SessionId\": null,\r\n    \"ResourceType\": \"Login-session\",\r\n    \"ActionType\": \"User-Action\",\r\n    \"ActionStatement\": \"User has logged in\",\r\n    \"EventName\": \"user-login\",\r\n    \"EventCategory\": \"Login\",\r\n    \"Timestamp\": \"2024-11-20T13:41:49.985Z\",\r\n    \"Attributes\": {\r\n        \"systolic\": 120,\r\n        \"diastolic\": 80\r\n    }\r\n}"
 						},
 						"url": {
 							"raw": "{{BASE_URL}}/events",
@@ -368,64 +385,6 @@
 							],
 							"path": [
 								"events"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get by id",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Request is successfull\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"    var jsonRes = pm.response.json();\r",
-									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Event is retrieved\", function () {\r",
-									"    var jsonRes = pm.response.json();\r",
-									"    pm.expect(jsonRes.Data).to.have.property('id');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('UserId');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('TenantId');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('ActionType');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('ActionStatement');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('EventCategory');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('EventName');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('ResourceId');\r",
-									"    pm.expect(jsonRes.Data).to.have.property('SessionId');\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							},
-							{
-								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
-							}
-						],
-						"url": {
-							"raw": "{{BASE_URL}}/events/{{EVENT_ID}}",
-							"host": [
-								"{{BASE_URL}}"
-							],
-							"path": [
-								"events",
-								"{{EVENT_ID}}"
 							]
 						}
 					},
@@ -459,13 +418,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -487,56 +446,6 @@
 									"key": "EventName",
 									"value": "blood-pressure"
 								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Request is successfull\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"    var jsonRes = pm.response.json();\r",
-									"    pm.expect(jsonRes.Status).to.eql('Success');\r",
-									"});\r",
-									"\r",
-									"pm.test(\"User is deleted\", function () {\r",
-									"    var jsonRes = pm.response.json();\r",
-									"    pm.expect(jsonRes.Data).equals(true);\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							},
-							{
-								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
-							}
-						],
-						"url": {
-							"raw": "{{BASE_URL}}/events/{{EVENT_ID}}",
-							"host": [
-								"{{BASE_URL}}"
-							],
-							"path": [
-								"events",
-								"{{EVENT_ID}}"
 							]
 						}
 					},
@@ -590,13 +499,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -649,13 +558,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -705,13 +614,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -759,13 +668,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -815,13 +724,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -884,13 +793,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -941,13 +850,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -995,13 +904,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -1049,13 +958,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1105,13 +1014,13 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							},
 							{
 								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{USER_JWT}}"
+								"value": "Bearer {{USER_JWT}}",
+								"type": "text"
 							}
 						],
 						"url": {
@@ -1122,6 +1031,194 @@
 							"path": [
 								"cohorts",
 								"{{COHORT_ID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "sync-api",
+			"item": [
+				{
+					"name": "sync-users",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/sync/users",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"sync",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sync-login-events",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/sync/events/logins",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"sync",
+								"events",
+								"logins"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sync-medication-create_events",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/sync/events/medications/create",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"sync",
+								"events",
+								"medications",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sync-medication-delete_events",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/sync/events/medications/delete",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"sync",
+								"events",
+								"medications",
+								"delete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sync-medication-taken-events",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/sync/events/medication-schedules/taken",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"sync",
+								"events",
+								"medication-schedules",
+								"taken"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sync-medication-missed-events",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/sync/events/medication-schedules/missed",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"sync",
+								"events",
+								"medication-schedules",
+								"missed"
 							]
 						}
 					},
