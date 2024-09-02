@@ -6,6 +6,7 @@ from .filter.filter_routes import router as filter_router
 from .user.user_routes import router as user_router
 from .user_milestone.user_milestone_routes import router as user_milestone_router
 from .tenant_milestone.tenant_milestone_routes import router as tenant_milestone_router
+from .sync.sync_routes import router as sync_router
 
 router = APIRouter(prefix=API_PREFIX)
 
@@ -16,6 +17,7 @@ def add_routes():
     router.include_router(user_router)
     router.include_router(user_milestone_router)
     router.include_router(tenant_milestone_router)
+    router.include_router(sync_router)
 
     # Add other routes here
 

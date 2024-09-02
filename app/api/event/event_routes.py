@@ -21,7 +21,6 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ResponseModel[SuccessResponseModel])
 async def create_event(model: EventCreateModel, request: Request):
     model.SourceName = model.SourceName if model.SourceName is not None else request.state.client_name
