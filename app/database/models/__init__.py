@@ -6,4 +6,4 @@ from .user import User
 from .tenant import Tenant
 from .user_milestone import UserMilestone
 from .tenant_milestone import TenantMilestone
-
+from .user_metadata import UserMetadata

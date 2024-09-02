@@ -20,7 +20,7 @@ class Event(Base):
     SourceVersion               = Column(String(256), default=None, nullable=True)
     EventName                   = Column(String(256), default=None, nullable=False)
     EventCategory               = Column(String(256), default=None, nullable=False)
-    ActionType                  = Column(Enum(EventActionType), default=None, nullable=False)
+    ActionType                  = Column(String(128), default=None, nullable=False)
     ActionStatement             = Column(String(512), default=None, nullable=True)
     Attributes                  = Column(Text, default=None, nullable=True)
     Timestamp                   = Column(DateTime(timezone=True), server_default=func.now())

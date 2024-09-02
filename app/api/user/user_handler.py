@@ -36,13 +36,13 @@ def get_user_by_id_(id, db_session):
     finally:
         db_session.close()
 
-@trace_span("handler: update_user")
-def update_user_(id, model, db_session):
+@trace_span("handler: update_user_metadata")
+def update_user_metadata_(id, model, db_session):
     try:
         user_id = validate_uuid4(id)
-        user = user_service.update_user(db_session, user_id, model)
-        message = "User updated successfully"
-        resp = ResponseModel[UserResponseModel](Message=message, Data=user)
+        user = user_service.update_user_metata(db_session, user_id, model)
+        message = "User metadata updated successfully"
+        resp = ResponseModel[bool](Message=message, Data=user)
         return resp
     except Exception as e:
         db_session.rollback()
