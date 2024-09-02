@@ -21,7 +21,7 @@ analytics_db_password = os.getenv("DB_USER_PASSWORD")
 
 ############################################################
 
-class DataSyncHandler:
+class DataSynchronizer:
 
     _tenant_cache = LocalMemoryCache()
     _user_cache = LocalMemoryCache()
@@ -47,7 +47,7 @@ class DataSyncHandler:
     @staticmethod
     def get_reancare_user_roles():
         try:
-            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT * from roles
             """
@@ -59,10 +59,10 @@ class DataSyncHandler:
 
     @staticmethod
     def populate_role_type_cache():
-        roles = DataSyncHandler.get_reancare_user_roles()
+        roles = DataSynchronizer.get_reancare_user_roles()
         if roles is not None:
             for role in roles:
-                DataSyncHandler._role_type_cache.set(role['id'], role)
+                DataSynchronizer._role_type_cache.set(role['id'], role)
 
     #endregion
 
@@ -71,7 +71,7 @@ class DataSyncHandler:
     @staticmethod
     def get_analytics_user(user_id):
         try:
-            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
             query = f"""
             SELECT * from users
             WHERE
@@ -89,7 +89,7 @@ class DataSyncHandler:
     @staticmethod
     def get_reancare_user_role(user_id):
         try:
-            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT RoleId from users
             WHERE
@@ -98,7 +98,7 @@ class DataSyncHandler:
             rows = rean_db_connector.execute_read_query(query)
             if len(rows) > 0:
                 role_id = rows[0]['RoleId']
-                role = DataSyncHandler._role_type_cache.get(role_id)
+                role = DataSynchronizer._role_type_cache.get(role_id)
                 return role
             else:
                 return None
@@ -109,8 +109,8 @@ class DataSyncHandler:
     def get_reancare_user(user_id):
         user = None
         try:
-            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
-            role = DataSyncHandler.get_reancare_user_role(user_id)
+            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            role = DataSynchronizer.get_reancare_user_role(user_id)
             if role is None:
                 return None
 
@@ -176,7 +176,7 @@ class DataSyncHandler:
     @staticmethod
     def add_analytics_user_record(user_id, user):
         try:
-            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
             insert_query = """
             INSERT INTO users (
                 id,
@@ -221,7 +221,7 @@ class DataSyncHandler:
     @staticmethod
     def add_analytics_user_metadata(user):
         try:
-            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
             insert_query = """
             INSERT INTO user_metadata (
                 UserId,
@@ -247,7 +247,7 @@ class DataSyncHandler:
             """
 
             role_name = "Patient"
-            role = DataSyncHandler._role_type_cache.get(user["RoleId"])
+            role = DataSynchronizer._role_type_cache.get(user["RoleId"])
             if role is not None:
                 role_name = role['RoleName']
 
@@ -284,26 +284,26 @@ class DataSyncHandler:
 
     @staticmethod
     def add_analytics_user(user_id, user):
-        added_row_count = DataSyncHandler.add_analytics_user_record(user_id, user)
+        added_row_count = DataSynchronizer.add_analytics_user_record(user_id, user)
         if added_row_count == 1:
-            user_metadata = DataSyncHandler.add_analytics_user_metadata(user)
+            user_metadata = DataSynchronizer.add_analytics_user_metadata(user)
             return user_metadata
         return None
 
     @staticmethod
     def get_user(user_id):
-        user = DataSyncHandler._user_cache.get(user_id)
+        user = DataSynchronizer._user_cache.get(user_id)
         if user is not None:
             return user
         else:
-            user = DataSyncHandler.get_analytics_user(user_id)
+            user = DataSynchronizer.get_analytics_user(user_id)
             if user is not None:
-                DataSyncHandler._user_cache.set(user_id, user)
+                DataSynchronizer._user_cache.set(user_id, user)
                 return user
             else:
-                user_ = DataSyncHandler.get_reancare_user(user_id)
+                user_ = DataSynchronizer.get_reancare_user(user_id)
                 if user_ is not None:
-                    user = DataSyncHandler.add_analytics_user(user_id, user_)
+                    user = DataSynchronizer.add_analytics_user(user_id, user_)
                     return user
         return None
 
@@ -314,7 +314,7 @@ class DataSyncHandler:
     @staticmethod
     def get_analytics_tenant(tenant_id):
         try:
-            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
             query = f"""
             SELECT * from tenants
             WHERE
@@ -333,7 +333,7 @@ class DataSyncHandler:
     def get_reancare_tenant(tenant_id):
         tenant = None
         try:
-            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT * from tenants
             WHERE
@@ -351,7 +351,7 @@ class DataSyncHandler:
     @staticmethod
     def add_analytics_tenant(tenant_id, tenant):
         try:
-            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
             insert_query = """
             INSERT INTO tenants (
             id, TenantName, TenantCode, RegistrationDate
@@ -365,7 +365,7 @@ class DataSyncHandler:
                 print(f"Not inserted data {row}.")
                 return None
             else:
-                DataSyncHandler._tenant_cache.set(tenant_id, result)
+                DataSynchronizer._tenant_cache.set(tenant_id, result)
                 print(f"Inserted row into the tenants table.")
                 return result
         except mysql.connector.Error as error:
@@ -377,18 +377,18 @@ class DataSyncHandler:
 
     @staticmethod
     def get_tenant(tenant_id):
-        tenant = DataSyncHandler._tenant_cache.get(tenant_id)
+        tenant = DataSynchronizer._tenant_cache.get(tenant_id)
         if tenant is not None:
             return tenant
         else:
-            tenant = DataSyncHandler.get_analytics_tenant(tenant_id)
+            tenant = DataSynchronizer.get_analytics_tenant(tenant_id)
             if tenant is not None:
-                DataSyncHandler._tenant_cache.set(tenant_id, tenant)
+                DataSynchronizer._tenant_cache.set(tenant_id, tenant)
                 return tenant
             else:
-                tenant_ = DataSyncHandler.get_reancare_tenant(tenant_id)
+                tenant_ = DataSynchronizer.get_reancare_tenant(tenant_id)
                 if tenant_ is not None:
-                    tenant = DataSyncHandler.add_analytics_tenant(tenant_id, tenant_)
+                    tenant = DataSynchronizer.add_analytics_tenant(tenant_id, tenant_)
                     return tenant
         return None
 
@@ -399,7 +399,7 @@ class DataSyncHandler:
     @staticmethod
     def get_reancare_api_clients():
         try:
-            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT * from api_clients
             WHERE
@@ -413,7 +413,7 @@ class DataSyncHandler:
 
     @staticmethod
     def populate_api_keys_cache():
-        api_clients = DataSyncHandler.get_reancare_api_clients()
+        api_clients = DataSynchronizer.get_reancare_api_clients()
         if api_clients is not None:
             for api_client in api_clients:
                 key = api_client['ApiKey']
@@ -425,7 +425,7 @@ class DataSyncHandler:
                     'ClientInterfaceType': api_client['ClientInterfaceType'],
                     'ApiKey': api_client['ApiKey'],
                 }
-                DataSyncHandler._api_keys_cache.set(key, client_app)
+                DataSynchronizer._api_keys_cache.set(key, client_app)
 
     #endregion
 
@@ -434,7 +434,7 @@ class DataSyncHandler:
     @staticmethod
     def get_reancare_user_ids():
         try:
-            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT id from users
             WHERE
@@ -452,21 +452,21 @@ class DataSyncHandler:
             existing_user_count = 0
             synched_user_count = 0
             user_not_synched = []
-            ids = DataSyncHandler.get_reancare_user_ids()
+            ids = DataSynchronizer.get_reancare_user_ids()
             if ids is None:
                 print("No users found.")
                 return None
             user_ids = [user['id'] for user in ids]
             for user_id in user_ids:
-                if DataSyncHandler._user_cache.get(user_id) is not None:
+                if DataSynchronizer._user_cache.get(user_id) is not None:
                     existing_user_count += 1
                     continue
-                if DataSyncHandler.get_analytics_user(user_id) is not None:
+                if DataSynchronizer.get_analytics_user(user_id) is not None:
                     existing_user_count += 1
                     continue
-                user = DataSyncHandler.get_reancare_user(user_id)
+                user = DataSynchronizer.get_reancare_user(user_id)
                 if user is not None:
-                    DataSyncHandler.add_analytics_user(user_id, user)
+                    DataSynchronizer.add_analytics_user(user_id, user)
                     synched_user_count += 1
                 else:
                     user_not_synched.append(user_id)
@@ -488,7 +488,7 @@ class DataSyncHandler:
     @staticmethod
     def get_reancare_tenant_ids():
         try:
-            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT id from tenants
             """
@@ -504,20 +504,20 @@ class DataSyncHandler:
             existing_tenant_count = 0
             synched_tenant_count = 0
             tenant_not_synched = []
-            tenant_ids = DataSyncHandler.get_reancare_tenant_ids()
+            tenant_ids = DataSynchronizer.get_reancare_tenant_ids()
             if tenant_ids is None:
                 print("No tenants found.")
                 return None
             for tenant_id in tenant_ids:
-                if DataSyncHandler._tenant_cache.get(tenant_id) is not None:
+                if DataSynchronizer._tenant_cache.get(tenant_id) is not None:
                     existing_tenant_count += 1
                     continue
-                if DataSyncHandler.get_analytics_tenant(tenant_id) is not None:
+                if DataSynchronizer.get_analytics_tenant(tenant_id) is not None:
                     existing_tenant_count += 1
                     continue
-                tenant = DataSyncHandler.get_reancare_tenant(tenant_id)
+                tenant = DataSynchronizer.get_reancare_tenant(tenant_id)
                 if tenant is not None:
-                    DataSyncHandler.add_analytics_tenant(tenant_id, tenant)
+                    DataSynchronizer.add_analytics_tenant(tenant_id, tenant)
                     synched_tenant_count += 1
                 else:
                     tenant_not_synched.append(tenant_id)
@@ -540,7 +540,7 @@ class DataSyncHandler:
     def get_existing_event(user_id, resource_id, event_type):
         try:
             event_name = event_type.value
-            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
             query = f"""
             SELECT * from events
             WHERE
@@ -562,7 +562,7 @@ class DataSyncHandler:
     @staticmethod
     def add_event(event):
         try:
-            analytics_db_connector = DataSyncHandler.get_analytics_db_connector()
+            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
             id_ = str(uuid.uuid4())
             insert_query = """
                 INSERT INTO events (
@@ -625,7 +625,7 @@ class DataSyncHandler:
     @staticmethod
     def get_reancare_user_login_sessions():
         try:
-            rean_db_connector = DataSyncHandler.get_reancare_db_connector()
+            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT * from user_login_sessions
             WHERE
@@ -657,7 +657,7 @@ class DataSyncHandler:
                 'Timestamp': session['StartedAt'],
                 'RegistrationDate': user['CreatedAt']
             }
-            new_event_added = DataSyncHandler.add_event(event)
+            new_event_added = DataSynchronizer.add_event(event)
             if not new_event_added:
                 print(f"Not inserted data.")
                 return None
@@ -674,18 +674,18 @@ class DataSyncHandler:
             existing_session_count = 0
             synched_session_count = 0
             session_not_synched = []
-            sessions = DataSyncHandler.get_reancare_user_login_sessions()
+            sessions = DataSynchronizer.get_reancare_user_login_sessions()
             if sessions is None:
                 print("No user login sessions found.")
                 return None
             for session in sessions:
-                existing_event = DataSyncHandler.get_existing_event(session['UserId'], session['id'], EventType.UserLogin)
+                existing_event = DataSynchronizer.get_existing_event(session['UserId'], session['id'], EventType.UserLogin)
                 if existing_event is not None:
                     existing_session_count += 1
                     continue
-                user = DataSyncHandler.get_user(session['UserId'])
+                user = DataSynchronizer.get_user(session['UserId'])
                 if user is not None:
-                    DataSyncHandler.add_login_session_events(session, user)
+                    DataSynchronizer.add_login_session_events(session, user)
                     synched_session_count += 1
                 else:
                     session_not_synched.append(session['id'])
