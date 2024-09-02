@@ -158,8 +158,6 @@ class DataSyncHandler:
                 from users as user
                 JOIN persons as person ON user.PersonId = person.id
                 WHERE
-                    user.DeletedAt IS null
-                    AND
                     user.IsTestUser = 0
                     AND
                     user.id = "{user_id}"
@@ -211,7 +209,7 @@ class DataSyncHandler:
                 print(f"Not inserted data {row}.")
                 return None
             else:
-                print(f"Inserted row into the users table.")
+                # print(f"Inserted row into the users table.")
                 return result
         except mysql.connector.Error as error:
             print(f"Failed to insert records: {error}")
@@ -266,7 +264,7 @@ class DataSyncHandler:
                     user["Race"] if user.get('Race') is not None else None,
                     user["HealthSystem"] if user.get('HealthSystem') is not None else None,
                     user["AssociatedHospital"] if user.get('AssociatedHospital') is not None else None,
-                    user["StrokeSurvivorOrCaregiver"] if user.get('StrokeSurvivorOrCaregiver') is not None else None,
+                    True if user.get('StrokeSurvivorOrCaregiver') == 'Caregiver' else False,
                     user["MajorAilment"] if user.get('MajorAilment') is not None else None,
                     user["IsSmoker"] if user.get('IsSmoker') is not None else None,
                     user["IsDrinker"] if user.get('IsDrinker') is not None else None,
@@ -454,10 +452,11 @@ class DataSyncHandler:
             existing_user_count = 0
             synched_user_count = 0
             user_not_synched = []
-            user_ids = DataSyncHandler.get_reancare_user_ids()
-            if user_ids is None:
+            ids = DataSyncHandler.get_reancare_user_ids()
+            if ids is None:
                 print("No users found.")
                 return None
+            user_ids = [user['id'] for user in ids]
             for user_id in user_ids:
                 if DataSyncHandler._user_cache.get(user_id) is not None:
                     existing_user_count += 1

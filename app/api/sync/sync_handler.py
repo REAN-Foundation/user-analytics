@@ -8,6 +8,9 @@ from app.telemetry.tracing import trace_span
 @trace_span("handler: sync_users")
 def sync_users_():
     try:
+        # Please note that there are users with patient role
+        # but there is no corresponding entry in the patients table
+        # So such users are not synched.
         DataSyncHandler.sync_users()
     except Exception as e:
         print(e)
