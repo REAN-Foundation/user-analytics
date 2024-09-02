@@ -22,3 +22,38 @@ def sync_user_login_session_events_():
     except Exception as e:
         print(e)
 
+@trace_span("handler: sync_user_medication_create_events")
+def sync_user_medication_create_events_():
+    try:
+        DataSyncHandler.sync_user_medication_create_events()
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_user_medication_update_events")
+def sync_user_medication_update_events_():
+    try:
+        DataSyncHandler.sync_user_medication_update_events()
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_user_medication_delete_events")
+def sync_user_medication_delete_events_():
+    try:
+        DataSyncHandler.sync_user_medication_delete_events()
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_user_medication_schedule_taken_events")
+def sync_user_medication_schedule_taken_events_():
+    try:
+        DataSyncHandler.sync_user_medication_schedule_taken_events()
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_user_medication_schedule_missed_events")
+def sync_user_medication_schedule_missed_events_():
+    try:
+        DataSyncHandler.sync_user_medication_schedule_missed_events()
+    except Exception as e:
+        print(e)
+
