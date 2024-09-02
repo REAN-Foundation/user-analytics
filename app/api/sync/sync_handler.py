@@ -1,6 +1,8 @@
 from typing import Optional
 from app.common.validators import validate_uuid4
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
+from app.modules.data_sync.login_events_synchonizer import LoginEventsSynchronizer
+from app.modules.data_sync.medication_events_synchronizer import MedicationEventsSynchronizer
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
@@ -18,42 +20,34 @@ def sync_users_():
 @trace_span("handler: sync_user_login_session_events")
 def sync_user_login_session_events_():
     try:
-        DataSynchronizer.sync_user_login_events()
+        LoginEventsSynchronizer.sync_user_login_events()
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_user_medication_create_events")
-def sync_user_medication_create_events_():
+@trace_span("handler: sync_medication_create_events")
+def sync_medication_create_events_():
     try:
-        DataSynchronizer.sync_user_medication_create_events()
+        MedicationEventsSynchronizer.sync_medication_create_events()
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_user_medication_update_events")
-def sync_user_medication_update_events_():
+@trace_span("handler: sync_medication_delete_events")
+def sync_medication_delete_events_():
     try:
-        DataSynchronizer.sync_user_medication_update_events()
+        MedicationEventsSynchronizer.sync_medication_delete_events()
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_user_medication_delete_events")
-def sync_user_medication_delete_events_():
+@trace_span("handler: sync_medication_schedule_taken_events")
+def sync_medication_schedule_taken_events_():
     try:
-        DataSynchronizer.sync_user_medication_delete_events()
+        MedicationEventsSynchronizer.sync_medication_schedule_taken_events()
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_user_medication_schedule_taken_events")
-def sync_user_medication_schedule_taken_events_():
+@trace_span("handler: sync_medication_schedule_missed_events")
+def sync_medication_schedule_missed_events_():
     try:
-        DataSynchronizer.sync_user_medication_schedule_taken_events()
+        MedicationEventsSynchronizer.sync_medication_schedule_missed_events()
     except Exception as e:
         print(e)
-
-@trace_span("handler: sync_user_medication_schedule_missed_events")
-def sync_user_medication_schedule_missed_events_():
-    try:
-        DataSynchronizer.sync_user_medication_schedule_missed_events()
-    except Exception as e:
-        print(e)
-

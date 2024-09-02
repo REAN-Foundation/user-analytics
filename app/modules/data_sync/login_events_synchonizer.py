@@ -39,7 +39,7 @@ class LoginEventsSynchronizer:
                 'ActionStatement': "User logged in.",
                 'Attributes': "{}",
                 'Timestamp': session['StartedAt'],
-                'RegistrationDate': user['CreatedAt']
+                'UserRegistrationDate': user['CreatedAt']
             }
             new_event_added = DataSynchronizer.add_event(event)
             if not new_event_added:
@@ -49,7 +49,7 @@ class LoginEventsSynchronizer:
                 print(f"Inserted row into the user_login_sessions table.")
                 return new_event_added
         except mysql.connector.Error as error:
-            print(f"Failed to insert records: {error}")
+            print(f"Failed to insert event: {error}")
             return None
 
     @staticmethod

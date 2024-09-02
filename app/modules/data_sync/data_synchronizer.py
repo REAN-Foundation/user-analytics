@@ -586,7 +586,7 @@ class DataSynchronizer:
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
             """
-            diff = event['Timestamp'] - event['RegistrationDate']
+            diff = event['Timestamp'] - event['UserRegistrationDate']
             days_since_registration = diff.days
             time_offset_since_registration_seconds = int(diff.total_seconds())
             row = (

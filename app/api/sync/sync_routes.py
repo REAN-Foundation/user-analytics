@@ -1,5 +1,9 @@
 from fastapi import APIRouter, Depends, status, HTTPException, BackgroundTasks
 from app.api.sync.sync_handler import (
+    sync_medication_create_events_,
+    sync_medication_delete_events_,
+    sync_medication_schedule_missed_events_,
+    sync_medication_schedule_taken_events_,
     sync_user_login_session_events_,
     sync_users_,
 )
@@ -31,36 +35,29 @@ async def sync_user_login_session_events(background_tasks: BackgroundTasks):
     return resp
 
 @router.post("/events/medications/create", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
-async def sync_user_medication_create_events(background_tasks: BackgroundTasks):
-    # background_tasks.add_task(sync_user_medication_create_events_)
-    message = "User medication create events synchronization has started."
-    resp = ResponseModel[bool](Message=message, Data=True)
-    return resp
-
-@router.post("/events/medications/update", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
-async def sync_user_medication_update_events(background_tasks: BackgroundTasks):
-    # background_tasks.add_task(sync_user_medication_update_events_)
-    message = "User medication update events synchronization has started."
+async def sync_medication_create_events(background_tasks: BackgroundTasks):
+    background_tasks.add_task(sync_medication_create_events_)
+    message = "Medication create events synchronization has started."
     resp = ResponseModel[bool](Message=message, Data=True)
     return resp
 
 @router.post("/events/medications/delete", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
-async def sync_user_medication_delete_events(background_tasks: BackgroundTasks):
-    # background_tasks.add_task(sync_user_medication_delete_events_)
-    message = "User medication delete events synchronization has started."
+async def sync_medication_delete_events(background_tasks: BackgroundTasks):
+    background_tasks.add_task(sync_medication_delete_events_)
+    message = "Medication delete events synchronization has started."
     resp = ResponseModel[bool](Message=message, Data=True)
     return resp
 
 @router.post("/events/medication-schedules/taken", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
-async def sync_user_medication_schedule_taken_events(background_tasks: BackgroundTasks):
-    # background_tasks.add_task(sync_user_medication_schedule_taken_events_)
-    message = "User medication schedule taken events synchronization has started."
+async def sync_medication_schedule_taken_events(background_tasks: BackgroundTasks):
+    background_tasks.add_task(sync_medication_schedule_taken_events_)
+    message = "Medication schedule taken events synchronization has started."
     resp = ResponseModel[bool](Message=message, Data=True)
     return resp
 
 @router.post("/events/medication-schedules/missed", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
-async def sync_user_medication_schedule_missed_events(background_tasks: BackgroundTasks):
-    # background_tasks.add_task(sync_user_medication_schedule_missed_events_)
-    message = "User medication schedule missed events synchronization has started."
+async def sync_medication_schedule_missed_events(background_tasks: BackgroundTasks):
+    background_tasks.add_task(sync_medication_schedule_missed_events_)
+    message = "Medication schedule missed events synchronization has started."
     resp = ResponseModel[bool](Message=message, Data=True)
     return resp
