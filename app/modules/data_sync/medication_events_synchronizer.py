@@ -27,10 +27,11 @@ class MedicationEventsSynchronizer:
                 medication.DurationUnit,
                 medication.StartDate,
                 medication.EndDate,
-                medication.CreatedAt
+                medication.CreatedAt,
                 medication.UpdatedAt,
                 medication.DeletedAt,
-                user.TenantId,
+                user.id as UserId,
+                user.TenantId as TenantId,
                 user.CreatedAt as UserRegistrationDate
             from medications as medication
             JOIN users as user ON medication.PatientUserId = user.id
@@ -47,10 +48,10 @@ class MedicationEventsSynchronizer:
     def add_analytics_medication_create_event(medication):
         try:
             event_name = EventType.MedicationCreate.value
-            user = DataSynchronizer.get_user(medication['UserId'])
-            if not user:
-                print(f"User not found for the event: {medication}")
-                return None
+            # user = DataSynchronizer.get_user(medication['UserId'])
+            # if not user:
+            #     print(f"User not found for the event: {medication}")
+            #     return None
             attributes = {
                 'DrugName': medication['DrugName'],
                 'DrugId': medication['DrugId'],
@@ -66,7 +67,7 @@ class MedicationEventsSynchronizer:
             }
             medication = {
                 'UserId': medication['UserId'],
-                'TenantId': user['TenantId'],
+                'TenantId': medication['TenantId'],
                 'SessionId': None,
                 'ResourceId': medication['id'],
                 'ResourceType': "Medication",
@@ -78,7 +79,7 @@ class MedicationEventsSynchronizer:
                 'ActionStatement': "User added a medication.",
                 'Attributes': str(attributes),
                 'Timestamp': medication['CreatedAt'],
-                'UserRegistrationDate': user['CreatedAt']
+                'UserRegistrationDate': medication['UserRegistrationDate']
             }
             new_event_added = DataSynchronizer.add_event(medication)
             if not new_event_added:
@@ -102,7 +103,7 @@ class MedicationEventsSynchronizer:
                 for med in meds:
                     existing_event = DataSynchronizer.get_existing_event(
                         med['UserId'], med['id'], EventType.MedicationCreate)
-                    if existing_event:
+                    if existing_event is not None:
                         existing_event_count += 1
                     else:
                         new_event = MedicationEventsSynchronizer.add_analytics_medication_create_event(med)
@@ -141,9 +142,10 @@ class MedicationEventsSynchronizer:
                 medication.DurationUnit,
                 medication.StartDate,
                 medication.EndDate,
-                medication.CreatedAt
+                medication.CreatedAt,
                 medication.UpdatedAt,
                 medication.DeletedAt,
+                user.id as UserId,
                 user.TenantId,
                 user.CreatedAt as UserRegistrationDate
             from medications as medication
@@ -163,10 +165,10 @@ class MedicationEventsSynchronizer:
     def add_analytics_medication_delete_event(medication):
         try:
             event_name = EventType.MedicationDelete.value
-            user = DataSynchronizer.get_user(medication['UserId'])
-            if not user:
-                print(f"User not found for the event: {medication}")
-                return None
+            # user = DataSynchronizer.get_user(medication['UserId'])
+            # if not user:
+            #     print(f"User not found for the event: {medication}")
+            #     return None
             attributes = {
                 'DrugName': medication['DrugName'],
                 'DrugId': medication['DrugId'],
@@ -182,7 +184,7 @@ class MedicationEventsSynchronizer:
             }
             medication = {
                 'UserId': medication['UserId'],
-                'TenantId': user['TenantId'],
+                'TenantId': medication['TenantId'],
                 'SessionId': None,
                 'ResourceId': medication['id'],
                 'ResourceType': "Medication",
@@ -194,14 +196,14 @@ class MedicationEventsSynchronizer:
                 'ActionStatement': "User deleted a medication.",
                 'Attributes': str(attributes),
                 'Timestamp': medication['DeletedAt'],
-                'UserRegistrationDate': user['CreatedAt']
+                'UserRegistrationDate': medication['UserRegistrationDate']
             }
             new_event_added = DataSynchronizer.add_event(medication)
             if not new_event_added:
                 print(f"Not inserted data.")
                 return None
             else:
-                print(f"Inserted row into the medications table.")
+                # print(f"Inserted row into the medications table.")
                 return new_event_added
         except mysql.connector.Error as error:
             print(f"Failed to insert event: {error}")
@@ -218,15 +220,14 @@ class MedicationEventsSynchronizer:
                 for med in deleted_meds:
                     existing_event = DataSynchronizer.get_existing_event(
                         med['UserId'], med['id'], EventType.MedicationDelete)
-                    if existing_event:
+                    if existing_event is not None:
                         existing_event_count += 1
+                    else:
                         new_event = MedicationEventsSynchronizer.add_analytics_medication_delete_event(med)
                         if new_event:
                             synched_event_count += 1
                         else:
                             event_not_synched.append(med)
-                    else:
-                        print(f"User not found for the event: {med}")
                 print(f"Existing Event Count: {existing_event_count}")
                 print(f"Synched Event Count: {synched_event_count}")
                 print(f"Event Not Synched: {event_not_synched}")
@@ -245,31 +246,34 @@ class MedicationEventsSynchronizer:
             rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT
-                medication_consumption.id,
-                medication_consumption.PatientUserId as UserId,
-                medication_consumption.MedicationId,
-                medication_consumption.IsTaken,
-                medication_consumption.TakenAt,
-                medication_consumption.DrugName,
-                medication_consumption.DrugId,
-                medication_consumption.TimeScheduleStart,
-                medication_consumption.TimeScheduleEnd,
-                medication_consumption.CreatedAt,
-                medication_consumption.UpdatedAt,
-                medication_consumption.DeletedAt,
+                consumption.id,
+                consumption.PatientUserId as UserId,
+                consumption.MedicationId,
+                consumption.IsTaken,
+                consumption.TakenAt,
+                consumption.DrugName,
+                consumption.DrugId,
+                consumption.TimeScheduleStart,
+                consumption.TimeScheduleEnd,
+                consumption.CreatedAt,
+                consumption.UpdatedAt,
+                consumption.DeletedAt,
+                user.id as UserId,
                 user.TenantId,
                 user.CreatedAt as UserRegistrationDate
-            from medication_consumptions as medication_consumption
-            JOIN users as user ON medication_consumption.PatientUserId = user.id
+            from medication_consumptions as consumption
+            JOIN users as user ON consumption.PatientUserId = user.id
             WHERE
-                DeletedAt IS NULL
+                user.IsTestUser = 0
                 AND
-                IsTaken = 1
+                consumption.DeletedAt IS NULL
                 AND
-                TakenAt IS NOT NULL
+                consumption.IsTaken = 1
+                AND
+                consumption.TakenAt IS NOT NULL
+            ORDER BY consumption.TakenAt ASC
             LIMIT 10000
             OFFSET 0
-            ORDER BY TakenAt ASC
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -278,27 +282,27 @@ class MedicationEventsSynchronizer:
             return None
 
     @staticmethod
-    def add_analytics_medication_schedule_taken_event(medication_consumption):
+    def add_analytics_medication_schedule_taken_event(schedule):
         try:
             event_name = EventType.MedicationScheduleTaken.value
-            user = DataSynchronizer.get_user(medication_consumption['UserId'])
-            if not user:
-                print(f"User not found for the event: {medication_consumption}")
-                return None
+            # user = DataSynchronizer.get_user(medication_consumption['UserId'])
+            # if not user:
+            #     print(f"User not found for the event: {medication_consumption}")
+            #     return None
             attributes = {
-                'MedicationId': medication_consumption['MedicationId'],
-                'IsTaken': medication_consumption['IsTaken'],
-                'TakenAt': medication_consumption['TakenAt'],
-                'DrugName': medication_consumption['DrugName'],
-                'DrugId': medication_consumption['DrugId'],
-                'TimeScheduleStart': medication_consumption['TimeScheduleStart'],
-                'TimeScheduleEnd': medication_consumption['TimeScheduleEnd']
+                'MedicationId': schedule['MedicationId'],
+                'IsTaken': schedule['IsTaken'],
+                'TakenAt': schedule['TakenAt'],
+                'DrugName': schedule['DrugName'],
+                'DrugId': schedule['DrugId'],
+                'TimeScheduleStart': schedule['TimeScheduleStart'],
+                'TimeScheduleEnd': schedule['TimeScheduleEnd']
             }
             event = {
-                'UserId': medication_consumption['UserId'],
-                'TenantId': user['TenantId'],
+                'UserId': schedule['UserId'],
+                'TenantId': schedule['TenantId'],
                 'SessionId': None,
-                'ResourceId': medication_consumption['id'],
+                'ResourceId': schedule['id'],
                 'ResourceType': "Medication-Schedule",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
@@ -307,8 +311,8 @@ class MedicationEventsSynchronizer:
                 'ActionType': "User-Action",
                 'ActionStatement': "User took a medication.",
                 'Attributes': str(attributes),
-                'Timestamp': medication_consumption['TakenAt'],
-                'UserRegistrationDate': user['CreatedAt']
+                'Timestamp': schedule['TakenAt'],
+                'UserRegistrationDate': schedule['UserRegistrationDate']
             }
             new_event_added = DataSynchronizer.add_event(event)
             if not new_event_added:
@@ -332,7 +336,7 @@ class MedicationEventsSynchronizer:
                 for med in taken_meds:
                     existing_event = DataSynchronizer.get_existing_event(
                         med['UserId'], med['id'], EventType.MedicationScheduleTaken)
-                    if existing_event:
+                    if existing_event is not None:
                         existing_event_count += 1
                     else:
                         new_event = MedicationEventsSynchronizer.add_analytics_medication_schedule_taken_event(med)
@@ -358,34 +362,37 @@ class MedicationEventsSynchronizer:
             rean_db_connector = DataSynchronizer.get_reancare_db_connector()
             query = f"""
             SELECT
-                medication_consumption.id,
-                medication_consumption.PatientUserId as UserId,
-                medication_consumption.MedicationId,
-                medication_consumption.IsTaken,
-                medication_consumption.TakenAt,
-                medication_consumption.IsMissed,
-                medication_consumption.DrugName,
-                medication_consumption.DrugId,
-                medication_consumption.TimeScheduleStart,
-                medication_consumption.TimeScheduleEnd,
-                medication_consumption.CreatedAt,
-                medication_consumption.UpdatedAt,
-                medication_consumption.DeletedAt,
+                consumption.id,
+                consumption.PatientUserId as UserId,
+                consumption.MedicationId,
+                consumption.IsTaken,
+                consumption.TakenAt,
+                consumption.IsMissed,
+                consumption.DrugName,
+                consumption.DrugId,
+                consumption.TimeScheduleStart,
+                consumption.TimeScheduleEnd,
+                consumption.CreatedAt,
+                consumption.UpdatedAt,
+                consumption.DeletedAt,
+                user.id as UserId,
                 user.TenantId,
                 user.CreatedAt as UserRegistrationDate
-            from medication_consumptions as medication_consumption
-            JOIN users as user ON medication_consumption.PatientUserId = user.id
+            from medication_consumptions as consumption
+            JOIN users as user ON consumption.PatientUserId = user.id
             WHERE
-                DeletedAt IS NULL
+                user.IsTestUser = 0
                 AND
-                IsTaken = 0
+                consumption.DeletedAt IS NULL
                 AND
-                TakenAt IS NULL
+                consumption.IsTaken = 0
                 AND
-                IsMissed = 1
+                consumption.TakenAt IS NULL
+                AND
+                consumption.IsMissed = 1
+            ORDER BY consumption.CreatedAt ASC
             LIMIT 10000
             OFFSET 0
-            ORDER BY CreatedAt ASC
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -394,28 +401,28 @@ class MedicationEventsSynchronizer:
             return None
 
     @staticmethod
-    def add_analytics_medication_schedule_missed_event(medication_consumption):
+    def add_analytics_medication_schedule_missed_event(schedule):
         try:
             event_name = EventType.MedicationScheduleMissed.value
-            user = DataSynchronizer.get_user(medication_consumption['UserId'])
-            if not user:
-                print(f"User not found for the event: {medication_consumption}")
-                return None
+            # user = DataSynchronizer.get_user(schedule['UserId'])
+            # if not user:
+            #     print(f"User not found for the event: {schedule}")
+            #     return None
             attributes = {
-                'MedicationId': medication_consumption['MedicationId'],
-                'IsTaken': medication_consumption['IsTaken'],
-                'TakenAt': medication_consumption['TakenAt'],
-                'IsMissed': medication_consumption['IsMissed'],
-                'DrugName': medication_consumption['DrugName'],
-                'DrugId': medication_consumption['DrugId'],
-                'TimeScheduleStart': medication_consumption['TimeScheduleStart'],
-                'TimeScheduleEnd': medication_consumption['TimeScheduleEnd']
+                'MedicationId': schedule['MedicationId'],
+                'IsTaken': schedule['IsTaken'],
+                'TakenAt': schedule['TakenAt'],
+                'IsMissed': schedule['IsMissed'],
+                'DrugName': schedule['DrugName'],
+                'DrugId': schedule['DrugId'],
+                'TimeScheduleStart': schedule['TimeScheduleStart'],
+                'TimeScheduleEnd': schedule['TimeScheduleEnd']
             }
             event = {
-                'UserId': medication_consumption['UserId'],
-                'TenantId': user['TenantId'],
+                'UserId': schedule['UserId'],
+                'TenantId': schedule['TenantId'],
                 'SessionId': None,
-                'ResourceId': medication_consumption['id'],
+                'ResourceId': schedule['id'],
                 'ResourceType': "Medication-Schedule",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
@@ -424,8 +431,8 @@ class MedicationEventsSynchronizer:
                 'ActionType': "User-Action",
                 'ActionStatement': "User missed a medication.",
                 'Attributes': str(attributes),
-                'Timestamp': medication_consumption['UpdatedAt'],
-                'UserRegistrationDate': user['CreatedAt']
+                'Timestamp': schedule['UpdatedAt'],
+                'UserRegistrationDate': schedule['UserRegistrationDate']
             }
             new_event_added = DataSynchronizer.add_event(event)
             if not new_event_added:
@@ -449,7 +456,7 @@ class MedicationEventsSynchronizer:
                 for med in missed_meds:
                     existing_event = DataSynchronizer.get_existing_event(
                         med['UserId'], med['id'], EventType.MedicationScheduleMissed)
-                    if existing_event:
+                    if existing_event is not None:
                         existing_event_count += 1
                     else:
                         new_event = MedicationEventsSynchronizer.add_analytics_medication_schedule_missed_event(med)
