@@ -15,12 +15,11 @@ class QueryBuilder:
         q = ""
         if self.filter.AnalysisType == AnalysisTypeFilter.monthly_stickyness:
             if self.filter.Source == SourceTypeFilter.event:
-                
-            q = self._build_retention_query()
+                q = self._build_retention_query()
         elif self.filter.AnalysisType == AnalysisTypeFilter.frequency:
             q = self._build_unique_users_query()
 
         return self.query
-    
+
     def __str__(self) -> str:
         return self.name

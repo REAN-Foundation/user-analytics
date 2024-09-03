@@ -7,47 +7,57 @@ from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
-@trace_span("handler: sync_users")
-def sync_users_():
+@trace_span("handler: basic_stats")
+def basic_stats_():
     try:
-        # Please note that there are users with patient role
-        # but there is no corresponding entry in the patients table
-        # So such users are not synched.
-        DataSynchronizer.sync_users()
+        pass
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_user_login_session_events")
-def sync_user_login_session_events_():
+###############################################################################
+
+@trace_span("handler: generate_user_engagement_metrics")
+def generate_user_engagement_metrics_():
     try:
-        LoginEventsSynchronizer.sync_user_login_events()
+        pass
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_medication_create_events")
-def sync_medication_create_events_():
+@trace_span("handler: download_user_engagement_metrics")
+def download_user_engagement_metrics_():
     try:
-        MedicationEventsSynchronizer.sync_medication_create_events()
+        pass
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_medication_delete_events")
-def sync_medication_delete_events_():
+@trace_span("handler: get_user_engagement_metrics")
+def get_user_engagement_metrics_():
     try:
-        MedicationEventsSynchronizer.sync_medication_delete_events()
+        pass
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_medication_schedule_taken_events")
-def sync_medication_schedule_taken_events_():
+###############################################################################
+
+@trace_span("handler: generate_feature_engagement_metrics")
+def generate_feature_engagement_metrics_():
     try:
-        MedicationEventsSynchronizer.sync_medication_schedule_taken_events()
+        pass
     except Exception as e:
         print(e)
 
-@trace_span("handler: sync_medication_schedule_missed_events")
-def sync_medication_schedule_missed_events_():
+@trace_span("handler: download_feature_engagement_metrics")
+def download_feature_engagement_metrics_():
     try:
-        MedicationEventsSynchronizer.sync_medication_schedule_missed_events()
+        pass
     except Exception as e:
         print(e)
+
+@trace_span("handler: get_feature_engagement_metrics")
+def get_feature_engagement_metrics_():
+    try:
+        pass
+    except Exception as e:
+        print(e)
+
+###############################################################################
