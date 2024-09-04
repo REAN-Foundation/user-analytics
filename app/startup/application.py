@@ -12,6 +12,7 @@ def start():
 
     DataSynchronizer.populate_api_keys_cache()
     DataSynchronizer.populate_role_type_cache()
+    DataSynchronizer.populate_tenants_cache()
 
     server = FastAPI()
 
