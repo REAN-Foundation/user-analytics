@@ -6,50 +6,74 @@ from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
-@trace_span("service: analytics_basics: get_daily_active_patients")
+@trace_span("service: analytics: user engagement: get_daily_active_patients")
 async def get_daily_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date) -> int:
     try:
+        role_id = get_role_id()
         connector = get_analytics_db_connector()
         query = f"""
             SELECT
-                COUNT(*) as user_count
-            FROM users
-            WHERE __TENANT_ID_CHECK__
-                RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-            """
-        query = query.replace("__TENANT_ID_CHECK__", tenant_check(tenant_id))
+                DATE(e.Timestamp) AS activity_date, COUNT(DISTINCT e.UserId) AS daily_active_users
+            FROM events e
+            JOIN users as user ON e.UserId = user.id
+            WHERE
+                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                __TENANT_ID_CHECK__
+                __ROLE_ID_CHECK__
+            GROUP BY DATE(e.Timestamp)
+            ORDER BY activity_date;
+        """
+        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
-        total_users = result[0]['user_count']
-        return total_users
+        return result
     except Exception as e:
         print(e)
         return 0
 
-@trace_span("service: analytics_basics: get_weekly_active_patients")
+@trace_span("service: analytics: user engagement: get_weekly_active_patients")
 async def get_weekly_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date) -> int:
 
     role_id = get_role_id()
     try:
         connector = get_analytics_db_connector()
-        query = f"""
+
+        # query_week_number = f"""
+        #     SELECT
+        #         YEARWEEK(e.Timestamp, 1) AS activity_week, COUNT(DISTINCT e.UserId) AS weekly_active_users
+        #     FROM events e
+        #     JOIN users user ON e.UserId = user.id
+        #     WHERE
+        #         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+        #         __TENANT_ID_CHECK__
+        #         __ROLE_ID_CHECK__
+        #     GROUP BY YEARWEEK(e.Timestamp, 1)
+        #     ORDER BY activity_week;
+        # """
+
+        query_week_by_start_end_dates = f"""
             SELECT
-                COUNT(*) as user_count
-            FROM users
+                DATE_FORMAT(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), '%Y-%m-%d') AS week_start_date,
+                DATE_FORMAT(DATE_ADD(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), INTERVAL 6 DAY), '%Y-%m-%d') AS week_end_date,
+                COUNT(DISTINCT e.UserId) AS weekly_active_users
+            FROM events e
+            JOIN users as user ON e.UserId = user.id
             WHERE
+                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-            """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
-        result = connector.execute_read_query(query)
-        total_patients = result[0]['user_count']
-        return total_patients
+            GROUP BY DATE_FORMAT(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), '%Y-%m-%d'),
+                    DATE_FORMAT(DATE_ADD(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), INTERVAL 6 DAY), '%Y-%m-%d')
+            ORDER BY week_start_date;
+        """
+        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+        result = connector.execute_read_query(query_week_by_start_end_dates)
+        return result
     except Exception as e:
         print(e)
         return 0
 
 
-@trace_span("service: analytics_basics: get_monthly_active_patients")
+@trace_span("service: analytics: user engagement: get_monthly_active_patients")
 async def get_monthly_active_patients(tenant_id: UUID4|None) -> int:
 
         role_id = get_role_id()
@@ -72,7 +96,7 @@ async def get_monthly_active_patients(tenant_id: UUID4|None) -> int:
             print(e)
             return 0
 
-@trace_span("service: analytics_basics: get_patients_average_session_length_in_hours")
+@trace_span("service: analytics: user engagement: get_patients_average_session_length_in_hours")
 async def get_patients_average_session_length_in_hours(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
@@ -96,7 +120,7 @@ async def get_patients_average_session_length_in_hours(tenant_id: UUID4|None, st
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patients_login_frequency")
+@trace_span("service: analytics: user engagement: get_patients_login_frequency")
 async def get_patients_login_frequency(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
@@ -120,7 +144,7 @@ async def get_patients_login_frequency(tenant_id: UUID4|None, start_date: date, 
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patients_retention_rate")
+@trace_span("service: analytics: user engagement: get_patients_retention_rate")
 async def get_patients_retention_rate(tenant_id: UUID4|None, start_date:date, end_date: date) -> list:
     try:
         role_id = get_role_id()
@@ -156,7 +180,7 @@ async def get_patients_retention_rate(tenant_id: UUID4|None, start_date:date, en
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patients_churn_rate")
+@trace_span("service: analytics: user engagement: get_patients_churn_rate")
 async def get_patients_churn_rate(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
@@ -182,7 +206,7 @@ async def get_patients_churn_rate(tenant_id: UUID4|None, start_date: date, end_d
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patients_most_commonly_visited_screens")
+@trace_span("service: analytics: user engagement: get_patients_most_commonly_visited_screens")
 async def get_patients_most_commonly_visited_screens(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
@@ -208,7 +232,7 @@ async def get_patients_most_commonly_visited_screens(tenant_id: UUID4|None, star
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patients_most_commonly_used_features")
+@trace_span("service: analytics: user engagement: get_patients_most_commonly_used_features")
 async def get_patients_most_commonly_used_features(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
