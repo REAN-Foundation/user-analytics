@@ -41,10 +41,13 @@ class DataSynchronizer:
 
     @staticmethod
     def get_role_by_name(role_name: str):
-        for role_id in DataSynchronizer._role_type_cache.keys():
-            role = DataSynchronizer._role_type_cache.get(role_id)
-            if role['RoleName'] == role_name:
-                return role
+        for v in DataSynchronizer._role_type_cache.values():
+            if v['RoleName'] == role_name:
+                return v
+        # for role_id in DataSynchronizer._role_type_cache.keys():
+        #     role = DataSynchronizer._role_type_cache.get(role_id)
+        #     if role['RoleName'] == role_name:
+        #         return role
         return None
 
     @staticmethod
@@ -52,7 +55,9 @@ class DataSynchronizer:
         tenants = DataSynchronizer.get_reancare_tenants()
         if tenants is not None:
             for tenant in tenants:
-                DataSynchronizer.add_analytics_tenant(tenant['id'], tenant)
+                existing = DataSynchronizer.get_analytics_tenant(tenant['id'])
+                if existing is None:
+                    DataSynchronizer.add_analytics_tenant(tenant['id'], tenant)
 
     #endregion
 
@@ -367,7 +372,7 @@ class DataSynchronizer:
             row = (tenant['id'], tenant['Name'], tenant['Code'], tenant['CreatedAt'])
             result = analytics_db_connector.execute_write_query(insert_query, row)
             if result is None:
-                print(f"Not inserted data {row}.")
+                # print(f"Not inserted data {row}.")
                 return None
             else:
                 DataSynchronizer._tenant_cache.set(tenant_id, result)

@@ -66,7 +66,7 @@ async def basic_stats_(
         demographics = Demographics(
             AgeGroups                       = age_demographics,
             GenderGroups                    = gender_demographics,
-            LocationGroups                  = {},
+            LocationGroups                  = [],
             EthnicityGroups                 = ethnicity_demographics,
             RaceGroups                      = race_demographics,
             HealthSystemDistribution        = healthsystem_distribution,
