@@ -1,4 +1,5 @@
 from app.domain_types.enums.event_types import EventType
+from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
 
@@ -9,7 +10,7 @@ class LoginEventsSynchronizer:
     @staticmethod
     def get_reancare_user_login_sessions():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
                 session.id,

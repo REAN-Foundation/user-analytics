@@ -1,4 +1,5 @@
 from app.domain_types.enums.event_types import EventType
+from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
 
@@ -11,7 +12,7 @@ class MedicationEventsSynchronizer:
     @staticmethod
     def get_reancare_medication_create_events():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
                 medication.id,
@@ -126,7 +127,7 @@ class MedicationEventsSynchronizer:
     @staticmethod
     def get_reancare_medication_delete_events():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
                 medication.id,
@@ -243,7 +244,7 @@ class MedicationEventsSynchronizer:
     @staticmethod
     def get_reancare_medication_schedule_taken_events():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
                 consumption.id,
@@ -359,7 +360,7 @@ class MedicationEventsSynchronizer:
     @staticmethod
     def get_reancare_medication_schedule_missed_events():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
                 consumption.id,
