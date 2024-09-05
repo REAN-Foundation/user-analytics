@@ -6,18 +6,7 @@ from app.database.mysql_connector import MySQLConnector
 import mysql.connector
 
 from app.domain_types.enums.event_types import EventType
-
-############################################################
-
-reancare_db_host     = os.getenv("REANCARE_DB_HOST")
-reancare_db_database = os.getenv("REANCARE_DB_NAME")
-reancare_db_user     = os.getenv("REANCARE_DB_USER_NAME")
-reancare_db_password = os.getenv("REANCARE_DB_USER_PASSWORD")
-
-analytics_db_host     = os.getenv("DB_HOST")
-analytics_db_database = os.getenv("DB_NAME")
-analytics_db_user     = os.getenv("DB_USER_NAME")
-analytics_db_password = os.getenv("DB_USER_PASSWORD")
+from app.modules.data_sync.connectors import get_analytics_db_connector, get_reancare_db_connector
 
 ############################################################
 
@@ -28,26 +17,12 @@ class DataSynchronizer:
     _api_keys_cache = LocalMemoryCache()
     _role_type_cache = LocalMemoryCache()
 
-    #region Connectors
-
-    @staticmethod
-    def get_reancare_db_connector():
-        return MySQLConnector(
-            reancare_db_host, reancare_db_user, reancare_db_password, reancare_db_database)
-
-    @staticmethod
-    def get_analytics_db_connector():
-        return MySQLConnector(
-            analytics_db_host, analytics_db_user, analytics_db_password, analytics_db_database)
-
-    #endregion
-
     #region User roles
 
     @staticmethod
     def get_reancare_user_roles():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT * from roles
             """
@@ -64,6 +39,26 @@ class DataSynchronizer:
             for role in roles:
                 DataSynchronizer._role_type_cache.set(role['id'], role)
 
+    @staticmethod
+    def get_role_by_name(role_name: str):
+        for v in DataSynchronizer._role_type_cache.values():
+            if v['RoleName'] == role_name:
+                return v
+        # for role_id in DataSynchronizer._role_type_cache.keys():
+        #     role = DataSynchronizer._role_type_cache.get(role_id)
+        #     if role['RoleName'] == role_name:
+        #         return role
+        return None
+
+    @staticmethod
+    def populate_tenants_cache():
+        tenants = DataSynchronizer.get_reancare_tenants()
+        if tenants is not None:
+            for tenant in tenants:
+                existing = DataSynchronizer.get_analytics_tenant(tenant['id'])
+                if existing is None:
+                    DataSynchronizer.add_analytics_tenant(tenant['id'], tenant)
+
     #endregion
 
     #region User
@@ -71,7 +66,7 @@ class DataSynchronizer:
     @staticmethod
     def get_analytics_user(user_id):
         try:
-            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
+            analytics_db_connector = get_analytics_db_connector()
             query = f"""
             SELECT * from users
             WHERE
@@ -89,7 +84,7 @@ class DataSynchronizer:
     @staticmethod
     def get_reancare_user_role(user_id):
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT RoleId from users
             WHERE
@@ -109,7 +104,7 @@ class DataSynchronizer:
     def get_reancare_user(user_id):
         user = None
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             role = DataSynchronizer.get_reancare_user_role(user_id)
             if role is None:
                 return None
@@ -176,7 +171,7 @@ class DataSynchronizer:
     @staticmethod
     def add_analytics_user_record(user_id, user):
         try:
-            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
+            analytics_db_connector = get_analytics_db_connector()
             insert_query = """
             INSERT INTO users (
                 id,
@@ -221,7 +216,7 @@ class DataSynchronizer:
     @staticmethod
     def add_analytics_user_metadata(user):
         try:
-            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
+            analytics_db_connector = get_analytics_db_connector()
             insert_query = """
             INSERT INTO user_metadata (
                 UserId,
@@ -314,7 +309,7 @@ class DataSynchronizer:
     @staticmethod
     def get_analytics_tenant(tenant_id):
         try:
-            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
+            analytics_db_connector = get_analytics_db_connector()
             query = f"""
             SELECT * from tenants
             WHERE
@@ -333,7 +328,7 @@ class DataSynchronizer:
     def get_reancare_tenant(tenant_id):
         tenant = None
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT * from tenants
             WHERE
@@ -349,9 +344,24 @@ class DataSynchronizer:
         return tenant
 
     @staticmethod
+    def get_reancare_tenants():
+        try:
+            rean_db_connector = get_reancare_db_connector()
+            query = f"""
+            SELECT * from tenants
+            WHERE
+                DeletedAt IS NULL
+            """
+            rows = rean_db_connector.execute_read_query(query)
+            return rows
+        except Exception as e:
+            print(f"Failed to fetch records: {e}")
+        return None
+
+    @staticmethod
     def add_analytics_tenant(tenant_id, tenant):
         try:
-            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
+            analytics_db_connector = get_analytics_db_connector()
             insert_query = """
             INSERT INTO tenants (
             id, TenantName, TenantCode, RegistrationDate
@@ -362,7 +372,7 @@ class DataSynchronizer:
             row = (tenant['id'], tenant['Name'], tenant['Code'], tenant['CreatedAt'])
             result = analytics_db_connector.execute_write_query(insert_query, row)
             if result is None:
-                print(f"Not inserted data {row}.")
+                # print(f"Not inserted data {row}.")
                 return None
             else:
                 DataSynchronizer._tenant_cache.set(tenant_id, result)
@@ -392,6 +402,24 @@ class DataSynchronizer:
                     return tenant
         return None
 
+    @staticmethod
+    def get_tenant_by_code(tenant_code):
+        try:
+            analytics_db_connector = get_analytics_db_connector()
+            query = f"""
+            SELECT * from tenants
+            WHERE
+                TenantCode = "{tenant_code}"
+            """
+            rows = analytics_db_connector.execute_read_query(query)
+            if len(rows) > 0:
+                return rows[0]
+            else:
+                return None
+        except Exception as error:
+            print("Error retrieving Tenant:", error)
+            return None
+
     #endregion
 
     #region Client App API Keys
@@ -399,7 +427,7 @@ class DataSynchronizer:
     @staticmethod
     def get_reancare_api_clients():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT * from api_clients
             WHERE
@@ -434,7 +462,7 @@ class DataSynchronizer:
     @staticmethod
     def get_reancare_user_ids():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT id from users
             WHERE
@@ -488,7 +516,7 @@ class DataSynchronizer:
     @staticmethod
     def get_reancare_tenant_ids():
         try:
-            rean_db_connector = DataSynchronizer.get_reancare_db_connector()
+            rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT id from tenants
             """
@@ -540,7 +568,7 @@ class DataSynchronizer:
     def get_existing_event(user_id, resource_id, event_type):
         try:
             event_name = event_type.value
-            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
+            analytics_db_connector = get_analytics_db_connector()
             query = f"""
             SELECT * from events
             WHERE
@@ -562,7 +590,7 @@ class DataSynchronizer:
     @staticmethod
     def add_event(event):
         try:
-            analytics_db_connector = DataSynchronizer.get_analytics_db_connector()
+            analytics_db_connector = get_analytics_db_connector()
             id_ = str(uuid.uuid4())
             insert_query = """
                 INSERT INTO events (

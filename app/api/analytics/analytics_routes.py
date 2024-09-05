@@ -38,11 +38,11 @@ router = APIRouter(
 @router.get("/basic-stats",
             status_code=status.HTTP_200_OK,
             response_model=ResponseModel[BasicAnalyticsStatistics|None])
-def basic_stats(
+async def basic_stats(
         tenant_id: Optional[UUID4] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None):
-    stats = basic_stats_(tenant_id, start_date, end_date)
+    stats = await basic_stats_(tenant_id, start_date, end_date)
     message = "Basic analytics statistics retrieved successfully."
     resp = ResponseModel[BasicAnalyticsStatistics](Message=message, Data=stats)
     return resp
@@ -75,8 +75,7 @@ async def generate_user_engagement_metrics(
     return resp
 
 @router.get("/download-user-engagement-metrics/{analysis_code}/format/{file_format}",
-            status_code=status.HTTP_200_OK,
-            response_model=StreamingResponse)
+            status_code=status.HTTP_200_OK)
 def download_user_engagement_metrics(analysis_code: str, file_format: str):
     file_format_lower = file_format.lower()
     if file_format_lower not in ["json", "excel", "pdf"]:
@@ -122,8 +121,7 @@ def generate_feature_engagement_metrics(
     return resp
 
 @router.get("/download-feature-engagement-metrics/{analysis_code}/format/{file_format}",
-            status_code=status.HTTP_200_OK,
-            response_model=StreamingResponse)
+            status_code=status.HTTP_200_OK)
 def download_feature_engagement_metrics(analysis_code: str, file_format: str):
     file_format_lower = file_format.lower()
     if file_format_lower not in ["json", "excel", "pdf"]:

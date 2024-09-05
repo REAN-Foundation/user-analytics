@@ -43,6 +43,20 @@ class LocalMemoryCache:
         """
         self.cache.clear()
 
+    def keys(self):
+        """
+        Get all the keys in the cache.
+        :return: A list of all keys in the cache.
+        """
+        return list(self.cache.keys())
+
+    def values(self):
+        """
+        Get all the values in the cache.
+        :return: A list of all values in the cache.
+        """
+        return [item['value'] for item in self.cache.values()]
+
     def __repr__(self):
         return f"LocalMemoryCache({self.cache})"
 
