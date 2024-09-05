@@ -40,6 +40,14 @@ class DataSynchronizer:
                 DataSynchronizer._role_type_cache.set(role['id'], role)
 
     @staticmethod
+    def get_role_by_name(role_name: str):
+        for role_id in DataSynchronizer._role_type_cache.keys():
+            role = DataSynchronizer._role_type_cache.get(role_id)
+            if role['RoleName'] == role_name:
+                return role
+        return None
+
+    @staticmethod
     def populate_tenants_cache():
         tenants = DataSynchronizer.get_reancare_tenants()
         if tenants is not None:
