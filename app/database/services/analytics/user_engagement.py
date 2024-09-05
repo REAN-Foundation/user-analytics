@@ -1,47 +1,13 @@
-from datetime import date, timedelta
-import json
-import uuid
-
+from datetime import date
 from pydantic import UUID4
-from app.common.utils import print_colorized_json
-from app.database.models.cohort import Cohort
-from app.database.models.cohort_users import CohortUser
-from app.database.models.user import User
-from sqlalchemy.orm import Session
-from sqlalchemy import func, asc, desc
-from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
+from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, tenant_check
 from app.modules.data_sync.connectors import get_analytics_db_connector
-from app.modules.data_sync.data_synchronizer import DataSynchronizer
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
-def tenant_check(tenant_id: UUID4|None, on_joined_user = False) -> str:
-    if tenant_id is None:
-        return ""
-    return f"TenantId = '{tenant_id}' AND" if on_joined_user == False else f"user.TenantId = '{tenant_id}' AND"
-
-def role_check(role_id: int|None, on_joined_user = False) -> str:
-    if role_id is None:
-        return ""
-    return f"RoleId = {role_id} AND" if on_joined_user == False else f"user.RoleId = {role_id} AND"
-
-def add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False):
-    query = query.replace("__TENANT_ID_CHECK__", tenant_check(tenant_id, on_joined_user))
-    query = query.replace("__ROLE_ID_CHECK__", role_check(role_id, on_joined_user))
-    return query
-
-def get_role_id(role_name: str = "Patient") -> int|None:
-    role_id = None
-    role = DataSynchronizer.get_role_by_name(role_name)
-    if (role is not None):
-        role_id = role["id"]
-    return role_id
-
-###############################################################################
-
-@trace_span("service: analytics_basics: get_all_registered_users")
-async def get_all_registered_users(tenant_id: UUID4|None, start_date: date, end_date: date) -> int:
+@trace_span("service: analytics_basics: get_daily_active_patients")
+async def get_daily_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date) -> int:
     try:
         connector = get_analytics_db_connector()
         query = f"""
@@ -59,8 +25,8 @@ async def get_all_registered_users(tenant_id: UUID4|None, start_date: date, end_
         print(e)
         return 0
 
-@trace_span("service: analytics_basics: get_all_registered_patients")
-async def get_all_registered_patients(tenant_id: UUID4|None, start_date: date, end_date: date) -> int:
+@trace_span("service: analytics_basics: get_weekly_active_patients")
+async def get_weekly_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date) -> int:
 
     role_id = get_role_id()
     try:
@@ -83,8 +49,8 @@ async def get_all_registered_patients(tenant_id: UUID4|None, start_date: date, e
         return 0
 
 
-@trace_span("service: analytics_basics: get_current_active_patients")
-async def get_current_active_patients(tenant_id: UUID4|None) -> int:
+@trace_span("service: analytics_basics: get_monthly_active_patients")
+async def get_monthly_active_patients(tenant_id: UUID4|None) -> int:
 
         role_id = get_role_id()
         try:
@@ -106,8 +72,8 @@ async def get_current_active_patients(tenant_id: UUID4|None) -> int:
             print(e)
             return 0
 
-@trace_span("service: analytics_basics: get_patient_registration_history")
-async def get_patient_registration_hisory_by_months(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+@trace_span("service: analytics_basics: get_patients_average_session_length_in_hours")
+async def get_patients_average_session_length_in_hours(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
         connector = get_analytics_db_connector()
@@ -130,8 +96,8 @@ async def get_patient_registration_hisory_by_months(tenant_id: UUID4|None, start
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patient_deregistration_history")
-async def get_patient_deregistration_history_by_months(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+@trace_span("service: analytics_basics: get_patients_login_frequency")
+async def get_patients_login_frequency(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
         connector = get_analytics_db_connector()
@@ -154,8 +120,8 @@ async def get_patient_deregistration_history_by_months(tenant_id: UUID4|None, st
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patient_age_demographics")
-async def get_patient_age_demographics(tenant_id: UUID4|None, start_date:date, end_date: date) -> list:
+@trace_span("service: analytics_basics: get_patients_retention_rate")
+async def get_patients_retention_rate(tenant_id: UUID4|None, start_date:date, end_date: date) -> list:
     try:
         role_id = get_role_id()
         connector = get_analytics_db_connector()
@@ -190,8 +156,8 @@ async def get_patient_age_demographics(tenant_id: UUID4|None, start_date:date, e
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patient_gender_demographics")
-async def get_patient_gender_demographics(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+@trace_span("service: analytics_basics: get_patients_churn_rate")
+async def get_patients_churn_rate(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
         connector = get_analytics_db_connector()
@@ -216,8 +182,8 @@ async def get_patient_gender_demographics(tenant_id: UUID4|None, start_date: dat
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patient_ethnicity_demographics")
-async def get_patient_ethnicity_demographics(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+@trace_span("service: analytics_basics: get_patients_most_commonly_visited_screens")
+async def get_patients_most_commonly_visited_screens(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
         connector = get_analytics_db_connector()
@@ -242,8 +208,8 @@ async def get_patient_ethnicity_demographics(tenant_id: UUID4|None, start_date: 
         print(e)
         return []
 
-@trace_span("service: analytics_basics: get_patient_race_demographics")
-async def get_patient_race_demographics(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+@trace_span("service: analytics_basics: get_patients_most_commonly_used_features")
+async def get_patients_most_commonly_used_features(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
     try:
         role_id = get_role_id()
         connector = get_analytics_db_connector()
@@ -260,86 +226,6 @@ async def get_patient_race_demographics(tenant_id: UUID4|None, start_date: date,
                 __ROLE_ID_CHECK__
                 user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
             GROUP BY race;
-            """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-        result = connector.execute_read_query(query)
-        return result
-    except Exception as e:
-        print(e)
-        return []
-
-@trace_span("service: analytics_basics: get_patient_healthsystem_distribution")
-async def get_patient_healthsystem_distribution(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
-    try:
-        role_id = get_role_id()
-        connector = get_analytics_db_connector()
-        query = f"""
-            SELECT CASE
-                    WHEN HealthSystem IS NULL THEN 'Unknown'
-                    ELSE HealthSystem
-                END AS health_system,
-                COUNT(*) AS count
-            FROM user_metadata
-            INNER JOIN users as user ON user_metadata.UserId = user.id
-            WHERE
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-            GROUP BY health_system;
-            """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-        result = connector.execute_read_query(query)
-        return result
-    except Exception as e:
-        print(e)
-        return []
-
-@trace_span("service: analytics_basics: get_patient_hospital_distribution")
-async def get_patient_hospital_distribution(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
-    try:
-        role_id = get_role_id()
-        connector = get_analytics_db_connector()
-        query = f"""
-                SELECT CASE
-                        WHEN Hospital IS NULL THEN 'Unknown'
-                        ELSE Hospital
-                    END AS hospital,
-                    COUNT(*) AS count
-                FROM user_metadata
-                INNER JOIN users as user ON user_metadata.UserId = user.id
-                WHERE
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
-                    user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                GROUP BY hospital;
-            """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-        result = connector.execute_read_query(query)
-        return result
-    except Exception as e:
-        print(e)
-        return []
-
-@trace_span("service: analytics_basics: get_patient_survivor_or_caregiver_distribution")
-async def get_patient_survivor_or_caregiver_distribution(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
-    try:
-        role_id = get_role_id()
-        connector = get_analytics_db_connector()
-        query = f"""
-                SELECT CASE
-                        WHEN IsCareGiver IS NULL THEN 'Unknown'
-                        WHEN IsCareGiver = 1 THEN 'Yes'
-                        WHEN IsCareGiver = 0 THEN 'No'
-                        ELSE 'Unknown'
-                    END AS caregiver_status,
-                    COUNT(*) AS count
-                FROM user_metadata
-                INNER JOIN users as user ON user_metadata.UserId = user.id
-                WHERE
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
-                    user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                GROUP BY caregiver_status;
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)

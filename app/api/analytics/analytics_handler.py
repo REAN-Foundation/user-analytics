@@ -3,8 +3,7 @@ from typing import Optional
 import asyncio
 
 from pydantic import UUID4
-from app.common.validators import validate_uuid4
-from app.database.services.analytics_basics import (
+from app.database.services.analytics.basic_stats import (
     get_all_registered_patients,
     get_all_registered_users,
     get_current_active_patients,
@@ -18,7 +17,11 @@ from app.database.services.analytics_basics import (
     get_patient_registration_hisory_by_months,
     get_patient_survivor_or_caregiver_distribution
 )
-from app.domain_types.schemas.analytics import BasicAnalyticsStatistics, Demographics
+from app.database.services.analytics.report_generator_excel import generate_user_engagement_report_excel
+from app.database.services.analytics.report_generator_json import generate_user_engagement_report_json
+from app.database.services.analytics.report_generator_pdf import generate_user_engagement_report_pdf
+from app.database.services.analytics.user_engagement import get_daily_active_patients, get_monthly_active_patients, get_patients_average_session_length_in_hours, get_patients_churn_rate, get_patients_login_frequency, get_patients_most_commonly_used_features, get_patients_most_commonly_visited_screens, get_patients_retention_rate, get_weekly_active_patients
+from app.domain_types.schemas.analytics import BasicAnalyticsStatistics, Demographics, UserEngagementMetrics
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 from app.telemetry.tracing import trace_span
 
@@ -95,9 +98,61 @@ async def basic_stats_(
 ###############################################################################
 
 @trace_span("handler: generate_user_engagement_metrics")
-def generate_user_engagement_metrics_():
+async def generate_user_engagement_metrics_(
+                                    analysis_code,
+                                    tenant_id: Optional[UUID4] = None,
+                                    start_date: Optional[date] = None,
+                                    end_date: Optional[date] = None):
     try:
-        pass
+        tenant_id, start_date, end_date, tenant_name = check_params(tenant_id, start_date, end_date)
+
+        results = await asyncio.gather(
+            get_daily_active_patients(tenant_id, start_date, end_date),
+            get_weekly_active_patients(tenant_id, start_date, end_date),
+            get_monthly_active_patients(tenant_id, start_date, end_date),
+            get_patients_average_session_length_in_hours(tenant_id, start_date, end_date),
+            get_patients_login_frequency(tenant_id, start_date, end_date),
+            get_patients_retention_rate(tenant_id, start_date, end_date),
+            get_patients_churn_rate(tenant_id, start_date, end_date),
+            get_patients_most_commonly_visited_screens(tenant_id, start_date, end_date),
+            get_patients_most_commonly_used_features(tenant_id, start_date, end_date)
+        )
+
+        daily_active_users = results[0]
+        weekly_active_users = results[1]
+        monthly_active_users = results[2]
+        average_session_length = results[3]
+        login_frequency = results[4]
+        retention_rate = results[5]
+        churn_rate = results[6]
+        most_commonly_visited_screens = results[7]
+        most_common_features = results[8]
+
+        user_engagement_metrics = UserEngagementMetrics(
+            TenantId=tenant_id,
+            TenantName=tenant_name,
+            StartDate=start_date,
+            EndDate=end_date,
+            DailyActiveUsers=daily_active_users,
+            WeeklyActiveUsers=weekly_active_users,
+            MonthlyActiveUsers=monthly_active_users,
+            StickinessRate=[],
+            AverageSessionLengthHours=average_session_length,
+            LoginFrequency=login_frequency,
+            RetentionRate=retention_rate,
+            ChurnRate=churn_rate,
+            MostCommonlyVisitedScreens=most_commonly_visited_screens,
+            MostCommonFeatures=most_common_features
+        )
+
+        json_file_path = generate_user_engagement_report_json(analysis_code, user_engagement_metrics)
+        excel_file_path = generate_user_engagement_report_excel(analysis_code, user_engagement_metrics)
+        pdf_file_path = generate_user_engagement_report_pdf(analysis_code, user_engagement_metrics)
+
+        print(f"JSON file path: {json_file_path}")
+        print(f"Excel file path: {excel_file_path}")
+        print(f"PDF file path: {pdf_file_path}")
+
     except Exception as e:
         print(e)
 
