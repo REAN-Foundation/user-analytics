@@ -24,7 +24,6 @@ from app.database.services.analytics.user_engagement import (
     get_patients_average_session_length_in_hours,
     get_patients_login_frequency,
     get_patients_most_commonly_used_features,
-    get_patients_most_commonly_visited_screens,
     get_patients_retention_rate,
     get_weekly_active_patients
 )
@@ -146,7 +145,7 @@ async def generate_user_engagement_metrics_(
             DailyActiveUsers=daily_active_users,
             WeeklyActiveUsers=weekly_active_users,
             MonthlyActiveUsers=monthly_active_users,
-            StickinessRate=stickiness,
+            Stickiness=stickiness,
             AverageSessionLengthHours=average_session_length,
             LoginFrequency=login_frequency,
             RetentionRate=retention_rate,
