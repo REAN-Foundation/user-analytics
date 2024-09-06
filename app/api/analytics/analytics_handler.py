@@ -168,9 +168,8 @@ async def user_engagement(analysis_code, tenant_id, start_date, end_date):
         )
 
     json_file_path = await generate_user_engagement_report_json(analysis_code, user_engagement_metrics)
-    # excel_file_path = generate_user_engagement_report_excel(analysis_code, user_engagement_metrics)
-    # pdf_file_path = generate_user_engagement_report_pdf(analysis_code, user_engagement_metrics)
-    excel_file_path = None
+    excel_file_path = await generate_user_engagement_report_excel(analysis_code, user_engagement_metrics)
+    # pdf_file_path = await generate_user_engagement_report_pdf(analysis_code, user_engagement_metrics)
     pdf_file_path = None
 
     return json_file_path, excel_file_path, pdf_file_path
