@@ -43,20 +43,19 @@ class BasicAnalyticsStatistics(BaseModel):
     PatientDemographics          : Demographics|None = Field(description="User demographics")
 
 class UserEngagementMetrics(BaseModel):
-    TenantId                   : UUID4          = Field(description="Tenant ID")
-    TenantName                 : str            = Field(description="Tenant Name")
-    StartDate                  : datetime       = Field(description="Start date for analytics")
-    EndDate                    : datetime       = Field(description="End date for analytics")
-    DailyActiveUsers           : dict[str, int] = Field(description="Daily active users per day (DAU)")
-    WeeklyActiveUsers          : dict[str, int] = Field(description="Weekly active users per week (WAU)")
-    MonthlyActiveUsers         : dict[str, int] = Field(description="Monthly active users per month (MAU)")
-    StickinessRate             : dict[str, int] = Field(description="Ratio of DAU to MAU, showing user engagement and loyalty (DAU/MAU).")
-    AverageSessionLengthHours  : dict[str, int] = Field(description="Average session duration Hours")
-    LoginFrequency             : dict[str, int] = Field(description="Average number of sessions per user per day/week/month.")
-    RetentionRate              : dict[str, int] = Field(description="Percentage of users who return to the app after their first use (day 1, day 7, day 30).")
-    ChurnRate                  : dict[str, int] = Field(description="Percentage of users who stop using the app after their first use (day 1, day 7, day 30).")
-    MostCommonlyVisitedScreens : dict[str, int] = Field(description="Most common actions performed by users")
-    MostCommonFeatures         : dict[str, int] = Field(description="Most common events performed by users")
+      TenantId                        : UUID4|None     = Field(description="Tenant ID")
+      TenantName                      : str            = Field(description="Tenant Name")
+      StartDate                       : str|None       = Field(description="Start date for analytics")
+      EndDate                         : str|None       = Field(description="End date for analytics")
+      DailyActiveUsers                : list|dict|None = Field(description="Daily active users per day (DAU)")
+      WeeklyActiveUsers               : list|dict|None = Field(description="Weekly active users per week (WAU)")
+      MonthlyActiveUsers              : list|dict|None = Field(description="Monthly active users per month (MAU)")
+      StickinessRatio                 : list|dict|None = Field(description="Ratio of DAU to MAU, showing user engagement and loyalty (DAU/MAU).")
+      AverageSessionLengthMinutes     : float|None     = Field(description="Average session duration in minutes.")
+      LoginFrequency                  : list|dict|None = Field(description="Average number of sessions per user per day/week/month.")
+      RetentionRateOnSpecificDays     : list|dict|None = Field(description="Percentage of users who return to the app after their first use (day 1, day 7, day 30).")
+      RetentionRateInSpecificIntervals: list|dict|None = Field(description="Percentage of users who return to the app after their first use (day 1, day 7, day 30).")
+      MostCommonlyVisitedFeatures     : list|dict|None = Field(description="Most common events performed by users")
 
 class FeatureEngagementMetrics(BaseModel):
     TenantId                     : UUID4          = Field(description="Tenant ID")
@@ -77,14 +76,14 @@ class FeatureEngagementMetrics(BaseModel):
 
 
 class UserEngagementMetricsResponse(BaseModel):
-    TenantId     : Optional[UUID4]    = Field(description="Tenant ID")
-    StartDate    : Optional[datetime] = Field(description="Start date for analytics")
-    EndDate      : Optional[datetime] = Field(description="End date for analytics")
-    AnalysisCode : Optional[str]      = Field(description="Unique code to identify the analysis")
-    URL          : Optional[str]      = Field(description="URL to access the user engagement metrics data")
-    JsonURL      : Optional[str]      = Field(description="URL to access the JSON formatted user engagement metrics data")
-    ExcelURL     : Optional[str]      = Field(description="URL to access the Excel formatted user engagement metrics data")
-    PDFURL       : Optional[str]      = Field(description="URL to access the PDF formatted user engagement metrics data")
+    TenantId     : Optional[UUID4|str|None]    = Field(description="Tenant ID")
+    StartDate    : Optional[datetime|str|None] = Field(description="Start date for analytics")
+    EndDate      : Optional[datetime|str|None] = Field(description="End date for analytics")
+    AnalysisCode : Optional[str]               = Field(description="Unique code to identify the analysis")
+    URL          : Optional[str]               = Field(description="URL to access the user engagement metrics data")
+    JsonURL      : Optional[str]               = Field(description="URL to access the JSON formatted user engagement metrics data")
+    ExcelURL     : Optional[str]               = Field(description="URL to access the Excel formatted user engagement metrics data")
+    PDFURL       : Optional[str]               = Field(description="URL to access the PDF formatted user engagement metrics data")
 
 class FeatureEngagementMetricsResponse(UserEngagementMetricsResponse):
     Feature : str = Field(description="Name of the feature")

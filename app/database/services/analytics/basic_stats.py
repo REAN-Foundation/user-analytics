@@ -1,42 +1,9 @@
-from datetime import date, timedelta
-import json
-import uuid
+from datetime import date
 
 from pydantic import UUID4
-from app.common.utils import print_colorized_json
-from app.database.models.cohort import Cohort
-from app.database.models.cohort_users import CohortUser
-from app.database.models.user import User
-from sqlalchemy.orm import Session
-from sqlalchemy import func, asc, desc
-from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
+from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, tenant_check
 from app.modules.data_sync.connectors import get_analytics_db_connector
-from app.modules.data_sync.data_synchronizer import DataSynchronizer
 from app.telemetry.tracing import trace_span
-
-###############################################################################
-
-def tenant_check(tenant_id: UUID4|None, on_joined_user = False) -> str:
-    if tenant_id is None:
-        return ""
-    return f"TenantId = '{tenant_id}' AND" if on_joined_user == False else f"user.TenantId = '{tenant_id}' AND"
-
-def role_check(role_id: int|None, on_joined_user = False) -> str:
-    if role_id is None:
-        return ""
-    return f"RoleId = {role_id} AND" if on_joined_user == False else f"user.RoleId = {role_id} AND"
-
-def add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False):
-    query = query.replace("__TENANT_ID_CHECK__", tenant_check(tenant_id, on_joined_user))
-    query = query.replace("__ROLE_ID_CHECK__", role_check(role_id, on_joined_user))
-    return query
-
-def get_role_id(role_name: str = "Patient") -> int|None:
-    role_id = None
-    role = DataSynchronizer.get_role_by_name(role_name)
-    if (role is not None):
-        role_id = role["id"]
-    return role_id
 
 ###############################################################################
 
@@ -48,8 +15,9 @@ async def get_all_registered_users(tenant_id: UUID4|None, start_date: date, end_
             SELECT
                 COUNT(*) as user_count
             FROM users
-            WHERE __TENANT_ID_CHECK__
+            WHERE
                 RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                __TENANT_ID_CHECK__
             """
         query = query.replace("__TENANT_ID_CHECK__", tenant_check(tenant_id))
         result = connector.execute_read_query(query)
@@ -70,9 +38,9 @@ async def get_all_registered_patients(tenant_id: UUID4|None, start_date: date, e
                 COUNT(*) as user_count
             FROM users
             WHERE
+                RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
         result = connector.execute_read_query(query)
@@ -94,9 +62,9 @@ async def get_current_active_patients(tenant_id: UUID4|None) -> int:
                     COUNT(*) as user_count
                 FROM users
                 WHERE
+                    DeletedAt IS NULL
                     __TENANT_ID_CHECK__
                     __ROLE_ID_CHECK__
-                    DeletedAt IS NULL
                 """
             query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
             result = connector.execute_read_query(query)
@@ -117,9 +85,9 @@ async def get_patient_registration_hisory_by_months(tenant_id: UUID4|None, start
                 COUNT(*) as user_count
             FROM users
             WHERE
+                RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
             GROUP BY month
             ORDER BY month
             """
@@ -141,9 +109,9 @@ async def get_patient_deregistration_history_by_months(tenant_id: UUID4|None, st
                 COUNT(*) as user_count
             FROM users
             WHERE
+                DeletedAt BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                DeletedAt BETWEEN '{start_date}' AND '{end_date}'
             GROUP BY month
             ORDER BY month
             """
@@ -176,9 +144,9 @@ async def get_patient_age_demographics(tenant_id: UUID4|None, start_date:date, e
             FROM user_metadata
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
+                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
             GROUP BY age_group
             ORDER BY FIELD(age_group, '0-18', '19-30', '31-45', '46-60', '61-75', '76-90', '91-105', '106-120', 'Unknown');
             """
@@ -204,9 +172,9 @@ async def get_patient_gender_demographics(tenant_id: UUID4|None, start_date: dat
             FROM user_metadata
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
+                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
             GROUP BY gender;
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
@@ -230,9 +198,9 @@ async def get_patient_ethnicity_demographics(tenant_id: UUID4|None, start_date: 
             FROM user_metadata
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
+                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
             GROUP BY ethnicity;
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
@@ -256,9 +224,9 @@ async def get_patient_race_demographics(tenant_id: UUID4|None, start_date: date,
             FROM user_metadata
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
+                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
             GROUP BY race;
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
@@ -282,9 +250,9 @@ async def get_patient_healthsystem_distribution(tenant_id: UUID4|None, start_dat
             FROM user_metadata
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
+                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
             GROUP BY health_system;
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
@@ -308,9 +276,9 @@ async def get_patient_hospital_distribution(tenant_id: UUID4|None, start_date: d
                 FROM user_metadata
                 INNER JOIN users as user ON user_metadata.UserId = user.id
                 WHERE
+                    user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                     __TENANT_ID_CHECK__
                     __ROLE_ID_CHECK__
-                    user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 GROUP BY hospital;
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
@@ -336,9 +304,9 @@ async def get_patient_survivor_or_caregiver_distribution(tenant_id: UUID4|None, 
                 FROM user_metadata
                 INNER JOIN users as user ON user_metadata.UserId = user.id
                 WHERE
+                    user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                     __TENANT_ID_CHECK__
                     __ROLE_ID_CHECK__
-                    user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 GROUP BY caregiver_status;
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
