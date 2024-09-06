@@ -31,7 +31,8 @@ class MySQLConnector:
         connection.close()
 
     def is_read_only_query(self, query):
-        return query.strip().upper().startswith("SELECT")
+        q = query.strip().upper()
+        return q.startswith("SELECT") or q.startswith("WITH") or q.find('SELECT') != -1
 
     def close_connection(self, connection):
         if connection.is_connected():

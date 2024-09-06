@@ -13,7 +13,7 @@ async def generate_user_engagement_report_json(
         reports_path = get_report_folder_path()
         json_file_path = os.path.join(reports_path, f"user_engagement_report_{analysis_code}.json")
         with open(json_file_path, "w") as json_file:
-            json.dump(user_engagement_metrics.model_dump(), json_file)
+            json.dump(user_engagement_metrics.model_dump(), json_file, indent=4)
         return json_file_path
     except Exception as e:
         print(e)

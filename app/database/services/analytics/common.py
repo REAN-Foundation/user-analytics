@@ -13,12 +13,12 @@ REPORTS_DIR = "analytics_reports"
 def tenant_check(tenant_id: UUID4|None, on_joined_user = False) -> str:
     if tenant_id is None:
         return ""
-    return f"TenantId = '{tenant_id}' AND" if on_joined_user == False else f"user.TenantId = '{tenant_id}' AND"
+    return f"AND TenantId = '{tenant_id}'" if on_joined_user == False else f"AND user.TenantId = '{tenant_id}'"
 
 def role_check(role_id: int|None, on_joined_user = False) -> str:
     if role_id is None:
         return ""
-    return f"RoleId = {role_id} AND" if on_joined_user == False else f"user.RoleId = {role_id} AND"
+    return f"AND RoleId = {role_id}" if on_joined_user == False else f"AND user.RoleId = {role_id}"
 
 def add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False):
     query = query.replace("__TENANT_ID_CHECK__", tenant_check(tenant_id, on_joined_user))
