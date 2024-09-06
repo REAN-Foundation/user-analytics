@@ -57,21 +57,24 @@ async def generate_user_engagement_metrics(
         tenant_id: Optional[UUID4] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None):
+
     analysis_code = generate_random_code(12)
     base_url = os.getenv("BASE_URL")
+
+    background_tasks.add_task(generate_user_engagement_metrics_, analysis_code, tenant_id, start_date, end_date)
+
     res_model = UserEngagementMetricsResponse(
-        TenantId=tenant_id,
-        StartDate=start_date,
-        EndDate=end_date,
-        AnalysisCode=analysis_code,
-        JsonURL=f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/json",
-        ExcelURL=f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/excel",
-        PDFURL=f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/pdf",
-        URL=f"{base_url}/api/analytics/user-engagement-metrics/{analysis_code}"
+        TenantId     = tenant_id if tenant_id is not None else "Unspecified",
+        StartDate    = start_date if start_date is not None else "Unspecified",
+        EndDate      = end_date if end_date is not None else "Unspecified",
+        AnalysisCode = analysis_code,
+        JsonURL      = f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/json",
+        ExcelURL     = f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/excel",
+        PDFURL       = f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/pdf",
+        URL          = f"{base_url}/api/analytics/user-engagement-metrics/{analysis_code}"
     )
-    background_tasks.add_task(generate_user_engagement_metrics_(analysis_code, tenant_id, start_date, end_date))
     message = "User engagement metrics analysis started successfully. It may take a while to complete. You can access the results through the urls shared."
-    resp = ResponseModel[bool](Message=message, Data=res_model)
+    resp = ResponseModel[UserEngagementMetricsResponse](Message=message, Data=res_model)
     return resp
 
 @router.get("/download-user-engagement-metrics/{analysis_code}/format/{file_format}",

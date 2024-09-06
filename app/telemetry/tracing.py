@@ -51,6 +51,19 @@ def trace_span(operation_name, span_kind=SpanKind.INTERNAL):
         return wrapper
     return decorator
 
+# Decorator to trace a function
+async def trace_span_async(operation_name, span_kind=SpanKind.INTERNAL):
+    async def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            if not tracing_enabled:
+                return await func(*args, **kwargs)
+            else:
+                with tracer.start_as_current_span(operation_name, kind=span_kind):
+                    return await func(*args, **kwargs)
+        return wrapper
+    return decorator
+
 # Function to inject headers into outgoing requests
 # NOTE: This method needs to be fixed
 def inject_headers(headers: Request.headers, attributes: dict=None):
