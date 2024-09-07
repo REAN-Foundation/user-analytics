@@ -77,28 +77,198 @@ async def get_feature_retention_rate_on_specific_days(feature: str, tenant_id: U
 
         role_id = get_role_id()
         connector = get_analytics_db_connector()
-
         query = f"""
-            SELECT
-                e.UserId, COUNT(e.UserId) AS engagement_count
-            FROM events e
-            JOIN users as user ON e.UserId = user.id
-            WHERE
-                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                AND e.EventName = '{feature}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
-            GROUP BY e.UserId;
-        """
+                WITH registered_users AS (
+                    SELECT user.id
+                    FROM users as user
+                    WHERE
+                        __TENANT_ID_CHECK__
+                        AND
+                        __ROLE_ID_CHECK__
+                ),
+
+                retention_1d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users as user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
+                ),
+
+                retention_3d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users as user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
+                ),
+
+                retention_7d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
+                ),
+
+                retention_10d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
+                ),
+
+                retention_15d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
+                ),
+
+                retention_20d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
+                ),
+
+                retention_25d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
+                ),
+
+                retention_30d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 30 DAY)
+                )
+
+                SELECT
+                    (SELECT COUNT(*) FROM registered_users) AS active_users,
+
+                    (SELECT COUNT(*) FROM retention_1d) AS returning_on_day_1,
+                    (SELECT COUNT(*) FROM retention_1d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_1d_rate,
+
+                    (SELECT COUNT(*) FROM retention_3d) AS returning_on_day_3,
+                    (SELECT COUNT(*) FROM retention_3d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_3d_rate,
+
+                    (SELECT COUNT(*) FROM retention_7d) AS returning_on_day_7,
+                    (SELECT COUNT(*) FROM retention_7d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_7d_rate,
+
+                    (SELECT COUNT(*) FROM retention_10d) AS returning_on_day_10,
+                    (SELECT COUNT(*) FROM retention_10d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_10d_rate,
+
+                    (SELECT COUNT(*) FROM retention_15d) AS returning_on_day_15,
+                    (SELECT COUNT(*) FROM retention_15d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_15d_rate,
+
+                    (SELECT COUNT(*) FROM retention_20d) AS returning_on_day_20,
+                    (SELECT COUNT(*) FROM retention_20d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_20d_rate,
+
+                    (SELECT COUNT(*) FROM retention_25d) AS returning_on_day_25,
+                    (SELECT COUNT(*) FROM retention_25d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_25d_rate,
+
+                    (SELECT COUNT(*) FROM retention_30d) AS returning_on_day_30,
+                    (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
+            """
+
+        tenant_id_check = ""
+        if tenant_id is not None:
+            tenant_id_check = f"user.TenantId = '{tenant_id}'"
+        role_id_check = ""
+        if role_id is not None:
+            role_id_check = f"user.RoleId = {role_id}"
+        query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
+        query = query.replace("__ROLE_ID_CHECK__", role_id_check)
+
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
-        return result
+        row = result[0]
+        result_ = {
+            "active_users": row['active_users'],
+            "retention_on_specific_days": [
+                {
+                    "day": 1,
+                    "returning_users": row['returning_on_day_1'],
+                    "retention_rate": float(row['retention_1d_rate'])
+                },
+                {
+                    "day": 3,
+                    "returning_users": row['returning_on_day_3'],
+                    "retention_rate": float(row['retention_3d_rate'])
+                },
+                {
+                    "day": 7,
+                    "returning_users": row['returning_on_day_7'],
+                    "retention_rate": float(row['retention_7d_rate'])
+                },
+                {
+                    "day": 10,
+                    "returning_users": row['returning_on_day_10'],
+                    "retention_rate": float(row['retention_10d_rate'])
+                },
+                {
+                    "day": 15,
+                    "returning_users": row['returning_on_day_15'],
+                    "retention_rate": float(row['retention_15d_rate'])
+                },
+                {
+                    "day": 20,
+                    "returning_users": row['returning_on_day_20'],
+                    "retention_rate": float(row['retention_20d_rate'])
+                },
+                {
+                    "day": 25,
+                    "returning_users": row['returning_on_day_25'],
+                    "retention_rate": float(row['retention_25d_rate'])
+                },
+                {
+                    "day": 30,
+                    "returning_users": row['returning_on_day_30'],
+                    "retention_rate": float(row['retention_30d_rate'])
+                }
+            ]
+        }
+        return result_
     except Exception as e:
         print(e)
-        return 0
+        return []
+
 
 @trace_span("service: analytics: feature engagement: get_feature_retention_rate_in_specific_intervals")
 async def get_feature_retention_rate_in_specific_intervals(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
+
     try:
         if not feature or len(feature) == 0:
             return None
@@ -107,24 +277,199 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, tenant_
         connector = get_analytics_db_connector()
 
         query = f"""
-            SELECT
-                e.UserId, COUNT(e.UserId) AS engagement_count
-            FROM events e
-            JOIN users as user ON e.UserId = user.id
-            WHERE
-                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                AND e.EventName = '{feature}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
-            GROUP BY e.UserId;
-        """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+                WITH registered_users AS (
+                    SELECT user.id
+                    FROM users as user
+                    WHERE
+                        __TENANT_ID_CHECK__
+                        AND
+                        __ROLE_ID_CHECK__
+                ),
+
+                retention_1d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users as user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
+                        AND DATE(e.Timestamp) >= DATE(user.RegistrationDate)
+                ),
+
+                retention_3d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users as user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
+                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
+                ),
+
+                retention_7d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
+                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
+                ),
+
+                retention_10d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
+                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
+                ),
+
+                retention_15d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
+                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
+                ),
+
+                retention_20d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
+                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
+                ),
+
+                retention_25d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
+                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
+                ),
+
+                retention_30d AS (
+                    SELECT DISTINCT e.UserId
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
+                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 30 DAY)
+                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
+                )
+
+                SELECT
+                    (SELECT COUNT(*) FROM registered_users) AS active_users,
+
+                    (SELECT COUNT(*) FROM retention_1d) AS returning_before_day_1,
+                    (SELECT COUNT(*) FROM retention_1d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_1d_rate,
+
+                    (SELECT COUNT(*) FROM retention_3d) AS returning_between_day_1_and_day_3,
+                    (SELECT COUNT(*) FROM retention_3d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_3d_rate,
+
+                    (SELECT COUNT(*) FROM retention_7d) AS returning_between_day_3_and_day_7,
+                    (SELECT COUNT(*) FROM retention_7d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_7d_rate,
+
+                    (SELECT COUNT(*) FROM retention_10d) AS returning_between_day_7_and_day_10,
+                    (SELECT COUNT(*) FROM retention_10d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_10d_rate,
+
+                    (SELECT COUNT(*) FROM retention_15d) AS returning_between_day_10_and_day_15,
+                    (SELECT COUNT(*) FROM retention_15d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_15d_rate,
+
+                    (SELECT COUNT(*) FROM retention_20d) returning_between_day_15_and_day_20,
+                    (SELECT COUNT(*) FROM retention_20d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_20d_rate,
+
+                    (SELECT COUNT(*) FROM retention_25d) AS returning_between_day_20_and_day_25,
+                    (SELECT COUNT(*) FROM retention_25d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_25d_rate,
+
+                    (SELECT COUNT(*) FROM retention_30d) AS returning_between_day_25_and_day_30,
+                    (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
+            """
+
+        tenant_id_check = ""
+        if tenant_id is not None:
+            tenant_id_check = f"user.TenantId = '{tenant_id}'"
+        role_id_check = ""
+        if role_id is not None:
+            role_id_check = f"user.RoleId = {role_id}"
+        query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
+        query = query.replace("__ROLE_ID_CHECK__", role_id_check)
+
         result = connector.execute_read_query(query)
-        return result
+        row = result[0]
+        result_ = {
+            "active_users": row['active_users'],
+            "retention_in_specific_interval": [
+                {
+                    "interval": "1d",
+                    "returning_users": row['returning_before_day_1'],
+                    "retention_rate": float(row['retention_1d_rate'])
+                },
+                {
+                    "interval": "3d",
+                    "returning_users": row['returning_between_day_1_and_day_3'],
+                    "retention_rate": float(row['retention_3d_rate'])
+                },
+                {
+                    "interval": "7d",
+                    "returning_users": row['returning_between_day_3_and_day_7'],
+                    "retention_rate": float(row['retention_7d_rate'])
+                },
+                {
+                    "interval": "10d",
+                    "returning_users": row['returning_between_day_7_and_day_10'],
+                    "retention_rate": float(row['retention_10d_rate'])
+                },
+                {
+                    "interval": "15d",
+                    "returning_users": row['returning_between_day_10_and_day_15'],
+                    "retention_rate": float(row['retention_15d_rate'])
+                },
+                {
+                    "interval": "20d",
+                    "returning_users": row['returning_between_day_15_and_day_20'],
+                    "retention_rate": float(row['retention_20d_rate'])
+                },
+                {
+                    "interval": "25d",
+                    "returning_users": row['returning_between_day_20_and_day_25'],
+                    "retention_rate": float(row['retention_25d_rate'])
+                },
+                {
+                    "interval": "30d",
+                    "returning_users": row['returning_between_day_25_and_day_30'],
+                    "retention_rate": float(row['retention_30d_rate'])
+                }
+            ]
+        }
+        return result_
     except Exception as e:
         print(e)
-        return 0
-
+        return []
 
 # The first and last events recorded for a user are considered as
 # the start and end of the user's engagement with the feature.

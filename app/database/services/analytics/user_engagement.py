@@ -1,6 +1,6 @@
 from datetime import date
 from pydantic import UUID4
-from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, tenant_check
+from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, role_check, tenant_check
 from app.domain_types.enums.event_types import EventType
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.telemetry.tracing import trace_span
@@ -214,8 +214,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     SELECT user.id
                     FROM users as user
                     WHERE
-                        user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                         __TENANT_ID_CHECK__
+                        AND
                         __ROLE_ID_CHECK__
                 ),
 
@@ -224,7 +224,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     FROM events e
                     JOIN users as user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
                 ),
 
@@ -233,7 +234,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     FROM events e
                     JOIN users as user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
                 ),
 
@@ -242,7 +244,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
                 ),
 
@@ -251,7 +254,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
                 ),
 
@@ -260,7 +264,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
                 ),
 
@@ -269,7 +274,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
                 ),
 
@@ -278,7 +284,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
                 ),
 
@@ -287,7 +294,8 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 30 DAY)
                 )
 
@@ -318,6 +326,15 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     (SELECT COUNT(*) FROM retention_30d) AS returning_on_day_30,
                     (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
             """
+
+        tenant_id_check = ""
+        if tenant_id is not None:
+            tenant_id_check = f"user.TenantId = '{tenant_id}'"
+        role_id_check = ""
+        if role_id is not None:
+            role_id_check = f"user.RoleId = {role_id}"
+        query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
+        query = query.replace("__ROLE_ID_CHECK__", role_id_check)
 
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
@@ -385,8 +402,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     SELECT user.id
                     FROM users as user
                     WHERE
-                        user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                         __TENANT_ID_CHECK__
+                        AND
                         __ROLE_ID_CHECK__
                 ),
 
@@ -395,7 +412,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     FROM events e
                     JOIN users as user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
                         AND DATE(e.Timestamp) >= DATE(user.RegistrationDate)
                 ),
@@ -405,7 +423,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     FROM events e
                     JOIN users as user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
                 ),
@@ -415,7 +434,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
                 ),
@@ -425,7 +445,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
                 ),
@@ -435,7 +456,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
                 ),
@@ -445,7 +467,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
                 ),
@@ -455,7 +478,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
                 ),
@@ -465,7 +489,8 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.UserId IN (SELECT id FROM registered_users)
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 30 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
                 )
@@ -498,7 +523,16 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
             """
 
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        tenant_id_check = ""
+        if tenant_id is not None:
+            tenant_id_check = f"user.TenantId = '{tenant_id}'"
+        role_id_check = ""
+        if role_id is not None:
+            role_id_check = f"user.RoleId = {role_id}"
+        query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
+        query = query.replace("__ROLE_ID_CHECK__", role_id_check)
+        
         result = connector.execute_read_query(query)
         row = result[0]
         result_ = {
