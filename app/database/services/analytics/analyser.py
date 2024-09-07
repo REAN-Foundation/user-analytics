@@ -35,7 +35,7 @@ from app.database.services.analytics.feature_engagement import (
     get_feature_retention_rate_on_specific_days,
     get_feature_retention_rate_in_specific_intervals,
     get_feature_average_usage_duration_minutes,
-    get_feature_drop_off_points_top_n,
+    get_feature_drop_off_points,
 )
 from app.database.services.analytics.reports.report_generator_excel import generate_user_engagement_report_excel
 from app.database.services.analytics.reports.report_generator_json import generate_user_engagement_report_json
@@ -53,6 +53,9 @@ async def calculate(
         tenant_id: Optional[UUID4] = None,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None) -> BasicAnalyticsStatistics|None:
+
+    print(f"Analysis started -> {analysis_code} -> ?For tenant: {tenant_id} from {start_date} to {end_date}")
+
     try:
         basic_stats = await calculate_basic_stats(tenant_id, start_date, end_date)
         tenant_overall_engagement = await calculate_tenant_engagement_metrics(tenant_id, start_date, end_date)
@@ -154,7 +157,6 @@ async def calculate_basic_stats(
         print(e)
 
 async def calculate_tenant_engagement_metrics(
-                                    analysis_code,
                                     tenant_id: Optional[UUID4] = None,
                                     start_date: Optional[date] = None,
                                     end_date: Optional[date] = None):
@@ -222,7 +224,7 @@ async def calculate_feature_engagement_metrics(
             get_feature_engagement_rate(feature, tenant_id, start_date, end_date),
             get_feature_retention_rate_on_specific_days(feature, tenant_id, start_date, end_date),
             get_feature_retention_rate_in_specific_intervals(feature, tenant_id, start_date, end_date),
-            get_feature_drop_off_points_top_n(feature, tenant_id, start_date, end_date)
+            get_feature_drop_off_points(feature, tenant_id, start_date, end_date)
         )
 
         access_frequency = results[0]
