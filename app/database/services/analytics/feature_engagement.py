@@ -265,7 +265,6 @@ async def get_feature_retention_rate_on_specific_days(feature: str, tenant_id: U
         print(e)
         return []
 
-
 @trace_span("service: analytics: feature engagement: get_feature_retention_rate_in_specific_intervals")
 async def get_feature_retention_rate_in_specific_intervals(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
 
@@ -594,4 +593,3 @@ async def get_feature_drop_off_points(
     except Exception as e:
         print(e)
         return 0
-
