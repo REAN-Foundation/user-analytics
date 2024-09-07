@@ -9,7 +9,7 @@ from app.database.services.analytics.analyser import (
     calculate_feature_engagement_metrics
 )
 
-from app.domain_types.schemas.analytics import BasicAnalyticsStatistics, Demographics, UserEngagementMetrics
+from app.domain_types.schemas.analytics import BasicAnalyticsStatistics, Demographics, GenericEngagementMetrics
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 from app.telemetry.tracing import trace_span
 
@@ -36,12 +36,12 @@ async def calculate_tenant_engagement_metrics_(
 
 async def calculate_feature_engagement_metrics_(
                                     analysis_code,
-                                    feature_name: str,
+                                    feature: str,
                                     tenant_id: Optional[UUID4] = None,
                                     start_date: Optional[date] = None,
                                     end_date: Optional[date] = None):
     try:
-        return await calculate_feature_engagement_metrics(analysis_code, tenant_id, start_date, end_date)
+        return await calculate_feature_engagement_metrics(feature, analysis_code, tenant_id, start_date, end_date)
     except Exception as e:
         print(e)
 
