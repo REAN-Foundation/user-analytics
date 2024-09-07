@@ -19,6 +19,7 @@ class Event(Base):
     SourceName                  = Column(String(256), default=None, nullable=False)
     SourceVersion               = Column(String(256), default=None, nullable=True)
     EventName                   = Column(String(256), default=None, nullable=False)
+    EventSubject                = Column(String(256), default=None, nullable=True)
     EventCategory               = Column(String(256), default=None, nullable=False)
     ActionType                  = Column(String(128), default=None, nullable=False)
     ActionStatement             = Column(String(512), default=None, nullable=True)

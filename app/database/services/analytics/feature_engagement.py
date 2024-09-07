@@ -1,212 +1,104 @@
 from datetime import date
 from pydantic import UUID4
-from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, role_check, tenant_check
+from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, tenant_check
 from app.domain_types.enums.event_types import EventType
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
-@trace_span("service: analytics: user engagement: get_daily_active_patients")
-async def get_daily_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date):
+@trace_span("service: analytics: feature engagement: get_feature_access_frequency")
+async def get_feature_access_frequency(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
     try:
+        if not feature or len(feature) == 0:
+            return None
+
         role_id = get_role_id()
         connector = get_analytics_db_connector()
+
         query = f"""
             SELECT
-                DATE(e.Timestamp) AS activity_date, COUNT(DISTINCT e.UserId) AS daily_active_users
+                DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
+                COUNT(e.id) AS access_frequency
             FROM events e
-            JOIN users as user ON e.UserId = user.id
+            JOIN users user ON e.UserId = user.id
             WHERE
-                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                e.EventCategory = '{feature}'
+                AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-            GROUP BY DATE(e.Timestamp)
-            ORDER BY activity_date;
+            GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
+            ORDER BY month ASC;
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-        result = connector.execute_read_query(query)
-        result_ = []
-        for row in result:
-            result_.append({
-                "activity_date": str(row['activity_date']),
-                "daily_active_users": row['daily_active_users']
-            })
-        return result_
-    except Exception as e:
-        print(e)
-        return 0
-
-@trace_span("service: analytics: user engagement: get_weekly_active_patients")
-async def get_weekly_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date):
-
-    role_id = get_role_id()
-    try:
-        connector = get_analytics_db_connector()
-
-        # query_week_number = f"""
-        #     SELECT
-        #         YEARWEEK(e.Timestamp, 1) AS activity_week, COUNT(DISTINCT e.UserId) AS weekly_active_users
-        #     FROM events e
-        #     JOIN users user ON e.UserId = user.id
-        #     WHERE
-        #         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-        #         __TENANT_ID_CHECK__
-        #         __ROLE_ID_CHECK__
-        #     GROUP BY YEARWEEK(e.Timestamp, 1)
-        #     ORDER BY activity_week;
-        # """
-
-        query_week_by_start_end_dates = f"""
-            SELECT
-                DATE_FORMAT(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), '%Y-%m-%d') AS week_start_date,
-                DATE_FORMAT(DATE_ADD(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), INTERVAL 6 DAY), '%Y-%m-%d') AS week_end_date,
-                COUNT(DISTINCT e.UserId) AS weekly_active_users
-            FROM events e
-            JOIN users as user ON e.UserId = user.id
-            WHERE
-                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
-            GROUP BY DATE_FORMAT(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), '%Y-%m-%d'),
-                    DATE_FORMAT(DATE_ADD(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), INTERVAL 6 DAY), '%Y-%m-%d')
-            ORDER BY week_start_date;
-        """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query_week_by_start_end_dates, on_joined_user = True)
         result = connector.execute_read_query(query)
         return result
     except Exception as e:
         print(e)
         return 0
 
-
-@trace_span("service: analytics: user engagement: get_monthly_active_patients")
-async def get_monthly_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date):
-
-        role_id = get_role_id()
-        try:
-            connector = get_analytics_db_connector()
-            query = f"""
-                SELECT DATE_FORMAT(e.Timestamp, '%Y-%m') AS activity_month, COUNT(DISTINCT e.UserId) AS monthly_active_users
-                FROM events e
-                JOIN users as user ON e.UserId = user.id
-                WHERE
-                    e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
-                GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
-                ORDER BY activity_month;
-            """
-            query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-            result = connector.execute_read_query(query)
-            return result
-        except Exception as e:
-            print(e)
-            return 0
-
-# Get DAU, WAU, MAU in one query. Not tested yet.
-@trace_span("service: analytics: user engagement: get_patients_active_dau_wau_mau")
-async def get_patients_active_dau_wau_mau(tenant_id: UUID4|None, start_date: date, end_date: date) :
+@trace_span("service: analytics: feature engagement: get_feature_engagement_rate")
+async def get_feature_engagement_rate(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
     try:
+        if not feature or len(feature) == 0:
+            return None
+
         role_id = get_role_id()
         connector = get_analytics_db_connector()
-        query = f"""
-                SELECT
-                    DATE(e.Timestamp) AS activity_date,
-                    COUNT(DISTINCT e.UserId) AS daily_active_users,
-                    YEARWEEK(e.Timestamp, 1) AS activity_week,
-                    COUNT(DISTINCT CASE WHEN YEARWEEK(e.Timestamp, 1) = YEARWEEK(CURDATE(), 1) THEN e.UserId END) AS weekly_active_users,
-                    DATE_FORMAT(e.Timestamp, '%Y-%m') AS activity_month,
-                    COUNT(DISTINCT CASE WHEN DATE_FORMAT(e.Timestamp, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m') THEN e.UserId END) AS monthly_active_users
-                FROM events e
-                JOIN users user ON e.UserId = user.id
-                WHERE
-                    e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
-                GROUP BY DATE(e.Timestamp), YEARWEEK(e.Timestamp, 1), DATE_FORMAT(e.Timestamp, '%Y-%m')
-                ORDER BY activity_date;
-            """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-        result = connector.execute_read_query(query)
-        return result
-    except Exception as e:
-        print(e)
-        return None
 
-@trace_span("service: analytics: user engagement: get_patients_average_session_length_in_minutes")
-async def get_patients_average_session_length_in_minutes(
-    tenant_id: UUID4|None, start_date: date, end_date: date):
-    try:
-        role_id = get_role_id()
-        connector = get_analytics_db_connector()
-        # calculate average session lengths by utilizing the SessionId in the events table.
-        # Measure the duration of a session for each SessionId based on the difference between
-        # the first and last event timestamps in that session.
-        # PLEASE NOTE: Since the sessionId is not available for the existing synched data,
-        # the query will return an empty list for the time being. But once we start recording sessionId
-        # in the events table, this query will be able to calculate the average session length.
         query = f"""
-                SELECT
-                    AVG(session_length) AS avg_session_length_seconds
-                FROM (
+                -- Step 1: Get the total number of active users per month
+                WITH ActiveUsersPerMonth AS (
                     SELECT
-                        e.SessionId,
-                        TIMESTAMPDIFF(SECOND, MIN(e.Timestamp), MAX(e.Timestamp)) AS session_length
+                        DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,  -- Extract year and month
+                        COUNT(DISTINCT e.UserId) AS active_users     -- Count distinct active users per month
                     FROM events e
-                    JOIN users AS user ON e.UserId = user.id
-                        WHERE
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                        AND e.SessionId IS NOT NULL
                         __TENANT_ID_CHECK__
                         __ROLE_ID_CHECK__
-                    GROUP BY e.SessionId
-                ) AS session_durations;
-            """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-        result = connector.execute_read_query(query)
-        row = result[0]
-        average_session_length = float(row['avg_session_length_seconds']) / 60
-        return average_session_length
-    except Exception as e:
-        print(e)
-        return []
+                    GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
+                ),
 
-@trace_span("service: analytics: user engagement: get_patients_login_frequency")
-async def get_patients_login_frequency(
-    tenant_id: UUID4|None, start_date: date, end_date: date):
-    try:
-        role_id = get_role_id()
-        connector = get_analytics_db_connector()
-        event_name = EventType.UserLogin.value
-        query = f"""
+                -- Step 2: Get the number of unique users engaging with each feature per month
+                FeatureUsersPerMonth AS (
+                    SELECT
+                        DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,  -- Extract year and month
+                        e.EventCategory AS feature,                  -- The feature (EventCategory)
+                        COUNT(DISTINCT e.UserId) AS feature_users    -- Count distinct users engaging with the feature
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.EventCategory = '{feature}'
+                        AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        __TENANT_ID_CHECK__
+                        __ROLE_ID_CHECK__
+                    GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m'), e.EventCategory
+                )
+
+                -- Step 3: Calculate the feature engagement rate
                 SELECT
-                    DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
-                    COUNT(e.EventName) AS login_count
-                FROM events e
-                JOIN users AS user ON e.UserId = user.id
-                WHERE
-                    e.EventName = '{event_name}'
-                    AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
-                GROUP BY month
-                ORDER BY month ASC;
-            """
+                    fpm.month,
+                    fpm.feature,
+                    (fpm.feature_users / aupm.active_users) * 100 AS engagement_rate
+                FROM FeatureUsersPerMonth fpm
+                JOIN ActiveUsersPerMonth aupm ON fpm.month = aupm.month
+                ORDER BY fpm.month DESC;
+        """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
         return result
     except Exception as e:
         print(e)
-        return []
+        return 0
 
-
-# Retention rate on specific days = (returning users on specific day / active users) * 100
-# PLESE NOTE THAT - This retention rate (on specific days) is calculated based on the number of unique users returning
-# on specific days (Not during the interval between registration day and that day).
-@trace_span("service: analytics: user engagement: get_patients_retention_rate_on_specific_days")
-async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, start_date:date, end_date: date):
+@trace_span("service: analytics: feature engagement: get_feature_retention_rate_on_specific_days")
+async def get_feature_retention_rate_on_specific_days(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
     try:
+        if not feature or len(feature) == 0:
+            return None
+
         role_id = get_role_id()
         connector = get_analytics_db_connector()
         query = f"""
@@ -225,6 +117,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     JOIN users as user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
                 ),
@@ -235,6 +128,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     JOIN users as user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
                 ),
@@ -245,6 +139,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
                 ),
@@ -255,6 +150,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
                 ),
@@ -265,6 +161,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
                 ),
@@ -275,6 +172,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
                 ),
@@ -285,6 +183,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
                 ),
@@ -295,6 +194,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 30 DAY)
                 )
@@ -389,14 +289,16 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
         print(e)
         return []
 
-# Retention rate in a specific time interval = (returning users in the interval / active users) * 100
-# PLESE NOTE THAT - This retention rate (in a specific time interval) is calculated based on the number of unique users returning
-# in the interval between the start and end dates after their registration date.
-@trace_span("service: analytics: user engagement: get_patients_retention_rate_in_specific_time_interval")
-async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4|None, start_date: date, end_date: date):
+@trace_span("service: analytics: feature engagement: get_feature_retention_rate_in_specific_intervals")
+async def get_feature_retention_rate_in_specific_intervals(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
+
     try:
+        if not feature or len(feature) == 0:
+            return None
+
         role_id = get_role_id()
         connector = get_analytics_db_connector()
+
         query = f"""
                 WITH registered_users AS (
                     SELECT user.id
@@ -413,6 +315,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     JOIN users as user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
                         AND DATE(e.Timestamp) >= DATE(user.RegistrationDate)
@@ -424,6 +327,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     JOIN users as user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
@@ -435,6 +339,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
@@ -446,6 +351,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
@@ -457,6 +363,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
@@ -468,6 +375,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
@@ -479,6 +387,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
@@ -490,6 +399,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        AND e.EventCategory = '{feature}'
                         AND e.UserId IN (SELECT id FROM registered_users)
                         AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 30 DAY)
                         AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
@@ -523,7 +433,6 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                     (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
             """
 
-
         tenant_id_check = ""
         if tenant_id is not None:
             tenant_id_check = f"user.TenantId = '{tenant_id}'"
@@ -532,7 +441,7 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
             role_id_check = f"user.RoleId = {role_id}"
         query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
         query = query.replace("__ROLE_ID_CHECK__", role_id_check)
-        
+
         result = connector.execute_read_query(query)
         row = result[0]
         result_ = {
@@ -585,148 +494,126 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
         print(e)
         return []
 
-@trace_span("service: analytics: user engagement: get_patient_stickiness_dau_mau")
-async def get_patient_stickiness_dau_mau(tenant_id: UUID4|None, start_date: date, end_date: date):
+# The first and last events recorded for a user are considered as
+# the start and end of the user's engagement with the feature.
+@trace_span("service: analytics: feature engagement: get_feature_average_usage_duration_minutes")
+async def get_feature_average_usage_duration_minutes(
+    feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
     try:
-        role_id = get_role_id()
-        connector = get_analytics_db_connector()
-        query = f"""
-                    WITH ActiveUsers AS (
-                        SELECT
-                            DATE_FORMAT(e.Timestamp, '%Y-%m-%d') AS event_date,
-                            COUNT(DISTINCT e.UserId) AS daily_active_users,
-                            DATE_FORMAT(e.Timestamp, '%Y-%m') AS month
-                        FROM events e
-                        JOIN users user ON e.UserId = user.id
-                        WHERE
-                            user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                            __TENANT_ID_CHECK__
-                            __ROLE_ID_CHECK__
-                        GROUP BY event_date, month
-                    ),
-                    MonthlyActiveUsers AS (
-                        SELECT
-                            DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
-                            COUNT(DISTINCT e.UserId) AS monthly_active_users
-                        FROM events e
-                        JOIN users user ON e.UserId = user.id
-                        WHERE
-                            user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                            __TENANT_ID_CHECK__
-                            __ROLE_ID_CHECK__
-                        GROUP BY month
-                    )
-                    SELECT
-                        a.month,
-                        ROUND(AVG(a.daily_active_users), 0) AS avg_dau,
-                        m.monthly_active_users AS mau,
-                        ROUND((AVG(a.daily_active_users) / m.monthly_active_users) * 100, 2) AS stickiness
-                    FROM ActiveUsers a
-                    JOIN MonthlyActiveUsers m ON a.month = m.month
-                    GROUP BY a.month, m.monthly_active_users
-                    ORDER BY a.month ASC;
-            """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-        result = connector.execute_read_query(query)
-        result_ = []
-        for row in result:
-            result_.append({
-                "month": row['month'],
-                "avg_dau": float(row['avg_dau']),
-                "mau": row['mau'],
-                "stickiness": float(row['stickiness'])
-            })
-        return result_
-    except Exception as e:
-        print(e)
-        return []
+        if not feature or len(feature) == 0:
+            return None
 
-# Please note that we are treating the EventCategory as the feature in this case.
-@trace_span("service: analytics: user engagement: get_patients_most_commonly_used_features")
-async def get_patients_most_commonly_used_features(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
-    try:
-        top_features_count = 5
         role_id = get_role_id()
         connector = get_analytics_db_connector()
+
+        # Please note that we do not use user's login session Id to track this.
+        # We simply track the first and last event times for each feature session per user.
+
         query = f"""
-                    -- Step 1: Aggregate feature usage (EventCategory) by month
-                    SELECT t1.month, t1.feature, t1.feature_usage_count
-                    FROM (
-                        SELECT
-                            DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
-                            e.EventCategory AS feature,
-                            COUNT(e.id) AS feature_usage_count
-                        FROM events e
-                        JOIN
-                        users user ON e.UserId = user.id
-                        WHERE
-                            e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                            __TENANT_ID_CHECK__
-                            __ROLE_ID_CHECK__
-                        GROUP BY month, feature
-                        ORDER BY feature_usage_count DESC
-                    ) AS t1
-                    WHERE (
-                        SELECT COUNT(*)
-                        FROM (
-                            SELECT
-                                DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
-                                e.EventCategory AS feature,
-                                COUNT(e.id) AS feature_usage_count
-                            FROM events e
-                            GROUP BY month, feature
-                            ORDER BY feature_usage_count DESC
-                            LIMIT {top_features_count}
-                        ) AS top_features
-                    )
-                    ORDER BY month, feature_usage_count DESC;
+                -- Step 1: Get the first and last event times for each feature session per user
+                WITH FeatureUsage AS (
+                    SELECT
+                        e.UserId,
+                        e.EventCategory AS feature,                  -- The feature (EventCategory)
+                        MIN(e.Timestamp) AS first_event_time,        -- First event timestamp (start of feature interaction)
+                        MAX(e.Timestamp) AS last_event_time          -- Last event timestamp (end of feature interaction)
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        AND e.EventCategory = '{feature}'
+                        AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        __TENANT_ID_CHECK__
+                        __ROLE_ID_CHECK__
+                    GROUP BY e.UserId, e.EventCategory  -- Group by user, and feature
+                ),
+
+                -- Step 2: Calculate the duration for each feature session (in minutes)
+                FeatureDurations AS (
+                    SELECT
+                        f.UserId,
+                        f.feature,                                            -- The feature (EventCategory)
+                        TIMESTAMPDIFF(MINUTE, f.first_event_time, f.last_event_time) AS duration_minutes -- Duration in minutes
+                    FROM FeatureUsage f
+                    WHERE f.first_event_time IS NOT NULL AND f.last_event_time IS NOT NULL  -- Ensure valid timestamps
+                )
+
+                -- Step 3: Calculate the average usage duration per feature
+                SELECT
+                    fd.feature,                                              -- The feature (EventCategory)
+                    AVG(fd.duration_minutes) AS avg_duration_minutes         -- Average duration in minutes
+                FROM FeatureDurations fd
+                GROUP BY fd.feature                                          -- Group by feature
+                ORDER BY avg_duration_minutes DESC;                          -- Order by longest average duration
+
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
         return result
     except Exception as e:
         print(e)
-        return []
+        return 0
 
-@trace_span("service: analytics: user engagement: get_patients_most_commonly_visited_screens")
-async def get_patients_most_commonly_visited_screens(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+@trace_span("service: analytics: feature engagement: get_feature_drop_off_points")
+async def get_feature_drop_off_points(
+    feature: str, tenant_id: UUID4|None, start_date: date, end_date: date, top_n: int):
     try:
+        if not feature or len(feature) == 0:
+            return None
+
         role_id = get_role_id()
         connector = get_analytics_db_connector()
 
-        top_screens_count = 10
-        event_category = 'app-screen-visit' # EventCategory for screen visits
-        event_name = 'screen-entry' # EventName for screen-entry events
-        # Please note that we are treating the EventSubject as the screen name in this case.
+        # We are identifying a feature by event category. For example, 'Medication' feature
 
         query = f"""
-                SELECT
-                    sv.month,
-                    sv.screen_name,
-                    sv.screen_visit_count
-                FROM (
+                -- Step 1: Track user event sequences within a feature (EventCategory)
+                WITH UserEventFlow AS (
                     SELECT
-                        DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
-                        e.EventSubject AS screen_name,
-                        COUNT(e.id) AS screen_visit_count
+                        e.UserId,
+                        e.EventCategory,
+                        e.EventName AS event_name,              -- Capture the event name (e.g., screen-entry, button-click, etc.)
+                        e.Timestamp                             -- Timestamp to order events
                     FROM events e
-                    JOIN users AS user ON e.UserId = user.id
+                    JOIN users user ON e.UserId = user.id
                     WHERE
-                        e.EventCategory = '{event_category}'
-                        AND e.EventName = '{event_name}'
+                        e.EventCategory = '{feature}'           -- Filter for a specific feature/event category
                         AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         __TENANT_ID_CHECK__
                         __ROLE_ID_CHECK__
-                    GROUP BY month, screen_name
-                    ORDER BY screen_visit_count DESC
-                ) AS sv
-                GROUP BY sv.month, sv.screen_name
-                HAVING COUNT(*) <= {top_screens_count}
-                ORDER BY sv.month ASC, sv.screen_visit_count DESC;
-            """
+                    ORDER BY e.UserId, e.Timestamp -- Order by user, and time
+                ),
+
+                -- Step 2: Identify the next event for each user within the feature
+                NextEvent AS (
+                    SELECT
+                        f1.UserId,
+                        f1.event_name AS current_event,                                                         -- Current event (e.g., 'screen-entry')
+                        LEAD(f1.event_name) OVER (PARTITION BY f1.UserId ORDER BY f1.Timestamp) AS next_event   -- Next event in the sequence
+                    FROM UserEventFlow f1
+                ),
+
+                -- Step 3: Calculate drop-off points and rates for each event within the feature
+                DropOffs AS (
+                    SELECT
+                        ne.current_event,                       -- The event where we check for drop-offs
+                        COUNT(ne.UserId) AS total_users,        -- Total users who interacted with the current event
+                        SUM(CASE WHEN ne.next_event IS NULL THEN 1 ELSE 0 END) AS dropoff_count  -- Users who dropped off after the current event
+                    FROM NextEvent ne
+                    GROUP BY ne.current_event                  -- Group by the current event
+                )
+
+                -- Step 4: Calculate drop-off rate per event
+                SELECT
+                    d.current_event AS event_name,
+                    d.dropoff_count,
+                    d.total_users,
+                    (d.dropoff_count / d.total_users) * 100 AS dropoff_rate  -- Drop-off rate in percentage
+                FROM DropOffs d
+                ORDER BY dropoff_rate DESC;                                  -- Order by the highest drop-off rate
+        """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
         return result
     except Exception as e:
         print(e)
-        return []
+        return 0

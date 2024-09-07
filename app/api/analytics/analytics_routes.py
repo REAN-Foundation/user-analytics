@@ -8,7 +8,7 @@ from app.api.analytics.analytics_handler import (
     basic_stats_,
     download_feature_engagement_metrics_,
     generate_feature_engagement_metrics_,
-    generate_user_engagement_metrics_,
+    calculate_tenant_engagement_metrics_,
     download_user_engagement_metrics_,
     get_feature_engagement_metrics_,
     get_user_engagement_metrics_
@@ -20,8 +20,8 @@ from app.domain_types.schemas.analytics import (
     BasicAnalyticsStatistics,
     FeatureEngagementMetrics,
     FeatureEngagementMetricsResponse,
-    UserEngagementMetrics,
-    UserEngagementMetricsResponse
+    GenericEngagementMetrics,
+    GenericEngagementMetricsResponse
 )
 
 ###############################################################################
@@ -51,7 +51,7 @@ async def basic_stats(
 
 @router.get("/generate-user-engagement-metrics",
             status_code=status.HTTP_200_OK,
-            response_model=ResponseModel[UserEngagementMetricsResponse|None])
+            response_model=ResponseModel[GenericEngagementMetricsResponse|None])
 async def generate_user_engagement_metrics(
         background_tasks: BackgroundTasks,
         tenant_id: Optional[UUID4] = None,
@@ -61,9 +61,9 @@ async def generate_user_engagement_metrics(
     analysis_code = generate_random_code(12)
     base_url = os.getenv("BASE_URL")
 
-    background_tasks.add_task(generate_user_engagement_metrics_, analysis_code, tenant_id, start_date, end_date)
+    background_tasks.add_task(calculate_tenant_engagement_metrics_, analysis_code, tenant_id, start_date, end_date)
 
-    res_model = UserEngagementMetricsResponse(
+    res_model = GenericEngagementMetricsResponse(
         TenantId     = tenant_id if tenant_id is not None else "Unspecified",
         StartDate    = start_date if start_date is not None else "Unspecified",
         EndDate      = end_date if end_date is not None else "Unspecified",
@@ -74,7 +74,7 @@ async def generate_user_engagement_metrics(
         URL          = f"{base_url}/api/analytics/user-engagement-metrics/{analysis_code}"
     )
     message = "User engagement metrics analysis started successfully. It may take a while to complete. You can access the results through the urls shared."
-    resp = ResponseModel[UserEngagementMetricsResponse](Message=message, Data=res_model)
+    resp = ResponseModel[GenericEngagementMetricsResponse](Message=message, Data=res_model)
     return resp
 
 @router.get("/download-user-engagement-metrics/{analysis_code}/format/{file_format}",
@@ -88,11 +88,11 @@ def download_user_engagement_metrics(analysis_code: str, file_format: str):
 
 @router.get("/user-engagement-metrics/{analysis_code}",
             status_code=status.HTTP_200_OK,
-            response_model=ResponseModel[UserEngagementMetrics|None])
+            response_model=ResponseModel[GenericEngagementMetrics|None])
 def get_user_engagement_metrics_(analysis_code: str):
     metrics = get_user_engagement_metrics_(analysis_code)
     message = "User engagement metrics retrieved successfully."
-    resp = ResponseModel[UserEngagementMetrics](Message=message, Data=metrics)
+    resp = ResponseModel[GenericEngagementMetrics](Message=message, Data=metrics)
     return resp
 
 ###############################################################################

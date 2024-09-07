@@ -3,12 +3,12 @@ from datetime import datetime
 import json
 import os
 from app.database.services.analytics.common import get_report_folder_path
-from app.domain_types.schemas.analytics import UserEngagementMetrics
+from app.domain_types.schemas.analytics import GenericEngagementMetrics
 
 ###############################################################################
 
 async def generate_user_engagement_report_json(
-        analysis_code: str, user_engagement_metrics: UserEngagementMetrics) -> str:
+        analysis_code: str, user_engagement_metrics: GenericEngagementMetrics) -> str:
     try:
         reports_path = get_report_folder_path()
         json_file_path = os.path.join(reports_path, f"user_engagement_report_{analysis_code}.json")
