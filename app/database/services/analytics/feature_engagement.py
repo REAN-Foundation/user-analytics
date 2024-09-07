@@ -138,17 +138,45 @@ async def get_feature_average_usage_duration_minutes(
         role_id = get_role_id()
         connector = get_analytics_db_connector()
 
+        # Please note that we do not use user's login session Id to track this.
+        # We simply track the first and last event times for each feature session per user.
+
         query = f"""
-            SELECT
-                e.UserId, COUNT(e.UserId) AS engagement_count
-            FROM events e
-            JOIN users as user ON e.UserId = user.id
-            WHERE
-                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                AND e.EventName = '{feature}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
-            GROUP BY e.UserId;
+                -- Step 1: Get the first and last event times for each feature session per user
+                WITH FeatureUsage AS (
+                    SELECT
+                        e.UserId,
+                        e.EventCategory AS feature,                  -- The feature (EventCategory)
+                        MIN(e.Timestamp) AS first_event_time,        -- First event timestamp (start of feature interaction)
+                        MAX(e.Timestamp) AS last_event_time          -- Last event timestamp (end of feature interaction)
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        AND e.EventCategory = '{feature}'
+                        AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        __TENANT_ID_CHECK__
+                        __ROLE_ID_CHECK__
+                    GROUP BY e.UserId, e.EventCategory  -- Group by user, and feature
+                ),
+
+                -- Step 2: Calculate the duration for each feature session (in minutes)
+                FeatureDurations AS (
+                    SELECT
+                        f.UserId,
+                        f.feature,                                            -- The feature (EventCategory)
+                        TIMESTAMPDIFF(MINUTE, f.first_event_time, f.last_event_time) AS duration_minutes -- Duration in minutes
+                    FROM FeatureUsage f
+                    WHERE f.first_event_time IS NOT NULL AND f.last_event_time IS NOT NULL  -- Ensure valid timestamps
+                )
+
+                -- Step 3: Calculate the average usage duration per feature
+                SELECT
+                    fd.feature,                                              -- The feature (EventCategory)
+                    AVG(fd.duration_minutes) AS avg_duration_minutes         -- Average duration in minutes
+                FROM FeatureDurations fd
+                GROUP BY fd.feature                                          -- Group by feature
+                ORDER BY avg_duration_minutes DESC;                          -- Order by longest average duration
+
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
