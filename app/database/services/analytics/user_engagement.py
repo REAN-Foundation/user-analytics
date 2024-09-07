@@ -614,42 +614,6 @@ async def get_patients_most_commonly_used_features(tenant_id: UUID4|None, start_
         top_features_count = 5
         role_id = get_role_id()
         connector = get_analytics_db_connector()
-        # query = f"""
-        #             -- Step 1: Aggregate feature usage (EventCategory) by month
-        #             WITH FeatureUsage AS (
-        #                 SELECT
-        #                     DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,     -- Extract the month from the event timestamp
-        #                     e.EventCategory AS feature,                     -- Assume EventCategory represents the feature
-        #                     COUNT(e.id) AS feature_usage_count              -- Count the number of occurrences for the feature
-        #                 FROM events e
-        #                 JOIN
-        #                 users user ON e.UserId = user.id
-        #                 WHERE
-        #                     e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-        #                     __TENANT_ID_CHECK__
-        #                     __ROLE_ID_CHECK__
-        #                 GROUP BY month, feature                             -- Group by month and feature
-        #             ),
-
-        #             -- Step 2: Rank features by usage within each month
-        #             RankedFeatures AS (
-        #                 SELECT
-        #                     f.month,
-        #                     f.feature,
-        #                     f.feature_usage_count,
-        #                     ROW_NUMBER() OVER (PARTITION BY f.month ORDER BY f.feature_usage_count DESC) AS rank
-        #                 FROM FeatureUsage f
-        #             )
-
-        #             -- Step 3: Select the top 5 features per month
-        #             SELECT
-        #                 r.month,
-        #                 r.feature,
-        #                 r.feature_usage_count
-        #             FROM RankedFeatures r
-        #             WHERE r.rank <= {top_features_count}   -- Only keep the top 5 features per month
-        #             ORDER BY r.month ASC, r.rank ASC;
-        #     """
         query = f"""
                     -- Step 1: Aggregate feature usage (EventCategory) by month
                     SELECT t1.month, t1.feature, t1.feature_usage_count
@@ -690,16 +654,45 @@ async def get_patients_most_commonly_used_features(tenant_id: UUID4|None, start_
         print(e)
         return []
 
-# @trace_span("service: analytics: user engagement: get_patients_most_commonly_visited_screens")
-# async def get_patients_most_commonly_visited_screens(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
-#     try:
-#         role_id = get_role_id()
-#         connector = get_analytics_db_connector()
-#         query = f"""
-#             """
-#         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-#         result = connector.execute_read_query(query)
-#         return result
-#     except Exception as e:
-#         print(e)
-#         return []
+@trace_span("service: analytics: user engagement: get_patients_most_commonly_visited_screens")
+async def get_patients_most_commonly_visited_screens(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+    try:
+        role_id = get_role_id()
+        connector = get_analytics_db_connector()
+
+        top_screens_count = 10
+        event_category = 'app-screen-visit' # EventCategory for screen visits
+        event_name = 'screen-entry' # EventName for screen-entry events
+        # Please note that we are treating the EventSubject as the screen name in this case.
+
+        query = f"""
+                SELECT
+                    sv.month,
+                    sv.screen_name,
+                    sv.screen_visit_count
+                FROM (
+                    SELECT
+                        DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
+                        e.EventSubject AS screen_name,
+                        COUNT(e.id) AS screen_visit_count
+                    FROM events e
+                    JOIN users AS user ON e.UserId = user.id
+                    WHERE
+                        e.EventCategory = '{event_category}'
+                        AND e.EventName = '{event_name}'
+                        AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        __TENANT_ID_CHECK__
+                        __ROLE_ID_CHECK__
+                    GROUP BY month, screen_name
+                    ORDER BY screen_visit_count DESC
+                ) AS sv
+                GROUP BY sv.month, sv.screen_name
+                HAVING COUNT(*) <= {top_screens_count}
+                ORDER BY sv.month ASC, sv.screen_visit_count DESC;
+            """
+        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+        result = connector.execute_read_query(query)
+        return result
+    except Exception as e:
+        print(e)
+        return []

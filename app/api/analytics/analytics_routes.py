@@ -8,7 +8,7 @@ from app.api.analytics.analytics_handler import (
     basic_stats_,
     download_feature_engagement_metrics_,
     generate_feature_engagement_metrics_,
-    generate_user_engagement_metrics_,
+    calculate_tenant_engagement_metrics_,
     download_user_engagement_metrics_,
     get_feature_engagement_metrics_,
     get_user_engagement_metrics_
@@ -61,7 +61,7 @@ async def generate_user_engagement_metrics(
     analysis_code = generate_random_code(12)
     base_url = os.getenv("BASE_URL")
 
-    background_tasks.add_task(generate_user_engagement_metrics_, analysis_code, tenant_id, start_date, end_date)
+    background_tasks.add_task(calculate_tenant_engagement_metrics_, analysis_code, tenant_id, start_date, end_date)
 
     res_model = UserEngagementMetricsResponse(
         TenantId     = tenant_id if tenant_id is not None else "Unspecified",

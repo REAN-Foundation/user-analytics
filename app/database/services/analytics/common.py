@@ -36,7 +36,7 @@ def get_report_folder_path():
     cwd = os.getcwd()
     today = datetime.today()
     date_timestamp = today.strftime("%Y%m%d")
-    reports_path = os.path.join(cwd, 'temp', REPORTS_DIR, date_timestamp)
+    reports_path = os.path.join(cwd, 'tmp', REPORTS_DIR, date_timestamp)
     if not os.path.exists(reports_path):
         os.makedirs(reports_path, exist_ok=True)
     return reports_path

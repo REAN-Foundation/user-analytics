@@ -13,6 +13,7 @@ class EventCreateModel(BaseModel):
     SourceName      : Optional[str]      = Field(default=None, min_length=2, max_length=256, description="Name of the Event")
     SourceVersion   : Optional[str]      = Field(default=None, min_length=2, max_length=256, description="Version of the Event")
     EventName       : str                = Field(min_length=2, max_length=256, description="Name of the Event")
+    EventSubject    : Optional[str|None] = Field(min_length=2, max_length=256, description="Subject of the Event")
     EventCategory   : str                = Field(min_length=2, max_length=128, description="Type of the Event")
     ActionType      : EventActionType    = Field(min_length=2, max_length=128, description="Type of the Action")
     ActionStatement : str                = Field(min_length=2, max_length=512, description="Action Statement statement of event. Used for history tracking.")
@@ -31,6 +32,7 @@ class EventSearchFilter(BaseSearchFilter):
     ResourceType                   : Optional[str]
     SessionId                      : Optional[UUID4]
     EventName                      : Optional[str]
+    EventSubject                   : Optional[str]
     SourceName                     : Optional[str]
     SourceVersion                  : Optional[str]
     EventCategory                  : Optional[str]
@@ -53,6 +55,7 @@ class EventResponseModel(BaseModel):
     ResourceType                : Optional[str]         = Field(min_length=2, max_length=256, description="Type of the resource")
     SessionId                   : Optional[UUID4]       = Field(default=None, description="Session Id of the Event")
     EventName                   : str                   = Field(min_length=2, max_length=256, description="Name of the Event")
+    EventSubject                : Optional[str|None]    = Field(min_length=2, max_length=256, description="Subject of the Event")
     SourceName                  : str                   = Field(min_length=2, max_length=256, description="Name of the Event")
     SourceVersion               : Optional[str]         = Field(min_length=2, max_length=256, description="Version of the Event")
     EventCategory               : str                   = Field(min_length=2, max_length=128, description="Type of the Event")
