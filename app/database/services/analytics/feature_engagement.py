@@ -18,25 +18,21 @@ async def get_feature_access_frequency(feature: str, tenant_id: UUID4|None, star
 
         query = f"""
             SELECT
-                DATE(e.Timestamp) AS activity_date, COUNT(DISTINCT e.UserId) AS daily_active_users
+                DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
+                COUNT(e.id) AS access_frequency
             FROM events e
-            JOIN users as user ON e.UserId = user.id
+            JOIN users user ON e.UserId = user.id
             WHERE
-                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                e.EventCategory = '{feature}'
+                AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                 __TENANT_ID_CHECK__
                 __ROLE_ID_CHECK__
-            GROUP BY DATE(e.Timestamp)
-            ORDER BY activity_date;
+            GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
+            ORDER BY month ASC;
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
-        result_ = []
-        for row in result:
-            result_.append({
-                "activity_date": str(row['activity_date']),
-                "daily_active_users": row['daily_active_users']
-            })
-        return result_
+        return result
     except Exception as e:
         print(e)
         return 0
@@ -51,16 +47,44 @@ async def get_feature_engagement_rate(feature: str, tenant_id: UUID4|None, start
         connector = get_analytics_db_connector()
 
         query = f"""
-            SELECT
-                e.UserId, COUNT(e.UserId) AS engagement_count
-            FROM events e
-            JOIN users as user ON e.UserId = user.id
-            WHERE
-                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                AND e.EventName = '{feature}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
-            GROUP BY e.UserId;
+                -- Step 1: Get the total number of active users per month
+                WITH ActiveUsersPerMonth AS (
+                    SELECT
+                        DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,  -- Extract year and month
+                        COUNT(DISTINCT e.UserId) AS active_users     -- Count distinct active users per month
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        __TENANT_ID_CHECK__
+                        __ROLE_ID_CHECK__
+                    GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
+                ),
+
+                -- Step 2: Get the number of unique users engaging with each feature per month
+                FeatureUsersPerMonth AS (
+                    SELECT
+                        DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,  -- Extract year and month
+                        e.EventCategory AS feature,                  -- The feature (EventCategory)
+                        COUNT(DISTINCT e.UserId) AS feature_users    -- Count distinct users engaging with the feature
+                    FROM events e
+                    JOIN users user ON e.UserId = user.id
+                    WHERE
+                        e.EventCategory = '{feature}'
+                        AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                        __TENANT_ID_CHECK__
+                        __ROLE_ID_CHECK__
+                    GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m'), e.EventCategory
+                )
+
+                -- Step 3: Calculate the feature engagement rate
+                SELECT
+                    fpm.month,
+                    fpm.feature,
+                    (fpm.feature_users / aupm.active_users) * 100 AS engagement_rate
+                FROM FeatureUsersPerMonth fpm
+                JOIN ActiveUsersPerMonth aupm ON fpm.month = aupm.month
+                ORDER BY fpm.month DESC;
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
