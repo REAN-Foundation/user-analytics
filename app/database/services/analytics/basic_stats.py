@@ -1,16 +1,20 @@
-from datetime import date
-
-from pydantic import UUID4
-from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, tenant_check
+from app.database.services.analytics.common import add_tenant_and_role_checks, tenant_check
+from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
 @trace_span("service: analytics_basics: get_all_registered_users")
-async def get_all_registered_users(tenant_id: UUID4|None, start_date: date, end_date: date) -> int:
+async def get_all_registered_users(filters: AnalyticsFilters) -> int:
     try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
             SELECT
                 COUNT(*) as user_count
@@ -22,17 +26,24 @@ async def get_all_registered_users(tenant_id: UUID4|None, start_date: date, end_
         query = query.replace("__TENANT_ID_CHECK__", tenant_check(tenant_id))
         result = connector.execute_read_query(query)
         total_users = result[0]['user_count']
+
         return total_users
+
     except Exception as e:
         print(e)
         return 0
 
 @trace_span("service: analytics_basics: get_all_registered_patients")
-async def get_all_registered_patients(tenant_id: UUID4|None, start_date: date, end_date: date) -> int:
-
-    role_id = get_role_id()
+async def get_all_registered_patients(filters: AnalyticsFilters) -> int:
     try:
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
             SELECT
                 COUNT(*) as user_count
@@ -45,40 +56,54 @@ async def get_all_registered_patients(tenant_id: UUID4|None, start_date: date, e
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
         result = connector.execute_read_query(query)
         total_patients = result[0]['user_count']
+
         return total_patients
+
     except Exception as e:
         print(e)
         return 0
 
 
 @trace_span("service: analytics_basics: get_current_active_patients")
-async def get_current_active_patients(tenant_id: UUID4|None) -> int:
+async def get_current_active_patients(filters: AnalyticsFilters) -> int:
+    try:
 
-        role_id = get_role_id()
-        try:
-            connector = get_analytics_db_connector()
-            query = f"""
-                SELECT
-                    COUNT(*) as user_count
-                FROM users
-                WHERE
-                    DeletedAt IS NULL
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
-                """
-            query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
-            result = connector.execute_read_query(query)
-            active_patients = result[0]['user_count']
-            return active_patients
-        except Exception as e:
-            print(e)
-            return 0
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+        query = f"""
+            SELECT
+                COUNT(*) as user_count
+            FROM users
+            WHERE
+                DeletedAt IS NULL
+                __TENANT_ID_CHECK__
+                __ROLE_ID_CHECK__
+            """
+        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
+        result = connector.execute_read_query(query)
+        active_patients = result[0]['user_count']
+
+        return active_patients
+
+    except Exception as e:
+        print(e)
+        return 0
 
 @trace_span("service: analytics_basics: get_patient_registration_history")
-async def get_patient_registration_hisory_by_months(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patient_registration_hisory_by_months(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
             SELECT
                 DATE_FORMAT(RegistrationDate, '%Y-%m') as month,
@@ -93,16 +118,24 @@ async def get_patient_registration_hisory_by_months(tenant_id: UUID4|None, start
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_deregistration_history")
-async def get_patient_deregistration_history_by_months(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patient_deregistration_history_by_months(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
             SELECT
                 DATE_FORMAT(DeletedAt, '%Y-%m') as month,
@@ -117,15 +150,22 @@ async def get_patient_deregistration_history_by_months(tenant_id: UUID4|None, st
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_age_demographics")
-async def get_patient_age_demographics(tenant_id: UUID4|None, start_date:date, end_date: date) -> list:
+async def get_patient_age_demographics(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         query = f"""
             SELECT CASE
@@ -153,16 +193,24 @@ async def get_patient_age_demographics(tenant_id: UUID4|None, start_date:date, e
 
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_gender_demographics")
-async def get_patient_gender_demographics(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patient_gender_demographics(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
             SELECT CASE
                     WHEN Gender IS NULL THEN 'Unknown'
@@ -179,15 +227,22 @@ async def get_patient_gender_demographics(tenant_id: UUID4|None, start_date: dat
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_ethnicity_demographics")
-async def get_patient_ethnicity_demographics(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patient_ethnicity_demographics(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         query = f"""
             SELECT CASE
@@ -205,15 +260,22 @@ async def get_patient_ethnicity_demographics(tenant_id: UUID4|None, start_date: 
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_race_demographics")
-async def get_patient_race_demographics(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patient_race_demographics(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         query = f"""
             SELECT CASE
@@ -231,15 +293,22 @@ async def get_patient_race_demographics(tenant_id: UUID4|None, start_date: date,
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_healthsystem_distribution")
-async def get_patient_healthsystem_distribution(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patient_healthsystem_distribution(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         query = f"""
             SELECT CASE
@@ -257,15 +326,22 @@ async def get_patient_healthsystem_distribution(tenant_id: UUID4|None, start_dat
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_hospital_distribution")
-async def get_patient_hospital_distribution(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patient_hospital_distribution(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         query = f"""
                 SELECT CASE
@@ -283,15 +359,22 @@ async def get_patient_hospital_distribution(tenant_id: UUID4|None, start_date: d
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_survivor_or_caregiver_distribution")
-async def get_patient_survivor_or_caregiver_distribution(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patient_survivor_or_caregiver_distribution(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         query = f"""
                 SELECT CASE
@@ -311,7 +394,9 @@ async def get_patient_survivor_or_caregiver_distribution(tenant_id: UUID4|None, 
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []

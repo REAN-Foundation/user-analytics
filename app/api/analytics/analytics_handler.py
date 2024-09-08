@@ -1,84 +1,43 @@
-from datetime import date, timedelta
-from typing import Optional
-import asyncio
-
-from pydantic import UUID4
 from app.database.services.analytics.analyser import (
+    calculate,
     calculate_basic_stats,
-    calculate_tenant_engagement_metrics,
+    calculate_generic_engagement_metrics,
     calculate_feature_engagement_metrics
 )
-
-from app.domain_types.schemas.analytics import BasicAnalyticsStatistics, Demographics, GenericEngagementMetrics
-from app.modules.data_sync.data_synchronizer import DataSynchronizer
+from app.domain_types.schemas.analytics import (
+    AnalyticsFilters,
+    BasicAnalyticsStatistics,
+    EngagementMetrics,
+    FeatureEngagementMetrics,
+    GenericEngagementMetrics
+)
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
-async def basic_stats_(
-        tenant_id: Optional[UUID4] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None) -> BasicAnalyticsStatistics|None:
-    try:
-        return await calculate_basic_stats(tenant_id, start_date, end_date)
-    except Exception as e:
-        print(e)
+async def calculate_(analysis_code:str, filters: AnalyticsFilters|None) -> EngagementMetrics|None:
+    return await calculate(analysis_code, filters)
 
-async def calculate_tenant_engagement_metrics_(
-                                    analysis_code,
-                                    tenant_id: Optional[UUID4] = None,
-                                    start_date: Optional[date] = None,
-                                    end_date: Optional[date] = None):
-    try:
-        return await calculate_tenant_engagement_metrics(analysis_code, tenant_id, start_date, end_date)
-    except Exception as e:
-        print(e)
+async def calculate_basic_statistics_(filters: AnalyticsFilters|None) -> BasicAnalyticsStatistics|None:
+    return await calculate_basic_stats(filters)
 
-async def calculate_feature_engagement_metrics_(
-                                    analysis_code,
-                                    feature: str,
-                                    tenant_id: Optional[UUID4] = None,
-                                    start_date: Optional[date] = None,
-                                    end_date: Optional[date] = None):
-    try:
-        return await calculate_feature_engagement_metrics(feature, analysis_code, tenant_id, start_date, end_date)
-    except Exception as e:
-        print(e)
+async def calculate_generic_engagement_metrics_(filters: AnalyticsFilters|None) -> GenericEngagementMetrics|None:
+    return await calculate_generic_engagement_metrics(filters)
+
+async def calculate_feature_engagement_metrics_(feature: str, filters: AnalyticsFilters|None) -> FeatureEngagementMetrics|None:
+    return await calculate_feature_engagement_metrics(feature, filters)
 
 ###############################################################################
 
-@trace_span("handler: download_user_engagement_metrics")
-def download_user_engagement_metrics_():
+@trace_span("handler: download_metrics")
+def download_metrics_(analysis_code:str):
     try:
         pass
     except Exception as e:
         print(e)
 
-@trace_span("handler: get_user_engagement_metrics")
-def get_user_engagement_metrics_():
-    try:
-        pass
-    except Exception as e:
-        print(e)
-
-###############################################################################
-
-@trace_span("handler: generate_feature_engagement_metrics")
-def generate_feature_engagement_metrics_():
-    try:
-        pass
-    except Exception as e:
-        print(e)
-
-@trace_span("handler: download_feature_engagement_metrics")
-def download_feature_engagement_metrics_():
-    try:
-        pass
-    except Exception as e:
-        print(e)
-
-@trace_span("handler: get_feature_engagement_metrics")
-def get_feature_engagement_metrics_():
+@trace_span("handler: get_metrics")
+def get_metrics_(analysis_code:str):
     try:
         pass
     except Exception as e:

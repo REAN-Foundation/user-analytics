@@ -1,19 +1,21 @@
-from datetime import date
-from pydantic import UUID4
-from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, tenant_check
-from app.domain_types.enums.event_types import EventType
+from app.database.services.analytics.common import add_tenant_and_role_checks
+from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
 @trace_span("service: analytics: feature engagement: get_feature_access_frequency")
-async def get_feature_access_frequency(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_feature_access_frequency(feature: str, filters: AnalyticsFilters):
     try:
         if not feature or len(feature) == 0:
             return None
 
-        role_id = get_role_id()
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
 
         query = f"""
@@ -32,18 +34,24 @@ async def get_feature_access_frequency(feature: str, tenant_id: UUID4|None, star
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return 0
 
 @trace_span("service: analytics: feature engagement: get_feature_engagement_rate")
-async def get_feature_engagement_rate(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_feature_engagement_rate(feature: str, filters: AnalyticsFilters):
     try:
         if not feature or len(feature) == 0:
             return None
 
-        role_id = get_role_id()
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
 
         query = f"""
@@ -88,18 +96,24 @@ async def get_feature_engagement_rate(feature: str, tenant_id: UUID4|None, start
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return 0
 
 @trace_span("service: analytics: feature engagement: get_feature_retention_rate_on_specific_days")
-async def get_feature_retention_rate_on_specific_days(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_feature_retention_rate_on_specific_days(feature: str, filters: AnalyticsFilters):
     try:
         if not feature or len(feature) == 0:
             return None
 
-        role_id = get_role_id()
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         query = f"""
                 WITH registered_users AS (
@@ -238,6 +252,7 @@ async def get_feature_retention_rate_on_specific_days(feature: str, tenant_id: U
 
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         row = result[0]
         result_ = {
             "active_users": row['active_users'],
@@ -284,19 +299,25 @@ async def get_feature_retention_rate_on_specific_days(feature: str, tenant_id: U
                 }
             ]
         }
+
         return result_
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics: feature engagement: get_feature_retention_rate_in_specific_intervals")
-async def get_feature_retention_rate_in_specific_intervals(feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_feature_retention_rate_in_specific_intervals(feature: str, filters: AnalyticsFilters):
 
     try:
         if not feature or len(feature) == 0:
             return None
 
-        role_id = get_role_id()
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
 
         query = f"""
@@ -443,6 +464,7 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, tenant_
         query = query.replace("__ROLE_ID_CHECK__", role_id_check)
 
         result = connector.execute_read_query(query)
+
         row = result[0]
         result_ = {
             "active_users": row['active_users'],
@@ -489,7 +511,9 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, tenant_
                 }
             ]
         }
+
         return result_
+
     except Exception as e:
         print(e)
         return []
@@ -497,13 +521,16 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, tenant_
 # The first and last events recorded for a user are considered as
 # the start and end of the user's engagement with the feature.
 @trace_span("service: analytics: feature engagement: get_feature_average_usage_duration_minutes")
-async def get_feature_average_usage_duration_minutes(
-    feature: str, tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_feature_average_usage_duration_minutes(feature: str, filters: AnalyticsFilters):
     try:
         if not feature or len(feature) == 0:
             return None
 
-        role_id = get_role_id()
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
 
         # Please note that we do not use user's login session Id to track this.
@@ -548,19 +575,24 @@ async def get_feature_average_usage_duration_minutes(
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return 0
 
 @trace_span("service: analytics: feature engagement: get_feature_drop_off_points")
-async def get_feature_drop_off_points(
-    feature: str, tenant_id: UUID4|None, start_date: date, end_date: date, top_n: int):
+async def get_feature_drop_off_points(feature: str, filters: AnalyticsFilters):
     try:
         if not feature or len(feature) == 0:
             return None
 
-        role_id = get_role_id()
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
 
         # We are identifying a feature by event category. For example, 'Medication' feature
@@ -613,7 +645,9 @@ async def get_feature_drop_off_points(
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return 0

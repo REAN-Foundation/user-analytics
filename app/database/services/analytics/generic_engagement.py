@@ -1,17 +1,24 @@
 from datetime import date
 from pydantic import UUID4
-from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id, role_check, tenant_check
+from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
 
 @trace_span("service: analytics: user engagement: get_daily_active_patients")
-async def get_daily_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_daily_active_patients(filters: AnalyticsFilters):
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
             SELECT
                 DATE(e.Timestamp) AS activity_date, COUNT(DISTINCT e.UserId) AS daily_active_users
@@ -26,6 +33,7 @@ async def get_daily_active_patients(tenant_id: UUID4|None, start_date: date, end
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         result_ = []
         for row in result:
             result_.append({
@@ -33,15 +41,20 @@ async def get_daily_active_patients(tenant_id: UUID4|None, start_date: date, end
                 "daily_active_users": row['daily_active_users']
             })
         return result_
+
     except Exception as e:
         print(e)
         return 0
 
 @trace_span("service: analytics: user engagement: get_weekly_active_patients")
-async def get_weekly_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date):
-
-    role_id = get_role_id()
+async def get_weekly_active_patients(filters: AnalyticsFilters):
     try:
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
 
         # query_week_number = f"""
@@ -74,42 +87,56 @@ async def get_weekly_active_patients(tenant_id: UUID4|None, start_date: date, en
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query_week_by_start_end_dates, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return 0
 
-
 @trace_span("service: analytics: user engagement: get_monthly_active_patients")
-async def get_monthly_active_patients(tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_monthly_active_patients(filters: AnalyticsFilters):
+    try:
 
-        role_id = get_role_id()
-        try:
-            connector = get_analytics_db_connector()
-            query = f"""
-                SELECT DATE_FORMAT(e.Timestamp, '%Y-%m') AS activity_month, COUNT(DISTINCT e.UserId) AS monthly_active_users
-                FROM events e
-                JOIN users as user ON e.UserId = user.id
-                WHERE
-                    e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
-                GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
-                ORDER BY activity_month;
-            """
-            query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-            result = connector.execute_read_query(query)
-            return result
-        except Exception as e:
-            print(e)
-            return 0
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+
+        query = f"""
+            SELECT DATE_FORMAT(e.Timestamp, '%Y-%m') AS activity_month, COUNT(DISTINCT e.UserId) AS monthly_active_users
+            FROM events e
+            JOIN users as user ON e.UserId = user.id
+            WHERE
+                e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                __TENANT_ID_CHECK__
+                __ROLE_ID_CHECK__
+            GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
+            ORDER BY activity_month;
+        """
+        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+        result = connector.execute_read_query(query)
+
+        return result
+
+    except Exception as e:
+        print(e)
+        return 0
 
 # Get DAU, WAU, MAU in one query. Not tested yet.
 @trace_span("service: analytics: user engagement: get_patients_active_dau_wau_mau")
-async def get_patients_active_dau_wau_mau(tenant_id: UUID4|None, start_date: date, end_date: date) :
+async def get_patients_active_dau_wau_mau(filters: AnalyticsFilters):
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
                 SELECT
                     DATE(e.Timestamp) AS activity_date,
@@ -129,16 +156,22 @@ async def get_patients_active_dau_wau_mau(tenant_id: UUID4|None, start_date: dat
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return None
 
 @trace_span("service: analytics: user engagement: get_patients_average_session_length_in_minutes")
-async def get_patients_average_session_length_in_minutes(
-    tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_patients_average_session_length_in_minutes(filters: AnalyticsFilters):
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         # calculate average session lengths by utilizing the SessionId in the events table.
         # Measure the duration of a session for each SessionId based on the difference between
@@ -165,20 +198,28 @@ async def get_patients_average_session_length_in_minutes(
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         row = result[0]
         average_session_length = float(row['avg_session_length_seconds']) / 60
         return average_session_length
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics: user engagement: get_patients_login_frequency")
-async def get_patients_login_frequency(
-    tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_patients_login_frequency(filters: AnalyticsFilters):
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         event_name = EventType.UserLogin.value
+
         query = f"""
                 SELECT
                     DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
@@ -195,20 +236,29 @@ async def get_patients_login_frequency(
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 
 # Retention rate on specific days = (returning users on specific day / active users) * 100
-# PLESE NOTE THAT - This retention rate (on specific days) is calculated based on the number of unique users returning
-# on specific days (Not during the interval between registration day and that day).
+# Please note that - This retention rate (on specific days) is calculated based on the number
+# of unique users returning on specific days (Not during the interval between registration
+# day and that day).
 @trace_span("service: analytics: user engagement: get_patients_retention_rate_on_specific_days")
-async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, start_date:date, end_date: date):
+async def get_patients_retention_rate_on_specific_days(filters: AnalyticsFilters):
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
                 WITH registered_users AS (
                     SELECT user.id
@@ -338,6 +388,7 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
 
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         row = result[0]
         result_ = {
             "active_users": row['active_users'],
@@ -384,18 +435,25 @@ async def get_patients_retention_rate_on_specific_days(tenant_id: UUID4|None, st
                 }
             ]
         }
+
         return result_
+
     except Exception as e:
         print(e)
         return []
 
 # Retention rate in a specific time interval = (returning users in the interval / active users) * 100
-# PLESE NOTE THAT - This retention rate (in a specific time interval) is calculated based on the number of unique users returning
+# Please note that - This retention rate (in a specific time interval) is calculated based on the number of unique users returning
 # in the interval between the start and end dates after their registration date.
 @trace_span("service: analytics: user engagement: get_patients_retention_rate_in_specific_time_interval")
-async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_patients_retention_rate_in_specific_time_interval(filters: AnalyticsFilters):
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
         query = f"""
                 WITH registered_users AS (
@@ -532,8 +590,9 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
             role_id_check = f"user.RoleId = {role_id}"
         query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
         query = query.replace("__ROLE_ID_CHECK__", role_id_check)
-        
+
         result = connector.execute_read_query(query)
+
         row = result[0]
         result_ = {
             "active_users": row['active_users'],
@@ -580,16 +639,24 @@ async def get_patients_retention_rate_in_specific_time_interval(tenant_id: UUID4
                 }
             ]
         }
+
         return result_
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics: user engagement: get_patient_stickiness_dau_mau")
-async def get_patient_stickiness_dau_mau(tenant_id: UUID4|None, start_date: date, end_date: date):
+async def get_patient_stickiness_dau_mau(filters: AnalyticsFilters):
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
                     WITH ActiveUsers AS (
                         SELECT
@@ -628,6 +695,7 @@ async def get_patient_stickiness_dau_mau(tenant_id: UUID4|None, start_date: date
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         result_ = []
         for row in result:
             result_.append({
@@ -637,17 +705,25 @@ async def get_patient_stickiness_dau_mau(tenant_id: UUID4|None, start_date: date
                 "stickiness": float(row['stickiness'])
             })
         return result_
+
     except Exception as e:
         print(e)
         return []
 
 # Please note that we are treating the EventCategory as the feature in this case.
 @trace_span("service: analytics: user engagement: get_patients_most_commonly_used_features")
-async def get_patients_most_commonly_used_features(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patients_most_commonly_used_features(filters: AnalyticsFilters) -> list:
     try:
+
         top_features_count = 5
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
+
         query = f"""
                     -- Step 1: Aggregate feature usage (EventCategory) by month
                     SELECT t1.month, t1.feature, t1.feature_usage_count
@@ -683,15 +759,22 @@ async def get_patients_most_commonly_used_features(tenant_id: UUID4|None, start_
         """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []
 
 @trace_span("service: analytics: user engagement: get_patients_most_commonly_visited_screens")
-async def get_patients_most_commonly_visited_screens(tenant_id: UUID4|None, start_date: date, end_date: date) -> list:
+async def get_patients_most_commonly_visited_screens(filters: AnalyticsFilters) -> list:
     try:
-        role_id = get_role_id()
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
         connector = get_analytics_db_connector()
 
         top_screens_count = 10
@@ -726,7 +809,9 @@ async def get_patients_most_commonly_visited_screens(tenant_id: UUID4|None, star
             """
         query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
+
         return result
+
     except Exception as e:
         print(e)
         return []

@@ -1,9 +1,13 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
+import json
 from typing import Any, List, Optional
+
 from pydantic import UUID4, BaseModel, Field
+
 from app.domain_types.enums.types import EventActionType
-from app.domain_types.schemas.base_types import BaseSearchFilter, BaseSearchResults
+from app.domain_types.schemas.base_types import (BaseSearchFilter,
+                                                 BaseSearchResults)
 
 ###############################################################################
 
@@ -71,26 +75,36 @@ class FeatureEngagementMetrics(BaseModel):
     RetentionRateInSpecificIntervals : list|dict|None = Field(description="Percentage of users who return to the feature after their first use.")
     DropOffPoints                    : list|dict|None = Field(description="Most common points where users drop off after using the feature.")
 
-class TenantEngagementMetrics(BaseModel):
-    TenantId                 : UUID4                               = Field(description="Tenant ID")
-    TenantName               : str                                 = Field(description="Tenant Name")
-    StartDate                : datetime                            = Field(description="Start date for analytics")
-    EndDate                  : datetime                            = Field(description="End date for analytics")
-    OverallEngagementMetrics : GenericEngagementMetrics|None          = Field(description="User engagement metrics")
-    FeatureMetrics           : List[FeatureEngagementMetrics]|None = Field(description="Feature engagement metrics")
+class EngagementMetrics(BaseModel):
+      TenantId        : UUID4                               = Field(description="Tenant ID")
+      TenantName      : str                                 = Field(description="Tenant Name")
+      StartDate       : datetime                            = Field(description="Start date for analytics")
+      EndDate         : datetime                            = Field(description="End date for analytics")
+      BasicStatistics : BasicAnalyticsStatistics|None       = Field(description="Basic analytics statistics")
+      GenericMetrics  : GenericEngagementMetrics|None       = Field(description="User engagement metrics")
+      FeatureMetrics  : List[FeatureEngagementMetrics]|None = Field(description="Feature engagement metrics")
 
 ###############################################################################
 
-class GenericEngagementMetricsResponse(BaseModel):
+class CalculateMetricsResponse(BaseModel):
     TenantId     : Optional[UUID4|str|None]    = Field(description="Tenant ID")
+    RoleId       : Optional[int|str|None]      = Field(description="Role ID")
     StartDate    : Optional[datetime|str|None] = Field(description="Start date for analytics")
     EndDate      : Optional[datetime|str|None] = Field(description="End date for analytics")
     AnalysisCode : Optional[str]               = Field(description="Unique code to identify the analysis")
     URL          : Optional[str]               = Field(description="URL to access the user engagement metrics data")
     JsonURL      : Optional[str]               = Field(description="URL to access the JSON formatted user engagement metrics data")
     ExcelURL     : Optional[str]               = Field(description="URL to access the Excel formatted user engagement metrics data")
-    PDFURL       : Optional[str]               = Field(description="URL to access the PDF formatted user engagement metrics data")
+    PdfURL       : Optional[str]               = Field(description="URL to access the PDF formatted user engagement metrics data")
 
-class FeatureEngagementMetricsResponse(GenericEngagementMetricsResponse):
-    Feature : str = Field(description="Name of the feature")
+class AnalyticsFilters(BaseModel):
+    TenantId     : Optional[UUID4|None] = Field(description="Tenant ID")
+    TenantName   : Optional[str|None] = Field(description="Tenant Name")
+    RoleId       : Optional[int|None] = Field(description="Role ID")
+    Source       : Optional[str|None] = Field(description="Source application of the event")
+    StartDate    : Optional[date|None]   = Field(description="Start date for events")
+    EndDate      : Optional[date|None]   = Field(description="End date for events")
 
+    def __repr__(self):
+        jsonStr = json.dumps(self.__dict__)
+        return jsonStr

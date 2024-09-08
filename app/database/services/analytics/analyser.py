@@ -1,8 +1,6 @@
 from datetime import date, timedelta
-from typing import Optional
 import asyncio
 
-from pydantic import UUID4
 from app.database.services.analytics.basic_stats import (
     get_all_registered_patients,
     get_all_registered_users,
@@ -17,7 +15,8 @@ from app.database.services.analytics.basic_stats import (
     get_patient_registration_hisory_by_months,
     get_patient_survivor_or_caregiver_distribution
 )
-from app.database.services.analytics.user_engagement import (
+from app.database.services.analytics.common import get_role_id
+from app.database.services.analytics.generic_engagement import (
     get_daily_active_patients,
     get_monthly_active_patients,
     get_patient_stickiness_dau_mau,
@@ -40,46 +39,54 @@ from app.database.services.analytics.feature_engagement import (
 from app.database.services.analytics.reports.report_generator_excel import generate_user_engagement_report_excel
 from app.database.services.analytics.reports.report_generator_json import generate_user_engagement_report_json
 from app.database.services.analytics.reports.report_generator_pdf import generate_user_engagement_report_pdf
-from app.domain_types.schemas.analytics import BasicAnalyticsStatistics, Demographics, FeatureEngagementMetrics, TenantEngagementMetrics, GenericEngagementMetrics
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.schemas.analytics import (
+    AnalyticsFilters,
+    BasicAnalyticsStatistics,
+    Demographics,
+    FeatureEngagementMetrics,
+    EngagementMetrics,
+    GenericEngagementMetrics
+)
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
-from app.telemetry.tracing import trace_span
 
 ###############################################################################
 PAST_DAYS_TO_CONSIDER = 540
 ###############################################################################
 
 async def calculate(
-        analysis_code: str,
-        tenant_id: Optional[UUID4] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None) -> BasicAnalyticsStatistics|None:
+        analysis_code: str, filters: AnalyticsFilters|None) -> EngagementMetrics|None:
 
-    print(f"Analysis started -> {analysis_code} -> ?For tenant: {tenant_id} from {start_date} to {end_date}")
+    print(f"Analysis started -> {analysis_code} -> filters -> {str(filters)}")
 
     try:
-        basic_stats = await calculate_basic_stats(tenant_id, start_date, end_date)
-        tenant_overall_engagement = await calculate_tenant_engagement_metrics(tenant_id, start_date, end_date)
-        features = [
-            'feature1',
-            'feature2',
-            'feature3',
-            'feature4',
-            'feature5'
-        ]
-        feature_engagement = []
-        for feature in features:
-            engament = await calculate_feature_engagement_metrics(
-                feature, tenant_id, start_date, end_date)
-            feature_engagement.append(engament)
+        basic_stats = await calculate_basic_stats(filters)
 
-        metrics = TenantEngagementMetrics(
-            TenantId=tenant_id,
-            TenantName=basic_stats.TenantName,
-            StartDate=start_date,
-            EndDate=end_date,
-            BasicStats=basic_stats,
-            TenantOverallEngagement=tenant_overall_engagement,
-            FeatureEngagement=feature_engagement
+        generic_metrics = await calculate_generic_engagement_metrics(filters)
+
+        features = [
+            EventCategory.Login,
+            # EventCategory.Profile,
+            EventCategory.Medication,
+            EventCategory.Symptoms,
+            EventCategory.Vitals,
+            # EventCategory.LabRecords,
+            # EventCategory.Documents,
+            EventCategory.Careplan,
+        ]
+        metrics_by_feature = []
+        for feature in features:
+            engament = await calculate_feature_engagement_metrics(feature, filters)
+            metrics_by_feature.append(engament)
+
+        metrics = EngagementMetrics(
+            TenantId        = filters.TenantId,
+            TenantName      = filters.TenantName,
+            StartDate       = str(filters.StartDate) if filters.StartDate else 'Unspecified',
+            EndDate         = str(filters.EndDate) if filters.EndDate else 'Unspecified',
+            BasicStatistics = basic_stats,
+            GenericMetrics  = generic_metrics,
+            FeatureMetrics  = metrics_by_feature
         )
 
         # await generate_reports(analysis_code, metrics)
@@ -91,27 +98,24 @@ async def calculate(
 
 ###############################################################################
 
-async def calculate_basic_stats(
-        tenant_id: Optional[UUID4] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None) -> BasicAnalyticsStatistics|None:
+async def calculate_basic_stats(filters: AnalyticsFilters | None = None) -> BasicAnalyticsStatistics|None:
     try:
 
-        tenant_id, start_date, end_date, tenant_name = check_params(tenant_id, start_date, end_date)
+        filters = check_filter_params(filters)
 
         results = await asyncio.gather(
-            get_all_registered_users(tenant_id, start_date, end_date),
-            get_all_registered_patients(tenant_id, start_date, end_date),
-            get_current_active_patients(tenant_id),
-            get_patient_registration_hisory_by_months(tenant_id, start_date, end_date),
-            get_patient_deregistration_history_by_months(tenant_id, start_date, end_date),
-            get_patient_age_demographics(tenant_id, start_date, end_date),
-            get_patient_gender_demographics(tenant_id, start_date, end_date),
-            get_patient_ethnicity_demographics(tenant_id, start_date, end_date),
-            get_patient_race_demographics(tenant_id, start_date, end_date),
-            get_patient_healthsystem_distribution(tenant_id, start_date, end_date),
-            get_patient_hospital_distribution(tenant_id, start_date, end_date),
-            get_patient_survivor_or_caregiver_distribution(tenant_id, start_date, end_date)
+            get_all_registered_users(filters),
+            get_all_registered_patients(filters),
+            get_current_active_patients(filters),
+            get_patient_registration_hisory_by_months(filters),
+            get_patient_deregistration_history_by_months(filters),
+            get_patient_age_demographics(filters),
+            get_patient_gender_demographics(filters),
+            get_patient_ethnicity_demographics(filters),
+            get_patient_race_demographics(filters),
+            get_patient_healthsystem_distribution(filters),
+            get_patient_hospital_distribution(filters),
+            get_patient_survivor_or_caregiver_distribution(filters)
         )
 
         total_users                        = results[0]
@@ -139,10 +143,10 @@ async def calculate_basic_stats(
         )
 
         stats = BasicAnalyticsStatistics(
-            TenantId                     = tenant_id,
-            TenantName                   = tenant_name,
-            StartDate                    = start_date,
-            EndDate                      = end_date,
+            TenantId                     = filters.TenantId,
+            TenantName                   = filters.TenantName,
+            StartDate                    = str(filters.StartDate) if filters.StartDate else 'Unspecified',
+            EndDate                      = str(filters.EndDate) if filters.EndDate else 'Unspecified',
             TotalUsers                   = total_users,
             TotalPatients                = total_patients,
             TotalActivePatients          = active_patients,
@@ -156,24 +160,21 @@ async def calculate_basic_stats(
     except Exception as e:
         print(e)
 
-async def calculate_tenant_engagement_metrics(
-                                    tenant_id: Optional[UUID4] = None,
-                                    start_date: Optional[date] = None,
-                                    end_date: Optional[date] = None):
+async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None = None) -> GenericEngagementMetrics|None:
     try:
-        tenant_id, start_date, end_date, tenant_name = check_params(tenant_id, start_date, end_date)
+        filters = check_filter_params(filters)
 
         results = await asyncio.gather(
-                get_daily_active_patients(tenant_id, start_date, end_date),
-                get_weekly_active_patients(tenant_id, start_date, end_date),
-                get_monthly_active_patients(tenant_id, start_date, end_date),
-                get_patients_average_session_length_in_minutes(tenant_id, start_date, end_date),
-                get_patients_login_frequency(tenant_id, start_date, end_date),
-                get_patients_retention_rate_on_specific_days(tenant_id, start_date, end_date),
-                get_patients_retention_rate_in_specific_time_interval(tenant_id, start_date, end_date),
-                get_patient_stickiness_dau_mau(tenant_id, start_date, end_date),
-                get_patients_most_commonly_used_features(tenant_id, start_date, end_date),
-                get_patients_most_commonly_visited_screens(tenant_id, start_date, end_date)
+                get_daily_active_patients(filters),
+                get_weekly_active_patients(filters),
+                get_monthly_active_patients(filters),
+                get_patients_average_session_length_in_minutes(filters),
+                get_patients_login_frequency(filters),
+                get_patients_retention_rate_on_specific_days(filters),
+                get_patients_retention_rate_in_specific_time_interval(filters),
+                get_patient_stickiness_dau_mau(filters),
+                get_patients_most_commonly_used_features(filters),
+                get_patients_most_commonly_visited_screens(filters)
             )
 
         daily_active_users                   = results[0]
@@ -187,11 +188,11 @@ async def calculate_tenant_engagement_metrics(
         most_common_features                 = results[8]
         most_commonly_visited_screens        = results[9]
 
-        user_engagement_metrics = GenericEngagementMetrics(
-                TenantId                         = tenant_id,
-                TenantName                       = tenant_name,
-                StartDate                        = str(start_date) if start_date else 'Unspecified',
-                EndDate                          = str(end_date) if end_date else 'Unspecified',
+        generic_engagement_metrics = GenericEngagementMetrics(
+                TenantId                         = filters.TenantId,
+                TenantName                       = filters.TenantName,
+                StartDate                        = str(filters.StartDate) if filters.StartDate else 'Unspecified',
+                EndDate                          = str(filters.EndDate) if filters.EndDate else 'Unspecified',
                 DailyActiveUsers                 = daily_active_users,
                 WeeklyActiveUsers                = weekly_active_users,
                 MonthlyActiveUsers               = monthly_active_users,
@@ -204,27 +205,24 @@ async def calculate_tenant_engagement_metrics(
                 MostCommonlyVisitedScreens       = most_commonly_visited_screens
             )
 
-        return user_engagement_metrics
+        return generic_engagement_metrics
 
     except Exception as e:
         print(e)
 
 
 async def calculate_feature_engagement_metrics(
-        feature: str,
-        tenant_id: Optional[UUID4] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None)-> FeatureEngagementMetrics|None:
+        feature: str, filters: AnalyticsFilters | None = None)-> FeatureEngagementMetrics|None:
     try:
-        tenant_id, start_date, end_date, tenant_name = check_params(tenant_id, start_date, end_date)
+        filters = check_filter_params(filters)
 
         results = await asyncio.gather(
-            get_feature_access_frequency(feature, tenant_id, start_date, end_date),
-            get_feature_average_usage_duration_minutes(feature, tenant_id, start_date, end_date),
-            get_feature_engagement_rate(feature, tenant_id, start_date, end_date),
-            get_feature_retention_rate_on_specific_days(feature, tenant_id, start_date, end_date),
-            get_feature_retention_rate_in_specific_intervals(feature, tenant_id, start_date, end_date),
-            get_feature_drop_off_points(feature, tenant_id, start_date, end_date)
+            get_feature_access_frequency(feature, filters),
+            get_feature_average_usage_duration_minutes(feature, filters),
+            get_feature_engagement_rate(feature, filters),
+            get_feature_retention_rate_on_specific_days(feature, filters),
+            get_feature_retention_rate_in_specific_intervals(feature, filters),
+            get_feature_drop_off_points(feature, filters)
         )
 
         access_frequency = results[0]
@@ -235,17 +233,17 @@ async def calculate_feature_engagement_metrics(
         drop_off_points = results[5]
 
         feature_engagement_metrics = FeatureEngagementMetrics(
-            Feature=feature,
-            TenantId=tenant_id,
-            TenantName=tenant_name,
-            StartDate=str(start_date) if start_date else 'Unspecified',
-            EndDate=str(end_date) if end_date else 'Unspecified',
-            AccessFrequency=access_frequency,
-            AverageUsageDurationMinutes=average_time_spent,
-            EngagementRate=engagement_rate,
-            RetentionRateOnSpecificDays=retention_rate_on_specific_days,
-            RetentionRateInSpecificIntervals=retention_rate_in_specific_intervals,
-            DropOffPoints=drop_off_points
+            Feature                          = feature,
+            TenantId                         = filters.TenantId,
+            TenantName                       = filters.TenantName,
+            StartDate                        = str(filters.StartDate) if filters.StartDate else 'Unspecified',
+            EndDate                          = str(filters.EndDate) if filters.EndDate else 'Unspecified',
+            AccessFrequency                  = access_frequency,
+            AverageUsageDurationMinutes      = average_time_spent,
+            EngagementRate                   = engagement_rate,
+            RetentionRateOnSpecificDays      = retention_rate_on_specific_days,
+            RetentionRateInSpecificIntervals = retention_rate_in_specific_intervals,
+            DropOffPoints                    = drop_off_points
         )
 
         return feature_engagement_metrics
@@ -253,29 +251,50 @@ async def calculate_feature_engagement_metrics(
     except Exception as e:
         print(e)
 
-
 ###############################################################################
 
-def check_params(tenant_id, start_date, end_date):
-    if not start_date:
-        start_date = date.today() - timedelta(days=PAST_DAYS_TO_CONSIDER)
-    if not end_date:
-        end_date = date.today()
+def check_filter_params(filters: AnalyticsFilters | None = None) -> AnalyticsFilters:
 
     tenant_name = "unspecified"
-    if not tenant_id:
-        return tenant_id,start_date,end_date,tenant_name
-        # tenant = DataSynchronizer.get_tenant_by_code('default')
-        # if tenant is not None:
-        #     tenant_id = tenant['id']
-        #     tenant_name = tenant['TenantName']
-    else:
-        tenant = DataSynchronizer.get_tenant(tenant_id)
-        if tenant is not None:
-            tenant_name = tenant['TenantName']
-    return tenant_id,start_date,end_date,tenant_name
+    start_date = date.today() - timedelta(days=PAST_DAYS_TO_CONSIDER)
+    end_date = date.today()
+    role_id = get_role_id() # This defaults to 'Patient' role
 
-async def generate_reports(analysis_code, metrics):
+    if filters is None:
+        return AnalyticsFilters(
+            TenantId=None,
+            TenantName=tenant_name,
+            RoleId=role_id,
+            StartDate=start_date,
+            EndDate=end_date,
+            Source=None,
+            )
+
+    if not filters.RoleId or filters.RoleId < 0 or filters.RoleId > 20:
+        filters.RoleId = role_id
+
+    if not filters.StartDate:
+        filters.StartDate = start_date
+    if not filters.EndDate:
+        filters.EndDate = end_date
+
+    if not filters.TenantId:
+        return AnalyticsFilters(
+            TenantId=None,
+            TenantName=tenant_name,
+            RoleId=filters.RoleId,
+            StartDate=filters.StartDate,
+            EndDate=filters.EndDate,
+            Source=filters.Source,
+            )
+    else:
+        tenant = DataSynchronizer.get_tenant(filters.TenantId)
+        if tenant is not None:
+            filters.TenantName = tenant['TenantName']
+
+    return filters
+
+async def generate_reports(analysis_code: str, metrics: EngagementMetrics):
     try:
         json_file_path = await generate_user_engagement_report_json(analysis_code, metrics)
         excel_file_path = await generate_user_engagement_report_excel(analysis_code, metrics)
