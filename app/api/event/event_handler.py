@@ -12,7 +12,7 @@ from app.telemetry.tracing import trace_span
 async def create_event_(model):
     tracemalloc.start()
     await event_service.create_event(model)
-    message = "Events created successfully"
+    message = "Event created successfully"
     resp = ResponseModel[SuccessResponseModel](Message=message, Data=SuccessResponseModel())
     tracemalloc.stop()
     return resp

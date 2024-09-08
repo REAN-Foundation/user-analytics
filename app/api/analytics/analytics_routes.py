@@ -7,10 +7,11 @@ from app.api.analytics.analytics_handler import (
     calculate_feature_engagement_metrics_,
     calculate_generic_engagement_metrics_,
     download_metrics_,
-    get_metrics_
+    get_metrics_,
+    get_analysis_code_
 )
 from app.common.utils import generate_random_code
-from app.database.services.analytics.analyser import check_filter_params
+from app.database.services.analytics.analysis_service import check_filter_params
 from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
@@ -67,7 +68,7 @@ async def calculate_metrics(
         background_tasks: BackgroundTasks,
         filters: AnalyticsFilters):
 
-    analysis_code = generate_random_code(12)
+    analysis_code = get_analysis_code_()
     base_url = os.getenv("BASE_URL")
     filters_updated = check_filter_params(filters)
 

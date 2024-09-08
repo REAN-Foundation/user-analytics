@@ -1,7 +1,10 @@
 from datetime import date, timedelta
 import asyncio
+import os
 
-from app.database.services.analytics.basic_stats import (
+from app.database.database_accessor import get_db_session
+from app.database.models.analysis import Analysis
+from app.database.services.analytics.basic_statistics import (
     get_all_registered_patients,
     get_all_registered_users,
     get_current_active_patients,
@@ -89,7 +92,8 @@ async def calculate(
             FeatureMetrics  = metrics_by_feature
         )
 
-        # await generate_reports(analysis_code, metrics)
+        saved_analytics = await save_analytics(analysis_code, metrics)
+        await generate_reports(analysis_code, metrics)
 
         return metrics
 
@@ -308,3 +312,69 @@ async def generate_reports(analysis_code: str, metrics: EngagementMetrics):
         print(e)
 
 ###############################################################################
+
+async def get_analysis_code():
+    today = date.today().strftime("%Y-%m-%d")
+    existing_count = 0
+    try:
+        session = get_db_session()
+        existing = session.query(Analysis).filter(Analysis.Code.startswith(today)).all()
+        if existing is not None and len(existing) > 0:
+            existing_count = len(existing)
+        session.close()
+    except Exception as e:
+        print(e)
+
+    existing_count += 1
+    return f"{today}-{existing_count}"
+
+###############################################################################
+
+async def save_analytics(analysis_code: str, metrics: EngagementMetrics)-> dict:
+
+    print(f"Saving analytics -> {analysis_code} -> {metrics}")
+    session = get_db_session()
+    base_url = os.getenv("BASE_URL")
+
+    try:
+        db_model = Analysis(
+            Code       = analysis_code,
+            TenantId   = str(metrics.TenantId),
+            TenantName = metrics.TenantName,
+            DateStr    = date.today().strftime("%Y-%m-%d"),
+            Data       = str(metrics.model_dump_json()),
+            StartDate  = metrics.StartDate,
+            EndDate    = metrics.EndDate,
+            JsonURL    = f"{base_url}/api/analytics/download/{analysis_code}/formats/json",
+            ExcelURL   = f"{base_url}/api/analytics/download/{analysis_code}/formats/excel",
+            PdfURL     = f"{base_url}/api/analytics/download/{analysis_code}/formats/pdf",
+            URL        = f"{base_url}/api/analytics/metrics/{analysis_code}",
+            CreatedAt  = date.today(),
+            UpdatedAt  = date.today()
+        )
+
+        session.add(db_model)
+        session.commit()
+        temp = session.refresh(db_model)
+        analysis = db_model
+        return analysis.__dict__
+
+    except Exception as e:
+        session.rollback()
+        session.close()
+        raise e
+    finally:
+        session.close()
+
+###############################################################################
+
+async def get_analysis_by_code(analysis_code: str)-> dict:
+    try:
+        session = get_db_session()
+        analysis = session.query(Analysis).filter(Analysis.Code == analysis_code).first()
+        if analysis is None:
+            raise Exception(f"Analysis with code {analysis_code} not found")
+        session.close()
+        return analysis.__dict__
+    except Exception as e:
+        print(e)

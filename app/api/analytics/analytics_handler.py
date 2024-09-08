@@ -1,8 +1,11 @@
-from app.database.services.analytics.analyser import (
+from app.common.utils import generate_random_code
+from app.database.services.analytics.analysis_service import (
     calculate,
     calculate_basic_stats,
     calculate_generic_engagement_metrics,
-    calculate_feature_engagement_metrics
+    calculate_feature_engagement_metrics,
+    get_analysis_by_code,
+    get_analysis_code
 )
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
@@ -39,8 +42,14 @@ def download_metrics_(analysis_code:str):
 @trace_span("handler: get_metrics")
 def get_metrics_(analysis_code:str):
     try:
-        pass
+        analysis = get_analysis_by_code(analysis_code)
+        return analysis
     except Exception as e:
         print(e)
+
+###############################################################################
+
+async def get_analysis_code_() -> str:
+    return await get_analysis_code()
 
 ###############################################################################
