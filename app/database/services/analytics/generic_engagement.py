@@ -1,6 +1,7 @@
 from datetime import date
 from pydantic import UUID4
 from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id
+from app.domain_types.enums.event_categories import EventCategory
 from app.domain_types.enums.event_types import EventType
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
@@ -778,8 +779,8 @@ async def get_patients_most_commonly_visited_screens(filters: AnalyticsFilters) 
         connector = get_analytics_db_connector()
 
         top_screens_count = 10
-        event_category = 'app-screen-visit' # EventCategory for screen visits
-        event_name = 'screen-entry' # EventName for screen-entry events
+        event_category = EventCategory.AppScreenVisit.value # EventCategory for screen visits
+        event_name = EventType.ScreenEntry.value # EventName for screen-entry events
         # Please note that we are treating the EventSubject as the screen name in this case.
 
         query = f"""

@@ -69,7 +69,7 @@ class FeatureEngagementMetrics(BaseModel):
     StartDate                        : datetime       = Field(description="Start date for analytics")
     EndDate                          : datetime       = Field(description="End date for analytics")
     AccessFrequency                  : list|dict|None = Field(description="Frequency of feature access daily/weekly/monthly")
-    AverageUsageDurationMinutes      : float|None     = Field(description="Duration of feature access daily/weekly/monthly")
+    AverageUsageDurationMinutes      : float|None     = Field(description="Duration of feature usage")
     EngagementRate                   : list|dict|None = Field(description="Percentage of active users engaging with each feature.")
     RetentionRateOnSpecificDays      : list|dict|None = Field(description="Percentage of users who return to the feature after their first use.")
     RetentionRateInSpecificIntervals : list|dict|None = Field(description="Percentage of users who return to the feature after their first use.")

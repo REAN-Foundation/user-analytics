@@ -1,13 +1,16 @@
 from enum import Enum
 
 # These are commonly encountered event categories.
-# The application features are categorized into these event categories.
-# But do not set this enum to database. Keep it as string.
+# Do not set this enum to database. Keep it as string.
+
+# Event categories are broad categories of events.
+# The application features are considered as event categories.
 
 class EventCategory(str, Enum):
     Signup          = "signup"
     Profile         = "profile"
     Login           = "login"
+    AppScreenVisit  = "app-screen-visit"
     Medication      = "medication"
     Appointment     = "appointment"
     Symptoms        = "symptoms"
