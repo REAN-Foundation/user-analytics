@@ -68,7 +68,7 @@ class EventResponseModel(BaseModel):
     CreatedAt                   : datetime              = Field(default=None, description="Created At timestamp of the Event")
     UpdatedAt                   : datetime              = Field(default=None, description="Updated At timestamp of the Event")
 
-EventResponseModel.model_rebuild()
+EventResponseModel.model_rebuild
 
 class EventSearchResults(BaseSearchResults):
     Items: List[EventResponseModel] = []
