@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, status, HTTPException, BackgroundTasks
 from app.api.sync.sync_handler import (
-    sync_assessment_create_events_,
     sync_blood_glucose_create_events_,
     sync_blood_glucose_delete_events_,
     sync_blood_pressure_create_events_,
