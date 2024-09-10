@@ -1225,6 +1225,69 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "analytics",
+			"item": [
+				{
+					"name": "basic-stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/analytics/basic-stats",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"analytics",
+								"basic-stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "generate user engagement metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "x-api-key",
+								"value": "{{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/analytics/generate-user-engagement-metrics",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"analytics",
+								"generate-user-engagement-metrics"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }
