@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     SERVICE_NAME: str ="User-Analytics-Service"
     BASE_URL: str = "http://localhost:23456"
     USER_ACCESS_TOKEN_SECRET: str ="secret"
+    USER_REFRESH_TOKEN_SECRET: str ="secret"
     CIPHER_SALT: str="salt"
     SERVICE_IDENTIFIER: str =f"{SERVICE_NAME}-{ENVIRONMENT}"
 
