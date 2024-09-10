@@ -80,3 +80,4 @@ watchfiles==0.24.0
 websockets==13.0.1
 wrapt==1.16.0
 zipp==3.20.1
+pandas==2.2.2
