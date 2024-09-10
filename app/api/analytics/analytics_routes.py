@@ -1,27 +1,25 @@
 import os
-from datetime import date
-from typing import Optional
-from fastapi import APIRouter, Depends, status, HTTPException, BackgroundTasks
+from fastapi import APIRouter, status, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
-from pydantic import UUID4
 from app.api.analytics.analytics_handler import (
-    basic_stats_,
-    download_feature_engagement_metrics_,
-    generate_feature_engagement_metrics_,
-    calculate_tenant_engagement_metrics_,
-    download_user_engagement_metrics_,
-    get_feature_engagement_metrics_,
-    get_user_engagement_metrics_
+    calculate_,
+    calculate_basic_statistics_,
+    calculate_feature_engagement_metrics_,
+    calculate_generic_engagement_metrics_,
+    download_metrics_,
+    get_metrics_,
+    get_analysis_code_
 )
 from app.common.utils import generate_random_code
-from app.database.database_accessor import get_db_session
-from app.domain_types.miscellaneous.response_model import ResponseModel, ResponseStatusTypes
+from app.database.services.analytics.analysis_service import check_filter_params
+from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.analytics import (
+    AnalyticsFilters,
     BasicAnalyticsStatistics,
+    EngagementMetrics,
     FeatureEngagementMetrics,
-    FeatureEngagementMetricsResponse,
     GenericEngagementMetrics,
-    GenericEngagementMetricsResponse
+    CalculateMetricsResponse
 )
 
 ###############################################################################
@@ -35,110 +33,78 @@ router = APIRouter(
 
 ###############################################################################
 
-@router.get("/basic-stats",
+@router.get("/basic-statistics",
             status_code=status.HTTP_200_OK,
             response_model=ResponseModel[BasicAnalyticsStatistics|None])
-async def basic_stats(
-        tenant_id: Optional[UUID4] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None):
-    stats = await basic_stats_(tenant_id, start_date, end_date)
+async def calculate_basic_statistics(filters: AnalyticsFilters):
+    stats = await calculate_basic_statistics_(filters)
     message = "Basic analytics statistics retrieved successfully."
     resp = ResponseModel[BasicAnalyticsStatistics](Message=message, Data=stats)
     return resp
 
-###############################################################################
-
-@router.get("/generate-user-engagement-metrics",
+@router.get("/generic-engagement-metrics",
             status_code=status.HTTP_200_OK,
-            response_model=ResponseModel[GenericEngagementMetricsResponse|None])
-async def generate_user_engagement_metrics(
-        background_tasks: BackgroundTasks,
-        tenant_id: Optional[UUID4] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None):
-
-    analysis_code = generate_random_code(12)
-    base_url = os.getenv("BASE_URL")
-
-    background_tasks.add_task(calculate_tenant_engagement_metrics_, analysis_code, tenant_id, start_date, end_date)
-
-    res_model = GenericEngagementMetricsResponse(
-        TenantId     = tenant_id if tenant_id is not None else "Unspecified",
-        StartDate    = start_date if start_date is not None else "Unspecified",
-        EndDate      = end_date if end_date is not None else "Unspecified",
-        AnalysisCode = analysis_code,
-        JsonURL      = f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/json",
-        ExcelURL     = f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/excel",
-        PDFURL       = f"{base_url}/api/analytics/download-user-engagement-metrics/{analysis_code}/format/pdf",
-        URL          = f"{base_url}/api/analytics/user-engagement-metrics/{analysis_code}"
-    )
-    message = "User engagement metrics analysis started successfully. It may take a while to complete. You can access the results through the urls shared."
-    resp = ResponseModel[GenericEngagementMetricsResponse](Message=message, Data=res_model)
+            response_model=ResponseModel[GenericEngagementMetrics|None])
+async def calculate_generic_engagement_metrics(filters: AnalyticsFilters):
+    metrics = await calculate_generic_engagement_metrics_(filters)
+    message = "Generic engagement metrics retrieved successfully."
+    resp = ResponseModel[GenericEngagementMetrics](Message=message, Data=metrics)
     return resp
 
-@router.get("/download-user-engagement-metrics/{analysis_code}/format/{file_format}",
+@router.get("/feature-engagement-metrics/{feature}",
+            status_code=status.HTTP_200_OK,
+            response_model=ResponseModel[FeatureEngagementMetrics|None])
+async def calculate_feature_engagement_metrics(feature: str, filters: AnalyticsFilters):
+    metrics = await calculate_feature_engagement_metrics_(feature, filters)
+    message = "Feature engagement metrics retrieved successfully."
+    resp = ResponseModel[FeatureEngagementMetrics](Message=message, Data=metrics)
+    return resp
+###############################################################################
+
+@router.post("/metrics",
+            status_code=status.HTTP_200_OK,
+            response_model=ResponseModel[CalculateMetricsResponse|None])
+async def calculate_metrics(
+        background_tasks: BackgroundTasks,
+        filters: AnalyticsFilters):
+
+    analysis_code = get_analysis_code_()
+    base_url = os.getenv("BASE_URL")
+    filters_updated = check_filter_params(filters)
+
+    background_tasks.add_task(calculate_, analysis_code, filters_updated)
+
+    res_model = CalculateMetricsResponse(
+        TenantId     = filters_updated.TenantId,
+        RoleId       = filters_updated.RoleId,
+        StartDate    = str(filters_updated.StartDate),
+        EndDate      = str(filters_updated.EndDate),
+        AnalysisCode = analysis_code,
+        JsonURL      = f"{base_url}/api/analytics/download/{analysis_code}/formats/json",
+        ExcelURL     = f"{base_url}/api/analytics/download/{analysis_code}/formats/excel",
+        PdfURL       = f"{base_url}/api/analytics/download/{analysis_code}/formats/pdf",
+        URL          = f"{base_url}/api/analytics/metrics/{analysis_code}"
+    )
+    message = "Engagement metrics analysis started successfully. It may take a while to complete. You can access the results through the urls shared."
+    resp = ResponseModel[CalculateMetricsResponse](Message=message, Data=res_model)
+    return resp
+
+@router.get("/metrics/{analysis_code}",
+            status_code=status.HTTP_200_OK,
+            response_model=ResponseModel[EngagementMetrics|None])
+async def get_metrics(analysis_code: str):
+    metrics = await get_metrics_(analysis_code)
+    message = "Engagement metrics retrieved successfully."
+    resp = ResponseModel[EngagementMetrics](Message=message, Data=metrics)
+    return resp
+
+@router.get("/download/{analysis_code}/formats/{file_format}",
             status_code=status.HTTP_200_OK)
 def download_user_engagement_metrics(analysis_code: str, file_format: str):
     file_format_lower = file_format.lower()
     if file_format_lower not in ["json", "excel", "pdf"]:
         raise HTTPException(status_code=400, detail="Invalid file format. Supported formats are 'json', 'excel' and 'pdf'.")
-    stream = download_user_engagement_metrics_(analysis_code, file_format_lower)
+    stream = download_metrics_(analysis_code, file_format_lower)
     return StreamingResponse(stream, media_type="application/octet-stream")
-
-@router.get("/user-engagement-metrics/{analysis_code}",
-            status_code=status.HTTP_200_OK,
-            response_model=ResponseModel[GenericEngagementMetrics|None])
-def get_user_engagement_metrics_(analysis_code: str):
-    metrics = get_user_engagement_metrics_(analysis_code)
-    message = "User engagement metrics retrieved successfully."
-    resp = ResponseModel[GenericEngagementMetrics](Message=message, Data=metrics)
-    return resp
-
-###############################################################################
-
-@router.get("/generate-feature-engagement-metrics/{feature}",
-            status_code=status.HTTP_200_OK,
-            response_model=ResponseModel[FeatureEngagementMetricsResponse|None])
-def generate_feature_engagement_metrics(
-        background_tasks: BackgroundTasks,
-        feature: str,
-        tenant_id: Optional[UUID4] = None,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None):
-    analysis_code = generate_random_code(12)
-    base_url = os.getenv("BASE_URL")
-    res_model = FeatureEngagementMetricsResponse(
-        TenantId=tenant_id,
-        StartDate=start_date,
-        EndDate=end_date,
-        AnalysisCode=analysis_code,
-        JsonURL=f"{base_url}/api/analytics/download-feature-engagement-metrics/{analysis_code}/format/json",
-        ExcelURL=f"{base_url}/api/analytics/download-feature-engagement-metrics/{analysis_code}/format/excel",
-        PDFURL=f"{base_url}/api/analytics/download-feature-engagement-metrics/{analysis_code}/format/pdf",
-        URL=f"{base_url}/api/analytics/feature-engagement-metrics/{analysis_code}"
-    )
-    background_tasks.add_task(generate_feature_engagement_metrics_(analysis_code, feature, tenant_id, start_date, end_date))
-    message = "Feature engagement metrics analysis started successfully. It may take a while to complete. You can access the results through the urls shared."
-    resp = ResponseModel[bool](Message=message, Data=res_model)
-    return resp
-
-@router.get("/download-feature-engagement-metrics/{analysis_code}/format/{file_format}",
-            status_code=status.HTTP_200_OK)
-def download_feature_engagement_metrics(analysis_code: str, file_format: str):
-    file_format_lower = file_format.lower()
-    if file_format_lower not in ["json", "excel", "pdf"]:
-        raise HTTPException(status_code=400, detail="Invalid file format. Supported formats are 'json', 'excel' and 'pdf'.")
-    stream = download_feature_engagement_metrics_(analysis_code, file_format_lower)
-    return StreamingResponse(stream, media_type="application/octet-stream")
-
-@router.get("/feature-engagement-metrics/{analysis_code}",
-            status_code=status.HTTP_200_OK,
-            response_model=ResponseModel[FeatureEngagementMetrics|None])
-def feature_engagement_metrics(analysis_code: str):
-    metrics = get_feature_engagement_metrics_(analysis_code)
-    message = "Feature engagement metrics retrieved successfully."
-    resp = ResponseModel[FeatureEngagementMetrics](Message=message, Data=metrics)
-    return resp
 
 ###############################################################################

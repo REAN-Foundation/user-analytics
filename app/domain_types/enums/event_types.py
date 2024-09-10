@@ -2,6 +2,7 @@ from enum import Enum
 
 # These are commonly encountered event types.
 # But do not set this enum to database. Keep it as string.
+# Event types can broadly be termed as actions - user, system, device, etc.
 
 class EventType(str, Enum):
 
@@ -21,9 +22,9 @@ class EventType(str, Enum):
     PatientHealthProfileUpdate = "patient-health-profile-update"
 
     # Screen visit events
-    ScreenVisit = "screen-visit"
     ScreenEntry = "screen-entry"
     ScreenExit = "screen-exit"
+    ScreenButtonClick = "screen-button-click"
 
     # Medication events
     MedicationCreate = "medication-create"

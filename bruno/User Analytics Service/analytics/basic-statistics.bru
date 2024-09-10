@@ -1,0 +1,22 @@
+meta {
+  name: basic-statistics
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/analytics/basic-statistics
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}
+
+body:json {
+  {
+    
+  }
+}

@@ -15,10 +15,12 @@ class Analysis(Base):
     TenantId   = Column(String(36), default=None, index=True, nullable=False)
     TenantName = Column(String(256), default=None, nullable=False)
     DateStr    = Column(String(64), default=None, nullable=False)
+    StartDate  = Column(DateTime(timezone=True), default=None, nullable=False)
+    EndDate    = Column(DateTime(timezone=True), default=None, nullable=False)
     Data       = Column(Text, default=None, nullable=True)
     JsonUrl    = Column(String(256), default=None, nullable=True)
     ExcelUrl   = Column(String(256), default=None, nullable=True)
-    PDFUrl     = Column(String(256), default=None, nullable=True)
+    PdfUrl     = Column(String(256), default=None, nullable=True)
     CreatedAt  = Column(DateTime(timezone=True), server_default=func.now())
     UpdatedAt  = Column(DateTime(timezone=True), onupdate=func.now())
 

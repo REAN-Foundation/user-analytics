@@ -10,20 +10,44 @@ REPORTS_DIR = "analytics_reports"
 
 ###############################################################################
 
-def tenant_check(tenant_id: UUID4|None, on_joined_user = False) -> str:
+def tenant_check(tenant_id: UUID4|None) -> str:
     if tenant_id is None:
         return ""
-    return f"AND TenantId = '{tenant_id}'" if on_joined_user == False else f"AND user.TenantId = '{tenant_id}'"
+    return f"user.TenantId = '{tenant_id}'"
 
-def role_check(role_id: int|None, on_joined_user = False) -> str:
+def role_check(role_id: int|None) -> str:
     if role_id is None:
         return ""
-    return f"AND RoleId = {role_id}" if on_joined_user == False else f"AND user.RoleId = {role_id}"
+    return f"user.RoleId = {role_id}"
 
-def add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False):
-    query = query.replace("__TENANT_ID_CHECK__", tenant_check(tenant_id, on_joined_user))
-    query = query.replace("__ROLE_ID_CHECK__", role_check(role_id, on_joined_user))
-    return query
+def event_source_check(event_source: str|None) -> str:
+    if event_source is None:
+        return ""
+    return f"e.SourceName = '{event_source}'"
+
+def add_common_checks(
+        tenant_id: UUID4|None,
+        role_id: int|None,
+        event_source: str|None = None) -> str:
+
+    checks = []
+
+    tenant_check_str = tenant_check(tenant_id)
+    if len(tenant_check_str) > 0:
+        checks.append(tenant_check_str)
+
+    role_check_str = role_check(role_id)
+    if len(role_check_str) > 0:
+        checks.append(role_check_str)
+
+    event_source_check_str = event_source_check(event_source)
+    if len(event_source_check_str) > 0:
+        checks.append(event_source_check_str)
+
+    checks_str = " AND ".join(checks)
+    checks_str = checks_str.strip()
+    return checks_str
+
 
 def get_role_id(role_name: str = "Patient") -> int|None:
     role_id = None

@@ -1,0 +1,16 @@
+meta {
+  name: sync-medication-delete_events
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/medications/delete
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}
