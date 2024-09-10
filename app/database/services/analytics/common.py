@@ -32,11 +32,11 @@ def add_common_checks(
 
     checks = []
 
-    tenant_check_str = tenant_check(tenant_id, True)
+    tenant_check_str = tenant_check(tenant_id)
     if len(tenant_check_str) > 0:
         checks.append(tenant_check_str)
 
-    role_check_str = role_check(role_id, True)
+    role_check_str = role_check(role_id)
     if len(role_check_str) > 0:
         checks.append(role_check_str)
 

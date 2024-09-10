@@ -462,42 +462,42 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, filters
             "active_users": row['active_users'],
             "retention_in_specific_interval": [
                 {
-                    "interval": "1d",
+                    "interval": "0d-1d",
                     "returning_users": row['returning_before_day_1'],
                     "retention_rate": float(row['retention_1d_rate'])
                 },
                 {
-                    "interval": "3d",
+                    "interval": "1d-3d",
                     "returning_users": row['returning_between_day_1_and_day_3'],
                     "retention_rate": float(row['retention_3d_rate'])
                 },
                 {
-                    "interval": "7d",
+                    "interval": "3d-7d",
                     "returning_users": row['returning_between_day_3_and_day_7'],
                     "retention_rate": float(row['retention_7d_rate'])
                 },
                 {
-                    "interval": "10d",
+                    "interval": "7d-10d",
                     "returning_users": row['returning_between_day_7_and_day_10'],
                     "retention_rate": float(row['retention_10d_rate'])
                 },
                 {
-                    "interval": "15d",
+                    "interval": "10d-15d",
                     "returning_users": row['returning_between_day_10_and_day_15'],
                     "retention_rate": float(row['retention_15d_rate'])
                 },
                 {
-                    "interval": "20d",
+                    "interval": "15d-20d",
                     "returning_users": row['returning_between_day_15_and_day_20'],
                     "retention_rate": float(row['retention_20d_rate'])
                 },
                 {
-                    "interval": "25d",
+                    "interval": "20d-25d",
                     "returning_users": row['returning_between_day_20_and_day_25'],
                     "retention_rate": float(row['retention_25d_rate'])
                 },
                 {
-                    "interval": "30d",
+                    "interval": "25d-30d",
                     "returning_users": row['returning_between_day_25_and_day_30'],
                     "retention_rate": float(row['retention_30d_rate'])
                 }
@@ -539,7 +539,7 @@ async def get_feature_average_usage_duration_minutes(feature: str, filters: Anal
                     FROM events e
                     JOIN users user ON e.UserId = user.id
                     WHERE
-                        AND e.EventCategory = '{feature}'
+                        e.EventCategory = '{feature}'
                         AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         __CHECKS__
                     GROUP BY e.UserId, e.EventCategory  -- Group by user, and feature
@@ -571,9 +571,9 @@ async def get_feature_average_usage_duration_minutes(feature: str, filters: Anal
         query = query.replace("__CHECKS__", checks_str)
 
         result = connector.execute_read_query(query)
-
-        return result
-
+        row = result[0]
+        average_session_length = float(row['avg_duration_minutes'])
+        return average_session_length
     except Exception as e:
         print(e)
         return 0

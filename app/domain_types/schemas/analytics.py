@@ -64,10 +64,10 @@ class GenericEngagementMetrics(BaseModel):
 
 class FeatureEngagementMetrics(BaseModel):
     Feature                          : str            = Field(description="Name of the feature")
-    TenantId                         : UUID4          = Field(description="Tenant ID")
-    TenantName                       : str            = Field(description="Tenant Name")
-    StartDate                        : datetime       = Field(description="Start date for analytics")
-    EndDate                          : datetime       = Field(description="End date for analytics")
+    TenantId                         : UUID4|None     = Field(description="Tenant ID")
+    TenantName                       : str|None       = Field(description="Tenant Name")
+    StartDate                        : datetime|None  = Field(description="Start date for analytics")
+    EndDate                          : datetime|None  = Field(description="End date for analytics")
     AccessFrequency                  : list|dict|None = Field(description="Frequency of feature access daily/weekly/monthly")
     AverageUsageDurationMinutes      : float|None     = Field(description="Duration of feature usage")
     EngagementRate                   : list|dict|None = Field(description="Percentage of active users engaging with each feature.")
