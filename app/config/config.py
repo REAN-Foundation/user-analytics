@@ -1,6 +1,8 @@
+from dotenv import find_dotenv, load_dotenv
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
+load_dotenv(find_dotenv('.env'))
 class Settings(BaseSettings):
 
     # App
