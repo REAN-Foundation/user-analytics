@@ -1,11 +1,11 @@
-FROM python:3.11.4-alpine3.18
-
+FROM python:3.10
 WORKDIR /app
-
-COPY requirements.txt requirements.txt
-
-RUN pip3 install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "2345"]
+RUN python -m venv venv
+RUN . venv/bin/activate
+RUN pip install --upgrade pip
+RUN pip install setuptools wheel
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app
+EXPOSE 3000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]
