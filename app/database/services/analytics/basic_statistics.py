@@ -1,4 +1,4 @@
-from app.database.services.analytics.common import add_tenant_and_role_checks, tenant_check
+from app.database.services.analytics.common import add_common_checks
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.telemetry.tracing import trace_span
@@ -18,15 +18,18 @@ async def get_all_registered_users(filters: AnalyticsFilters) -> int:
         query = f"""
             SELECT
                 COUNT(*) as user_count
-            FROM users
+            FROM users as user
             WHERE
                 RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
+                __CHECKS__
             """
-        query = query.replace("__TENANT_ID_CHECK__", tenant_check(tenant_id))
+        checks_str = add_common_checks(tenant_id, role_id=None)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
         total_users = result[0]['user_count']
-
         return total_users
 
     except Exception as e:
@@ -47,16 +50,18 @@ async def get_all_registered_patients(filters: AnalyticsFilters) -> int:
         query = f"""
             SELECT
                 COUNT(*) as user_count
-            FROM users
+            FROM users as user
             WHERE
                 RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
         total_patients = result[0]['user_count']
-
         return total_patients
 
     except Exception as e:
@@ -77,13 +82,17 @@ async def get_current_active_patients(filters: AnalyticsFilters) -> int:
         query = f"""
             SELECT
                 COUNT(*) as user_count
-            FROM users
+            FROM users as user
             WHERE
                 DeletedAt IS NULL
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
         active_patients = result[0]['user_count']
 
@@ -108,15 +117,19 @@ async def get_patient_registration_hisory_by_months(filters: AnalyticsFilters) -
             SELECT
                 DATE_FORMAT(RegistrationDate, '%Y-%m') as month,
                 COUNT(*) as user_count
-            FROM users
+            FROM users as user
             WHERE
                 RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY month
             ORDER BY month
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -140,15 +153,19 @@ async def get_patient_deregistration_history_by_months(filters: AnalyticsFilters
             SELECT
                 DATE_FORMAT(DeletedAt, '%Y-%m') as month,
                 COUNT(*) as user_count
-            FROM users
+            FROM users as user
             WHERE
                 DeletedAt BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY month
             ORDER BY month
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = False)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -185,13 +202,16 @@ async def get_patient_age_demographics(filters: AnalyticsFilters) -> list:
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
                 user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY age_group
             ORDER BY FIELD(age_group, '0-18', '19-30', '31-45', '46-60', '61-75', '76-90', '91-105', '106-120', 'Unknown');
             """
 
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -221,11 +241,15 @@ async def get_patient_gender_demographics(filters: AnalyticsFilters) -> list:
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
                 user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY gender;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -254,13 +278,16 @@ async def get_patient_ethnicity_demographics(filters: AnalyticsFilters) -> list:
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
                 user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY ethnicity;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
-        result = connector.execute_read_query(query)
 
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
+        result = connector.execute_read_query(query)
         return result
 
     except Exception as e:
@@ -287,11 +314,15 @@ async def get_patient_race_demographics(filters: AnalyticsFilters) -> list:
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
                 user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY race;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -320,11 +351,15 @@ async def get_patient_healthsystem_distribution(filters: AnalyticsFilters) -> li
             INNER JOIN users as user ON user_metadata.UserId = user.id
             WHERE
                 user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY health_system;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -353,11 +388,15 @@ async def get_patient_hospital_distribution(filters: AnalyticsFilters) -> list:
                 INNER JOIN users as user ON user_metadata.UserId = user.id
                 WHERE
                     user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
+                    __CHECKS__
                 GROUP BY hospital;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -388,11 +427,15 @@ async def get_patient_survivor_or_caregiver_distribution(filters: AnalyticsFilte
                 INNER JOIN users as user ON user_metadata.UserId = user.id
                 WHERE
                     user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
+                    __CHECKS__
                 GROUP BY caregiver_status;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result

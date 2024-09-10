@@ -98,12 +98,12 @@ class CalculateMetricsResponse(BaseModel):
     PdfURL       : Optional[str]               = Field(description="URL to access the PDF formatted user engagement metrics data")
 
 class AnalyticsFilters(BaseModel):
-    TenantId     : Optional[UUID4|None] = Field(description="Tenant ID")
-    TenantName   : Optional[str|None] = Field(description="Tenant Name")
-    RoleId       : Optional[int|None] = Field(description="Role ID")
-    Source       : Optional[str|None] = Field(description="Source application of the event")
-    StartDate    : Optional[date|None]   = Field(description="Start date for events")
-    EndDate      : Optional[date|None]   = Field(description="End date for events")
+    TenantId   : Optional[UUID4|None] = Field(description="Tenant ID", default=None)
+    TenantName : Optional[str|None]   = Field(description="Tenant Name", default=None)
+    RoleId     : Optional[int|None]   = Field(description="Role ID", default=None)
+    Source     : Optional[str|None]   = Field(description="Source application of the event", default=None)
+    StartDate  : Optional[date|None]  = Field(description="Start date for events", default=None)
+    EndDate    : Optional[date|None]  = Field(description="End date for events", default=None)
 
     def __repr__(self):
         jsonStr = json.dumps(self.__dict__)

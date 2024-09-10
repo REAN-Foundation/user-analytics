@@ -1,6 +1,4 @@
-from datetime import date
-from pydantic import UUID4
-from app.database.services.analytics.common import add_tenant_and_role_checks, get_role_id
+from app.database.services.analytics.common import add_common_checks
 from app.domain_types.enums.event_categories import EventCategory
 from app.domain_types.enums.event_types import EventType
 from app.domain_types.schemas.analytics import AnalyticsFilters
@@ -27,12 +25,16 @@ async def get_daily_active_patients(filters: AnalyticsFilters):
             JOIN users as user ON e.UserId = user.id
             WHERE
                 e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY DATE(e.Timestamp)
             ORDER BY activity_date;
         """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         result_ = []
@@ -65,13 +67,12 @@ async def get_weekly_active_patients(filters: AnalyticsFilters):
         #     JOIN users user ON e.UserId = user.id
         #     WHERE
         #         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-        #         __TENANT_ID_CHECK__
-        #         __ROLE_ID_CHECK__
+        #         __CHECKS__
         #     GROUP BY YEARWEEK(e.Timestamp, 1)
         #     ORDER BY activity_week;
         # """
 
-        query_week_by_start_end_dates = f"""
+        query = f"""
             SELECT
                 DATE_FORMAT(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), '%Y-%m-%d') AS week_start_date,
                 DATE_FORMAT(DATE_ADD(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), INTERVAL 6 DAY), '%Y-%m-%d') AS week_end_date,
@@ -80,13 +81,17 @@ async def get_weekly_active_patients(filters: AnalyticsFilters):
             JOIN users as user ON e.UserId = user.id
             WHERE
                 e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY DATE_FORMAT(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), '%Y-%m-%d'),
                     DATE_FORMAT(DATE_ADD(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), INTERVAL 6 DAY), '%Y-%m-%d')
             ORDER BY week_start_date;
         """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query_week_by_start_end_dates, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -112,12 +117,16 @@ async def get_monthly_active_patients(filters: AnalyticsFilters):
             JOIN users as user ON e.UserId = user.id
             WHERE
                 e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
             ORDER BY activity_month;
         """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -150,12 +159,16 @@ async def get_patients_active_dau_wau_mau(filters: AnalyticsFilters):
                 JOIN users user ON e.UserId = user.id
                 WHERE
                     e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
+                    __CHECKS__
                 GROUP BY DATE(e.Timestamp), YEARWEEK(e.Timestamp, 1), DATE_FORMAT(e.Timestamp, '%Y-%m')
                 ORDER BY activity_date;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -192,12 +205,16 @@ async def get_patients_average_session_length_in_minutes(filters: AnalyticsFilte
                         WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.SessionId IS NOT NULL
-                        __TENANT_ID_CHECK__
-                        __ROLE_ID_CHECK__
+                        __CHECKS__
                     GROUP BY e.SessionId
                 ) AS session_durations;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         row = result[0]
@@ -230,12 +247,16 @@ async def get_patients_login_frequency(filters: AnalyticsFilters):
                 WHERE
                     e.EventName = '{event_name}'
                     AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                    __TENANT_ID_CHECK__
-                    __ROLE_ID_CHECK__
+                    __CHECKS__
                 GROUP BY month
                 ORDER BY month ASC;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -264,10 +285,7 @@ async def get_patients_retention_rate_on_specific_days(filters: AnalyticsFilters
                 WITH registered_users AS (
                     SELECT user.id
                     FROM users as user
-                    WHERE
-                        __TENANT_ID_CHECK__
-                        AND
-                        __ROLE_ID_CHECK__
+                    __CHECKS__
                 ),
 
                 retention_1d AS (
@@ -378,16 +396,11 @@ async def get_patients_retention_rate_on_specific_days(filters: AnalyticsFilters
                     (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
             """
 
-        tenant_id_check = ""
-        if tenant_id is not None:
-            tenant_id_check = f"user.TenantId = '{tenant_id}'"
-        role_id_check = ""
-        if role_id is not None:
-            role_id_check = f"user.RoleId = {role_id}"
-        query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
-        query = query.replace("__ROLE_ID_CHECK__", role_id_check)
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "WHERE " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
 
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
 
         row = result[0]
@@ -460,10 +473,7 @@ async def get_patients_retention_rate_in_specific_time_interval(filters: Analyti
                 WITH registered_users AS (
                     SELECT user.id
                     FROM users as user
-                    WHERE
-                        __TENANT_ID_CHECK__
-                        AND
-                        __ROLE_ID_CHECK__
+                    __CHECKS__
                 ),
 
                 retention_1d AS (
@@ -582,15 +592,10 @@ async def get_patients_retention_rate_in_specific_time_interval(filters: Analyti
                     (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
             """
 
-
-        tenant_id_check = ""
-        if tenant_id is not None:
-            tenant_id_check = f"user.TenantId = '{tenant_id}'"
-        role_id_check = ""
-        if role_id is not None:
-            role_id_check = f"user.RoleId = {role_id}"
-        query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
-        query = query.replace("__ROLE_ID_CHECK__", role_id_check)
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "WHERE " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
 
         result = connector.execute_read_query(query)
 
@@ -668,8 +673,7 @@ async def get_patient_stickiness_dau_mau(filters: AnalyticsFilters):
                         JOIN users user ON e.UserId = user.id
                         WHERE
                             user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                            __TENANT_ID_CHECK__
-                            __ROLE_ID_CHECK__
+                            __CHECKS__
                         GROUP BY event_date, month
                     ),
                     MonthlyActiveUsers AS (
@@ -680,8 +684,7 @@ async def get_patient_stickiness_dau_mau(filters: AnalyticsFilters):
                         JOIN users user ON e.UserId = user.id
                         WHERE
                             user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                            __TENANT_ID_CHECK__
-                            __ROLE_ID_CHECK__
+                            __CHECKS__
                         GROUP BY month
                     )
                     SELECT
@@ -694,7 +697,12 @@ async def get_patient_stickiness_dau_mau(filters: AnalyticsFilters):
                     GROUP BY a.month, m.monthly_active_users
                     ORDER BY a.month ASC;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         result_ = []
@@ -738,8 +746,7 @@ async def get_patients_most_commonly_used_features(filters: AnalyticsFilters) ->
                         users user ON e.UserId = user.id
                         WHERE
                             e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                            __TENANT_ID_CHECK__
-                            __ROLE_ID_CHECK__
+                            __CHECKS__
                         GROUP BY month, feature
                         ORDER BY feature_usage_count DESC
                     ) AS t1
@@ -758,7 +765,12 @@ async def get_patients_most_commonly_used_features(filters: AnalyticsFilters) ->
                     )
                     ORDER BY month, feature_usage_count DESC;
         """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -799,8 +811,7 @@ async def get_patients_most_commonly_visited_screens(filters: AnalyticsFilters) 
                         e.EventCategory = '{event_category}'
                         AND e.EventName = '{event_name}'
                         AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                        __TENANT_ID_CHECK__
-                        __ROLE_ID_CHECK__
+                        __CHECKS__
                     GROUP BY month, screen_name
                     ORDER BY screen_visit_count DESC
                 ) AS sv
@@ -808,7 +819,12 @@ async def get_patients_most_commonly_visited_screens(filters: AnalyticsFilters) 
                 HAVING COUNT(*) <= {top_screens_count}
                 ORDER BY sv.month ASC, sv.screen_visit_count DESC;
             """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result

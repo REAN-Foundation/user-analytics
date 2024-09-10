@@ -1,4 +1,4 @@
-from app.database.services.analytics.common import add_tenant_and_role_checks
+from app.database.services.analytics.common import add_common_checks
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.telemetry.tracing import trace_span
@@ -27,12 +27,16 @@ async def get_feature_access_frequency(feature: str, filters: AnalyticsFilters):
             WHERE
                 e.EventCategory = '{feature}'
                 AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                __TENANT_ID_CHECK__
-                __ROLE_ID_CHECK__
+                __CHECKS__
             GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
             ORDER BY month ASC;
         """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -64,8 +68,7 @@ async def get_feature_engagement_rate(feature: str, filters: AnalyticsFilters):
                     JOIN users user ON e.UserId = user.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                        __TENANT_ID_CHECK__
-                        __ROLE_ID_CHECK__
+                        __CHECKS__
                     GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
                 ),
 
@@ -80,8 +83,7 @@ async def get_feature_engagement_rate(feature: str, filters: AnalyticsFilters):
                     WHERE
                         e.EventCategory = '{feature}'
                         AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                        __TENANT_ID_CHECK__
-                        __ROLE_ID_CHECK__
+                        __CHECKS__
                     GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m'), e.EventCategory
                 )
 
@@ -94,7 +96,12 @@ async def get_feature_engagement_rate(feature: str, filters: AnalyticsFilters):
                 JOIN ActiveUsersPerMonth aupm ON fpm.month = aupm.month
                 ORDER BY fpm.month DESC;
         """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -119,10 +126,7 @@ async def get_feature_retention_rate_on_specific_days(feature: str, filters: Ana
                 WITH registered_users AS (
                     SELECT user.id
                     FROM users as user
-                    WHERE
-                        __TENANT_ID_CHECK__
-                        AND
-                        __ROLE_ID_CHECK__
+                    __CHECKS__
                 ),
 
                 retention_1d AS (
@@ -241,16 +245,11 @@ async def get_feature_retention_rate_on_specific_days(feature: str, filters: Ana
                     (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
             """
 
-        tenant_id_check = ""
-        if tenant_id is not None:
-            tenant_id_check = f"user.TenantId = '{tenant_id}'"
-        role_id_check = ""
-        if role_id is not None:
-            role_id_check = f"user.RoleId = {role_id}"
-        query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
-        query = query.replace("__ROLE_ID_CHECK__", role_id_check)
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "WHERE " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
 
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
         result = connector.execute_read_query(query)
 
         row = result[0]
@@ -324,10 +323,7 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, filters
                 WITH registered_users AS (
                     SELECT user.id
                     FROM users as user
-                    WHERE
-                        __TENANT_ID_CHECK__
-                        AND
-                        __ROLE_ID_CHECK__
+                    __CHECKS__
                 ),
 
                 retention_1d AS (
@@ -454,14 +450,10 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, filters
                     (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
             """
 
-        tenant_id_check = ""
-        if tenant_id is not None:
-            tenant_id_check = f"user.TenantId = '{tenant_id}'"
-        role_id_check = ""
-        if role_id is not None:
-            role_id_check = f"user.RoleId = {role_id}"
-        query = query.replace("__TENANT_ID_CHECK__", tenant_id_check)
-        query = query.replace("__ROLE_ID_CHECK__", role_id_check)
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "WHERE " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
 
         result = connector.execute_read_query(query)
 
@@ -549,8 +541,7 @@ async def get_feature_average_usage_duration_minutes(feature: str, filters: Anal
                     WHERE
                         AND e.EventCategory = '{feature}'
                         AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                        __TENANT_ID_CHECK__
-                        __ROLE_ID_CHECK__
+                        __CHECKS__
                     GROUP BY e.UserId, e.EventCategory  -- Group by user, and feature
                 ),
 
@@ -573,7 +564,12 @@ async def get_feature_average_usage_duration_minutes(feature: str, filters: Anal
                 ORDER BY avg_duration_minutes DESC;                          -- Order by longest average duration
 
         """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
@@ -610,8 +606,7 @@ async def get_feature_drop_off_points(feature: str, filters: AnalyticsFilters):
                     WHERE
                         e.EventCategory = '{feature}'           -- Filter for a specific feature/event category
                         AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                        __TENANT_ID_CHECK__
-                        __ROLE_ID_CHECK__
+                        __CHECKS__
                     ORDER BY e.UserId, e.Timestamp -- Order by user, and time
                 ),
 
@@ -643,7 +638,12 @@ async def get_feature_drop_off_points(feature: str, filters: AnalyticsFilters):
                 FROM DropOffs d
                 ORDER BY dropoff_rate DESC;                                  -- Order by the highest drop-off rate
         """
-        query = add_tenant_and_role_checks(tenant_id, role_id, query, on_joined_user = True)
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
         result = connector.execute_read_query(query)
 
         return result
