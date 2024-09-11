@@ -1,3 +1,5 @@
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
@@ -49,10 +51,14 @@ class MedicationEventsSynchronizer:
     def add_analytics_medication_create_event(medication):
         try:
             event_name = EventType.MedicationCreate.value
+            event_category = EventCategory.Medication.value
+            event_subject = EventSubject.Medication.value
+
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
             #     return None
+
             attributes = {
                 'DrugName': medication['DrugName'],
                 'DrugId': medication['DrugId'],
@@ -75,7 +81,8 @@ class MedicationEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Medication",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User added a medication.",
                 'Attributes': str(attributes),
@@ -166,6 +173,9 @@ class MedicationEventsSynchronizer:
     def add_analytics_medication_delete_event(medication):
         try:
             event_name = EventType.MedicationDelete.value
+            event_category = EventCategory.Medication.value
+            event_subject = EventSubject.Medication.value
+
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -192,7 +202,8 @@ class MedicationEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Medication",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User deleted a medication.",
                 'Attributes': str(attributes),
@@ -286,6 +297,8 @@ class MedicationEventsSynchronizer:
     def add_analytics_medication_schedule_taken_event(schedule):
         try:
             event_name = EventType.MedicationScheduleTaken.value
+            event_category = EventCategory.Medication.value
+            event_subject = EventSubject.MedicationSchedule.value
             # user = DataSynchronizer.get_user(medication_consumption['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication_consumption}")
@@ -308,7 +321,8 @@ class MedicationEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Medication-Schedule",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User took a medication.",
                 'Attributes': str(attributes),
@@ -405,6 +419,8 @@ class MedicationEventsSynchronizer:
     def add_analytics_medication_schedule_missed_event(schedule):
         try:
             event_name = EventType.MedicationScheduleMissed.value
+            event_category = EventCategory.Medication.value
+            event_subject = EventSubject.MedicationSchedule.value
             # user = DataSynchronizer.get_user(schedule['UserId'])
             # if not user:
             #     print(f"User not found for the event: {schedule}")
@@ -428,7 +444,8 @@ class MedicationEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Medication-Schedule",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User missed a medication.",
                 'Attributes': str(attributes),

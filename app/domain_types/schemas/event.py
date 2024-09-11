@@ -20,7 +20,7 @@ class EventCreateModel(BaseModel):
     Timestamp       : datetime           = Field(default=None, description="Timestamp of the Event")
     Attributes      : Optional[Any|None] = Field(default=None, description="Attributes of the Event")
 
-EventCreateModel.update_forward_refs()
+EventCreateModel.model_rebuild()
 
 class EventUpdateModel(BaseModel):
     pass

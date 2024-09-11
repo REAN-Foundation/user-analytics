@@ -1,0 +1,36 @@
+meta {
+  name: Get by id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE_URL}}/filters/{{FILTER_ID}}
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{USER_JWT}}
+}
+
+tests {
+  test("Request is successfull", function () {
+      expect(res.getStatus()).to.equal(200);
+      var jsonRes = res.getBody();
+      expect(jsonRes.Status).to.eql('Success');
+  });
+  
+  test("Filter is retrieved", function () {
+      var jsonRes = res.getBody();
+      expect(jsonRes.Data).to.have.property('id');
+      expect(jsonRes.Data).to.have.property('Name');
+      expect(jsonRes.Data).to.have.property('Description');
+      expect(jsonRes.Data).to.have.property('OwnerId');
+      expect(jsonRes.Data).to.have.property('UserId');
+      expect(jsonRes.Data).to.have.property('TenantId');
+      expect(jsonRes.Data).to.have.property('Filters');
+  });
+  
+}

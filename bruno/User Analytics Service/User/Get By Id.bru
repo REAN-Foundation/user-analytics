@@ -1,0 +1,37 @@
+meta {
+  name: Get By Id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE_URL}}/users/{{USER_ID}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{USER_JWT}}
+}
+
+tests {
+  
+  test("Request is successfull", function () {
+      expect(res.getStatus()).to.equal(200);
+      var jsonRes = res.getBody();
+      expect(jsonRes.Status).to.eql('Success');
+  });
+  
+  test("User is retrieved", function () {
+      var jsonRes = res.getBody();
+      expect(jsonRes.Data).to.have.property('id');
+      expect(jsonRes.Data).to.have.property('FirstName');
+      expect(jsonRes.Data).to.have.property('LastName');
+      expect(jsonRes.Data).to.have.property('Phone');
+      expect(jsonRes.Data).to.have.property('Email');
+      
+  });
+  
+  
+}

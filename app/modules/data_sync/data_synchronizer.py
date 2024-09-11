@@ -603,6 +603,7 @@ class DataSynchronizer:
                     SourceName,
                     SourceVersion,
                     EventName,
+                    EventSubject,
                     EventCategory,
                     ActionType,
                     ActionStatement,
@@ -611,7 +612,7 @@ class DataSynchronizer:
                     DaysSinceRegistration,
                     TimeOffsetSinceRegistration
                 ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
             """
             diff = event['Timestamp'] - event['UserRegistrationDate']
@@ -627,6 +628,7 @@ class DataSynchronizer:
                 event['SourceName'],
                 event['SourceVersion'],
                 event['EventName'],
+                event['EventSubject'],
                 event['EventCategory'],
                 event['ActionType'],
                 event['ActionStatement'],

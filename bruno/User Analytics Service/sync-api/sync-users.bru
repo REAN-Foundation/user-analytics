@@ -1,0 +1,16 @@
+meta {
+  name: sync-users
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{BASE_URL}}/sync/users
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

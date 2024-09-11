@@ -1,0 +1,47 @@
+meta {
+  name: Update
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{BASE_URL}}/users/{{USER_ID}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{USER_JWT}}
+}
+
+body:json {
+  {
+      "LocationLongitude": "28.0000",
+      "LocationLatitude": "77.0000",
+      "LastActive": "2023-11-10T00:00:00.000Z",
+      "OnboardingSource": "Doctor App",
+      "Role": "Doctor",
+      "Attributes": {
+          "sample_attribute_1": 3333,
+          "sample_attribute_2": "dfdsfds"
+      },
+      "TimezoneOffsetMin": -300
+  }
+  
+}
+
+tests {
+  test("Request is successfull", function () {
+      expect(res.getStatus()).to.equal(200);
+      var jsonRes = res.getBody();
+      expect(jsonRes.Status).to.eql('Success');
+  });
+  
+  test("User is updated", function () {
+      var jsonRes = res.getBody();
+      expect(jsonRes.Data).to.have.property('Role');
+      expect(jsonRes.Data.Role).equals('Doctor');
+  });
+  
+}

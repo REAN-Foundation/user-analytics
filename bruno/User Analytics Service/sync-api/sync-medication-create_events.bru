@@ -1,0 +1,16 @@
+meta {
+  name: sync-medication-create_events
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/medications/create
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

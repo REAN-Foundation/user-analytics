@@ -1,0 +1,16 @@
+meta {
+  name: sync-medication-taken-events
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/medication-schedules/taken
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}
