@@ -6,19 +6,26 @@ from enum import Enum
 
 class EventType(str, Enum):
 
-    # User events
-    UserSignup = "user-sign-up"
-    UserLogin = "user-login"
-    UserLogout = "user-logout"
+    # User account events
+    UserCreate = "user-create"
+    UserUpdate = "user-update"
+    UserDelete = "user-delete"
+
     UserPasswordChange = "user-password-change"
     UserPasswordReset = "user-password-reset"
+    UserSendPasswordResetCode = "user-send-password-reset-code"
     UserEmailChange = "user-email-change"
     UserPhoneChange = "user-phone-change"
     UserMetadataUpdate = "user-metadata-update"
-    UserDelete = "user-delete"
+
+    # User login session events
+
+    UserLoginWithPassword = "user-login-with-password"
+    UserLoginWithOtp = "user-login-with-otp"
+    UserGenerateOtp = "user-generate-otp"
+    UserLogout = "user-logout"
 
     # User profile events
-    UserProfileUpdate = "user-profile-update"
     PatientHealthProfileUpdate = "patient-health-profile-update"
 
     # Screen visit events

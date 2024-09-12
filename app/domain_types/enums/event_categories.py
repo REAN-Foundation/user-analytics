@@ -7,9 +7,8 @@ from enum import Enum
 # The application features are considered as event categories.
 
 class EventCategory(str, Enum):
-    Signup          = "signup"
-    Profile         = "profile"
-    Login           = "login"
+    UserAccount     = "user-account"
+    LoginSession    = "login-session"
     AppScreenVisit  = "app-screen-visit"
     Medication      = "medication"
     Appointment     = "appointment"
