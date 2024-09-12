@@ -1,4 +1,7 @@
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
@@ -10,8 +13,9 @@ class BodyHeightEventsSynchronizer:
     #region Create Body Height events
 
     @staticmethod
-    def get_reancare_body_height_create_events():
+    def get_reancare_body_height_create_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND bodyHeight.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -32,6 +36,7 @@ class BodyHeightEventsSynchronizer:
             JOIN users as user ON bodyHeight.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -43,6 +48,8 @@ class BodyHeightEventsSynchronizer:
     def add_analytics_body_height_create_event(body_height):
         try:
             event_name = EventType.VitalAddHeight.value
+            event_category = EventCategory.Vitals.value
+            event_subject = EventSubject.Vital.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -63,7 +70,8 @@ class BodyHeightEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Body-Height",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User added a body height.",
                 'Attributes': str(attributes),
@@ -81,12 +89,12 @@ class BodyHeightEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_body_height_create_events():
+    def sync_body_height_create_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            body_heights = BodyHeightEventsSynchronizer.get_reancare_body_height_create_events()
+            body_heights = BodyHeightEventsSynchronizer.get_reancare_body_height_create_events(filters)
             if body_heights:
                 for body_height in body_heights:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -112,8 +120,9 @@ class BodyHeightEventsSynchronizer:
     #region Delete Body Height events
 
     @staticmethod
-    def get_reancare_body_height_delete_events():
+    def get_reancare_body_height_delete_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND bodyHeight.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -136,6 +145,7 @@ class BodyHeightEventsSynchronizer:
                 user.IsTestUser = 0
                 AND
                 bodyHeight.DeletedAt IS NOT NULL
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -147,6 +157,8 @@ class BodyHeightEventsSynchronizer:
     def add_analytics_body_height_delete_event(body_height):
         try:
             event_name = EventType.VitalDeleteHeight.value
+            event_category = EventCategory.Vitals.value
+            event_subject = EventSubject.Vital.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -167,7 +179,8 @@ class BodyHeightEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Body-Height",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User deleted a biometric-body weight.",
                 'Attributes': str(attributes),
@@ -185,12 +198,12 @@ class BodyHeightEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_body_height_delete_events():
+    def sync_body_height_delete_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            deleted_body_heights = BodyHeightEventsSynchronizer.get_reancare_body_height_delete_events()
+            deleted_body_heights = BodyHeightEventsSynchronizer.get_reancare_body_height_delete_events(filters)
             if deleted_body_heights:
                 for body_height in deleted_body_heights:
                     existing_event = DataSynchronizer.get_existing_event(

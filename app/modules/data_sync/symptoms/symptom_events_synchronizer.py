@@ -1,4 +1,7 @@
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
@@ -10,8 +13,9 @@ class SymptomEventsSynchronizer:
     #region Add Symptom events
 
     @staticmethod
-    def get_reancare_symptom_create_events():
+    def get_reancare_symptom_create_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND symptom.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -40,7 +44,9 @@ class SymptomEventsSynchronizer:
             JOIN users as user ON symptom.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
+                {selection_condition}
             """
+            print(query)
             rows = rean_db_connector.execute_read_query(query)
             return rows
         except Exception as error:
@@ -51,6 +57,8 @@ class SymptomEventsSynchronizer:
     def add_analytics_symptom_create_event(symptom):
         try:
             event_name = EventType.SymptomAdd.value
+            event_category = EventCategory.Symptoms.value
+            event_subject = EventSubject.Symptom.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -79,7 +87,8 @@ class SymptomEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Symptom",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User added a symptom.",
                 'Attributes': str(attributes),
@@ -98,12 +107,12 @@ class SymptomEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_symptom_create_events():
+    def sync_symptom_create_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            symptoms = SymptomEventsSynchronizer.get_reancare_symptom_create_events()
+            symptoms = SymptomEventsSynchronizer.get_reancare_symptom_create_events(filters)
             if symptoms:
                 for symptom in symptoms:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -129,8 +138,9 @@ class SymptomEventsSynchronizer:
     #region Update Symptom events
 
     @staticmethod
-    def get_reancare_symptom_update_events():
+    def get_reancare_symptom_update_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND symptom.UpdatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -160,7 +170,8 @@ class SymptomEventsSynchronizer:
             WHERE
                 user.IsTestUser = 0
                 AND
-                symptom.CreatedAt <> symptom.UpdatedAt;
+                symptom.CreatedAt <> symptom.UpdatedAt
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -172,6 +183,8 @@ class SymptomEventsSynchronizer:
     def add_analytics_symptom_update_event(symptom):
         try:
             event_name = EventType.SymptomUpdate.value
+            event_category = EventCategory.Symptoms.value
+            event_subject = EventSubject.Symptom.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -200,7 +213,8 @@ class SymptomEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Symptom",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User updated a symptom.",
                 'Attributes': str(attributes),
@@ -219,12 +233,12 @@ class SymptomEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_symptom_update_events():
+    def sync_symptom_update_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            symptoms = SymptomEventsSynchronizer.get_reancare_symptom_update_events()
+            symptoms = SymptomEventsSynchronizer.get_reancare_symptom_update_events(filters)
             if symptoms:
                 for symptom in symptoms:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -250,8 +264,9 @@ class SymptomEventsSynchronizer:
     #region Update Symptom events
 
     @staticmethod
-    def get_reancare_symptom_delete_events():
+    def get_reancare_symptom_delete_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND symptom.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -282,6 +297,7 @@ class SymptomEventsSynchronizer:
                 user.IsTestUser = 0
                 AND
                 symptom.DeletedAt IS NOT null
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -293,6 +309,8 @@ class SymptomEventsSynchronizer:
     def add_analytics_symptom_delete_event(symptom):
         try:
             event_name = EventType.SymptomDelete.value
+            event_category = EventCategory.Symptoms.value
+            event_subject = EventSubject.Symptom.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -321,7 +339,8 @@ class SymptomEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Symptom",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User deleted a symptom.",
                 'Attributes': str(attributes),
@@ -339,12 +358,12 @@ class SymptomEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_symptom_delete_events():
+    def sync_symptom_delete_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            symptoms = SymptomEventsSynchronizer.get_reancare_symptom_delete_events()
+            symptoms = SymptomEventsSynchronizer.get_reancare_symptom_delete_events(filters)
             if symptoms:
                 for symptom in symptoms:
                     existing_event = DataSynchronizer.get_existing_event(

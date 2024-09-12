@@ -1,4 +1,7 @@
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
@@ -10,8 +13,9 @@ class CholesterolEventsSynchronizer:
     #region Create Blood Cholesterol events
 
     @staticmethod
-    def get_reancare_cholesterol_create_events():
+    def get_reancare_cholesterol_create_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND cholesterol.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -37,6 +41,7 @@ class CholesterolEventsSynchronizer:
             JOIN users as user ON cholesterol.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -47,7 +52,9 @@ class CholesterolEventsSynchronizer:
     @staticmethod
     def add_analytics_cholesterol_create_event(cholesterol):
         try:
-            event_name = EventType.VitalAddBloodSugar.value
+            event_name = EventType.VitalAddCholesterol.value
+            event_category = EventCategory.Vitals.value
+            event_subject = EventSubject.Vital.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -73,7 +80,8 @@ class CholesterolEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Blood-Cholesterol",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User added a blood cholesterol.",
                 'Attributes': str(attributes),
@@ -91,12 +99,12 @@ class CholesterolEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_cholesterol_create_events():
+    def sync_cholesterol_create_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            cholesterol_records = CholesterolEventsSynchronizer.get_reancare_cholesterol_create_events()
+            cholesterol_records = CholesterolEventsSynchronizer.get_reancare_cholesterol_create_events(filters)
             if cholesterol_records:
                 for cholesterol in cholesterol_records:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -122,8 +130,9 @@ class CholesterolEventsSynchronizer:
     #region Delete Blood Cholesterol events
 
     @staticmethod
-    def get_reancare_cholesterol_delete_events():
+    def get_reancare_cholesterol_delete_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND cholesterol.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
              SELECT
@@ -151,6 +160,7 @@ class CholesterolEventsSynchronizer:
                 user.IsTestUser = 0
                 AND
                 cholesterol.DeletedAt IS NOT NULL
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -162,6 +172,8 @@ class CholesterolEventsSynchronizer:
     def add_analytics_cholesterol_delete_event(cholesterol):
         try:
             event_name = EventType.VitalDeleteCholesterol.value
+            event_category = EventCategory.Vitals.value
+            event_subject = EventSubject.Vital.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -187,7 +199,8 @@ class CholesterolEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Blood-Cholesterol",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User deleted a blood cholesterol.",
                 'Attributes': str(attributes),
@@ -205,12 +218,12 @@ class CholesterolEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_cholesterol_delete_events():
+    def sync_cholesterol_delete_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            cholesterol_records = CholesterolEventsSynchronizer.get_reancare_cholesterol_delete_events()
+            cholesterol_records = CholesterolEventsSynchronizer.get_reancare_cholesterol_delete_events(filters)
             if cholesterol_records:
                 for cholesterol in cholesterol_records:
                     existing_event = DataSynchronizer.get_existing_event(

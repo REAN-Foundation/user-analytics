@@ -1,4 +1,7 @@
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
@@ -10,8 +13,9 @@ class OxygenSaturationEventsSynchronizer:
     #region Create Blood Oxygen Saturation events
 
     @staticmethod
-    def get_reancare_oxygen_saturation_create_events():
+    def get_reancare_oxygen_saturation_create_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND oxygenSaturation.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -34,6 +38,7 @@ class OxygenSaturationEventsSynchronizer:
             JOIN users as user ON oxygenSaturation.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -45,6 +50,8 @@ class OxygenSaturationEventsSynchronizer:
     def add_analytics_oxygen_saturation_create_event(oxygen_saturation):
         try:
             event_name = EventType.VitalAddOxygenSaturation.value
+            event_category = EventCategory.Vitals.value
+            event_subject = EventSubject.Vital.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -67,7 +74,8 @@ class OxygenSaturationEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Oxygen-Saturation",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User added a blood oxygen saturation.",
                 'Attributes': str(attributes),
@@ -85,12 +93,12 @@ class OxygenSaturationEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_oxygen_saturation_create_events():
+    def sync_oxygen_saturation_create_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            oxygen_saturation_records = OxygenSaturationEventsSynchronizer.get_reancare_oxygen_saturation_create_events()
+            oxygen_saturation_records = OxygenSaturationEventsSynchronizer.get_reancare_oxygen_saturation_create_events(filters)
             if oxygen_saturation_records:
                 for oxygen_saturation in oxygen_saturation_records:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -116,8 +124,9 @@ class OxygenSaturationEventsSynchronizer:
     #region Delete Blood Oxygen Saturation events
 
     @staticmethod
-    def get_reancare_oxygen_saturation_delete_events():
+    def get_reancare_oxygen_saturation_delete_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND oxygenSaturation.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
              SELECT
@@ -142,6 +151,7 @@ class OxygenSaturationEventsSynchronizer:
                 user.IsTestUser = 0
                 AND
                 oxygenSaturation.DeletedAt IS NOT NULL
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -153,6 +163,8 @@ class OxygenSaturationEventsSynchronizer:
     def add_analytics_oxygen_saturation_delete_event(oxygen_saturation):
         try:
             event_name = EventType.VitalDeleteOxygenSaturation.value
+            event_category = EventCategory.Vitals.value
+            event_subject = EventSubject.Vital.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -175,7 +187,8 @@ class OxygenSaturationEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Oxygen-Saturation",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User deleted a blood oxygen saturation.",
                 'Attributes': str(attributes),
@@ -193,12 +206,12 @@ class OxygenSaturationEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_oxygen_saturation_delete_events():
+    def sync_oxygen_saturation_delete_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            oxygen_saturation_records = OxygenSaturationEventsSynchronizer.get_reancare_oxygen_saturation_delete_events()
+            oxygen_saturation_records = OxygenSaturationEventsSynchronizer.get_reancare_oxygen_saturation_delete_events(filters)
             if oxygen_saturation_records:
                 for oxygen_saturation in oxygen_saturation_records:
                     existing_event = DataSynchronizer.get_existing_event(

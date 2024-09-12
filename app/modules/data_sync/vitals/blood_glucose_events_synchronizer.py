@@ -1,4 +1,7 @@
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
@@ -10,8 +13,9 @@ class BloodGlucoseEventsSynchronizer:
     #region Create Blood Glucose events
 
     @staticmethod
-    def get_reancare_blood_glucose_create_events():
+    def get_reancare_blood_glucose_create_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND bloodGlucose.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -35,6 +39,7 @@ class BloodGlucoseEventsSynchronizer:
             JOIN users as user ON bloodGlucose.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -46,6 +51,8 @@ class BloodGlucoseEventsSynchronizer:
     def add_analytics_blood_glucose_create_event(blood_glucose):
         try:
             event_name = EventType.VitalAddBloodSugar.value
+            event_category = EventCategory.Vitals.value
+            event_subject = EventSubject.Vital.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -69,7 +76,8 @@ class BloodGlucoseEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Blood-Glucose",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User added a blood glucose.",
                 'Attributes': str(attributes),
@@ -87,12 +95,12 @@ class BloodGlucoseEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_blood_glucose_create_events():
+    def sync_blood_glucose_create_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            blood_glucose_records = BloodGlucoseEventsSynchronizer.get_reancare_blood_glucose_create_events()
+            blood_glucose_records = BloodGlucoseEventsSynchronizer.get_reancare_blood_glucose_create_events(filters)
             if blood_glucose_records:
                 for blood_glucose in blood_glucose_records:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -118,8 +126,9 @@ class BloodGlucoseEventsSynchronizer:
     #region Delete Blood Glucose events
 
     @staticmethod
-    def get_reancare_blood_glucose_delete_events():
+    def get_reancare_blood_glucose_delete_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND bloodGlucose.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
              SELECT
@@ -145,6 +154,7 @@ class BloodGlucoseEventsSynchronizer:
                 user.IsTestUser = 0
                 AND
                 bloodGlucose.DeletedAt IS NOT NULL
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -156,6 +166,8 @@ class BloodGlucoseEventsSynchronizer:
     def add_analytics_blood_glucose_delete_event(blood_glucose):
         try:
             event_name = EventType.VitalDeleteOxygenSaturation.value
+            event_category = EventCategory.Vitals.value
+            event_subject = EventSubject.Vital.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -179,7 +191,8 @@ class BloodGlucoseEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Blood-Glucose",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User deleted a blood glucose.",
                 'Attributes': str(attributes),
@@ -197,12 +210,12 @@ class BloodGlucoseEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_blood_glucose_delete_events():
+    def sync_blood_glucose_delete_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            blood_glucose_records = BloodGlucoseEventsSynchronizer.get_reancare_blood_glucose_delete_events()
+            blood_glucose_records = BloodGlucoseEventsSynchronizer.get_reancare_blood_glucose_delete_events(filters)
             if blood_glucose_records:
                 for blood_glucose in blood_glucose_records:
                     existing_event = DataSynchronizer.get_existing_event(

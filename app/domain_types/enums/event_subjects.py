@@ -18,3 +18,6 @@ class EventSubject(str, Enum):
     Login              = "login"
     Medication         = "medication"
     MedicationSchedule = "medication-schedule"
+    LabRecord          = "lab-record"
+    Symptom            = "symptom"
+    Vital              = "vital"

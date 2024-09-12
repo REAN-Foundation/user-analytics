@@ -1,4 +1,7 @@
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
@@ -10,8 +13,9 @@ class LabRecordEventsSynchronizer:
     #region Create Lab Record events
 
     @staticmethod
-    def get_reancare_lab_record_create_events():
+    def get_reancare_lab_record_create_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND labRecord.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -37,6 +41,7 @@ class LabRecordEventsSynchronizer:
             JOIN users as user ON labRecord.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -48,6 +53,8 @@ class LabRecordEventsSynchronizer:
     def add_analytics_lab_record_create_event(lab_record):
         try:
             event_name = EventType.LabRecordAdd.value
+            event_category = EventCategory.LabRecords.value
+            event_subject = EventSubject.LabRecord.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -73,7 +80,8 @@ class LabRecordEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Lab-Record",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User added a lab record.",
                 'Attributes': str(attributes),
@@ -91,12 +99,12 @@ class LabRecordEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_lab_record_create_events():
+    def sync_lab_record_create_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            lab_records = LabRecordEventsSynchronizer.get_reancare_lab_record_create_events()
+            lab_records = LabRecordEventsSynchronizer.get_reancare_lab_record_create_events(filters)
             if lab_records:
                 for lab_record in lab_records:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -108,7 +116,7 @@ class LabRecordEventsSynchronizer:
                         if new_event:
                             synched_event_count += 1
                         else:
-                            event_not_synched.append(med)
+                            event_not_synched.append(lab_record)
                 print(f"Existing Event Count: {existing_event_count}")
                 print(f"Synched Event Count: {synched_event_count}")
                 print(f"Event Not Synched: {event_not_synched}")
@@ -122,8 +130,9 @@ class LabRecordEventsSynchronizer:
     #region Delete Lab Record events
 
     @staticmethod
-    def get_reancare_lab_record_delete_events():
+    def get_reancare_lab_record_delete_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND labRecord.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -151,6 +160,7 @@ class LabRecordEventsSynchronizer:
                 user.IsTestUser = 0
                 AND
                 labRecord.DeletedAt IS NOT NULL
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -162,6 +172,8 @@ class LabRecordEventsSynchronizer:
     def add_analytics_lab_record_delete_event(lab_record):
         try:
             event_name = EventType.LabRecordDelete.value
+            event_category = EventCategory.LabRecords.value
+            event_subject = EventSubject.LabRecord.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -187,7 +199,8 @@ class LabRecordEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "Lab-Record",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User deleted a lab record.",
                 'Attributes': str(attributes),
@@ -205,12 +218,12 @@ class LabRecordEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_lab_record_delete_events():
+    def sync_lab_record_delete_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            deleted_lab_records = LabRecordEventsSynchronizer.get_reancare_lab_record_delete_events()
+            deleted_lab_records = LabRecordEventsSynchronizer.get_reancare_lab_record_delete_events(filters)
             if deleted_lab_records:
                 for lab_record in deleted_lab_records:
                     existing_event = DataSynchronizer.get_existing_event(
