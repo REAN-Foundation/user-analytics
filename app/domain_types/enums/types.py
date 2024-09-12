@@ -1,9 +1,9 @@
 from enum import Enum
 
 class EventActionType(str, Enum):
-    UserAction   = "User-Action"
-    SystemAction = "System-Action"
-    Unspecified  = "Unspecified"
+    UserAction   = "user-action"
+    SystemAction = "system-action"
+    Unspecified  = "unspecified"
 
 class Operators(str, Enum):
     Equals             = 'Equals'

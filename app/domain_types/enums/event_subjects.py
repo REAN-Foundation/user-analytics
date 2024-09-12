@@ -13,8 +13,7 @@ from enum import Enum
 # In such cases, the event subject can be any string.
 
 class EventSubject(str, Enum):
-    Signup             = "signup"
-    Profile            = "profile"
-    Login              = "login"
+    UserAccount        = "user-account"
+    LoginSession       = "login-session"
     Medication         = "medication"
     MedicationSchedule = "medication-schedule"
