@@ -171,7 +171,7 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 async def generate_user_engagement_report_excel() -> str:
     try:
         # Example analysis code
-        analysis_code = '14'
+        analysis_code = '20'
 
         # Load JSON data from the file for basic analytics
         basic_analysis_data_path = 'test_data/basic_statistic.json'
@@ -185,7 +185,6 @@ async def generate_user_engagement_report_excel() -> str:
         feature_engagement_data_path = 'test_data/feature_engagement_metrics_medication.json'
         feature_engagement_data = read_json_file(feature_engagement_data_path)
 
-
         # Initialize the loaded data
         basic_analysis = BasicAnalyticsStatistics(**basic_analysis_data)
         generic_engagement_metrics = GenericEngagementMetrics(**generic_engagement_metrics_data)
@@ -197,7 +196,7 @@ async def generate_user_engagement_report_excel() -> str:
              await add_basic_analytics_statistics(basic_analysis, writer) 
              await add_patient_demographics_data(basic_analysis, writer) 
              await add_generic_engagement_data(generic_engagement_metrics, writer)
-             await add_feature_engagement_data(feature_engagement_metrics, writer)
+            #  await add_feature_engagement_data(feature_engagement_metrics, writer)
         return excel_file_path
     except Exception as e:
         print(e)
@@ -446,16 +445,14 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
 
 async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagementMetrics, writer) -> None:
     try:
-        # Define the starting row and column for each dataset
         start_row = 3
         col_daily = 1 
         col_weekly = 4 
         col_monthly = 8
-        col_login_freq = 20 # New column for LoginFrequency
-        col_stickiness = 23  # New column for StickinessRatio
+        col_login_freq = 20
+        col_stickiness = 23 
         col_retention_days = 36
         col_retention_intervals = 40
-        # col_visited_features = 28
         
         sheet_name = 'Generic Engagement'
         if sheet_name not in writer.sheets:
@@ -477,12 +474,20 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
         # # Write Weekly Active Users data to Excel
         if generic_engagement_metrics.WeeklyActiveUsers:
             df_weekly_active_users = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
-             # Combine week_start_date and week_end_date into a single column
             df_weekly_active_users = write_data_to_excel(
                 df_weekly_active_users, 'Generic Engagement', start_row, col_weekly, writer,'Weekly Active Users',
                 {'week_start_date': 'Week Start Date', 'week_end_date': 'Week End Date', 'weekly_active_users': 'Weekly Active Users'}
             ) 
-            chart_weekly_active_users = create_chart(writer.book, 'column', 'Weekly Active Users', 'Generic Engagement', start_row, col_weekly+3, len(df_weekly_active_users), 'Date', 'Active Users')
+            chart_weekly_active_users = writer.book.add_chart({'type': 'column'})
+            chart_weekly_active_users.add_series({
+            'name': 'Weekly Active Users',
+            'categories': ['Generic Engagement', start_row + 1, col_weekly, start_row + 1 + len(df_weekly_active_users) - 1, col_weekly],  # X-axis (Week Start Date)
+            'values': ['Generic Engagement', start_row + 1, col_weekly + 2, start_row + 1 + len(df_weekly_active_users) - 1, col_weekly + 2],  # Y-axis (Weekly Active Users)
+            })
+        
+            chart_weekly_active_users.set_title({'name': 'Weekly Active Users'})
+            chart_weekly_active_users.set_x_axis({'name': 'Week Start Date'})
+            chart_weekly_active_users.set_y_axis({'name': 'Weekly Active Users'})
             worksheet.insert_chart(start_row + 16, col_monthly + 3, chart_weekly_active_users)
 
         # Write Monthly Active Users data to Excel
@@ -529,16 +534,11 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 'Retention Rate on Specific Days',
                 {'day': 'Day', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
             )
-            # chart_retention_days = create_chart(
-            #     writer.book, 'column', 'Retention Rate on Specific Days', 'Generic Engagement', start_row,
-            #     col_retention_days, len(df_retention_days), 'Day', 'Retention Rate'
-            # )
-            # worksheet.insert_chart(start_row, col_retention_intervals + 5, chart_retention_days)
             chart_retention_days = writer.book.add_chart({'type': 'column'})
             chart_retention_days.add_series({
                 'name': 'Retention Rate',
                 'categories': [sheet_name, start_row + 1, col_retention_days, start_row + len(df_retention_days), col_retention_days],
-                'values': [sheet_name, start_row + 1, col_retention_days + 1, start_row + len(df_retention_days), col_retention_days + 1],
+                'values': [sheet_name, start_row + 1, col_retention_days + 2, start_row + len(df_retention_days), col_retention_days + 2],
             })
             chart_retention_days.set_title({'name': 'Retention Rate on Specific Days'})
             chart_retention_days.set_x_axis({'name': 'Day'})
@@ -555,15 +555,11 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 {'interval': 'Interval', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
             )
 
-            # chart_retention_intervals = create_chart(
-            #     writer.book, 'column', 'Retention Rate in Specific Intervals', 'Generic Engagement', start_row,
-            #     col_retention_intervals, len(df_retention_intervals), 'Interval', 'Retention Rate'
-            # )
             chart_retention_intervals = writer.book.add_chart({'type': 'column'})
             chart_retention_intervals.add_series({
                 'name': 'Retention Rate',
                 'categories': [sheet_name, start_row + 1, col_retention_intervals, start_row + len(df_retention_intervals), col_retention_intervals],
-                'values': [sheet_name, start_row + 1, col_retention_intervals + 1, start_row + len(df_retention_intervals), col_retention_intervals + 1],
+                'values': [sheet_name, start_row + 1, col_retention_intervals + 2, start_row + len(df_retention_intervals), col_retention_intervals + 2],
             })
             chart_retention_intervals.set_title({'name': 'Retention Rate in Specific Intervals'})
             chart_retention_intervals.set_x_axis({'name': 'Interval'})
