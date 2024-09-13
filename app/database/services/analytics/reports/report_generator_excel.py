@@ -144,13 +144,12 @@ def write_data_to_excel(df, sheet_name: str, start_row: int, start_col: int, wri
     if rename_columns:
         df.rename(columns=rename_columns, inplace=True)
     
-    # Write DataFrame to Excel
-    df.to_excel(writer, sheet_name=sheet_name, index=False, startrow=start_row, startcol=start_col)
+    df.to_excel(writer, sheet_name=sheet_name, index=False, startrow=start_row, startcol=start_col,)
     
-    # Dynamically adjust column width
+    # Dynamically adjust column width without padding
     for i, col in enumerate(df.columns):
-        max_len = max(df[col].astype(str).map(len).max(), len(col)) + 2  # Add some padding
-        worksheet.set_column(start_col + i, start_col + i, max_len) 
+        max_len = max(df[col].astype(str).map(len).max(), len(col))  # No additional padding
+        worksheet.set_column(start_col + i, start_col + i, max_len)
     
     return df
 
@@ -171,7 +170,7 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 async def generate_user_engagement_report_excel() -> str:
     try:
         # Example analysis code
-        analysis_code = '20'
+        analysis_code = '22'
 
         # Load JSON data from the file for basic analytics
         basic_analysis_data_path = 'test_data/basic_statistic.json'
@@ -361,6 +360,7 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
 
         if patient_demographics.EthnicityGroups:
             df_ethnicity = pd.DataFrame(patient_demographics.EthnicityGroups)
+            df_ethnicity['ethnicity'] = df_ethnicity['ethnicity'].replace('', 'Unspecified').fillna('Unspecified')
             df_ethnicity = write_data_to_excel(
                 df_ethnicity, sheet_name, start_row, 1, writer,
                 'Ethnicity Distribution',
@@ -390,6 +390,7 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
         start_col = 13 
         if patient_demographics.RaceGroups:
             df_race = pd.DataFrame(patient_demographics.RaceGroups)
+            df_race['race'] = df_race['race'].replace('', 'Unspecified').fillna('Unspecified')
             df_race = write_data_to_excel(
                 df_race, sheet_name, start_row, start_col, writer,
                 'Race Distribution',
@@ -486,8 +487,8 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
             })
         
             chart_weekly_active_users.set_title({'name': 'Weekly Active Users'})
-            chart_weekly_active_users.set_x_axis({'name': 'Week Start Date'})
-            chart_weekly_active_users.set_y_axis({'name': 'Weekly Active Users'})
+            chart_weekly_active_users.set_x_axis({'name': 'Date'})
+            chart_weekly_active_users.set_y_axis({'name': 'Active Users'})
             worksheet.insert_chart(start_row + 16, col_monthly + 3, chart_weekly_active_users)
 
         # Write Monthly Active Users data to Excel
