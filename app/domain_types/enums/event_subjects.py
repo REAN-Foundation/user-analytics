@@ -21,3 +21,7 @@ class EventSubject(str, Enum):
     LabRecord          = "lab-record"
     Symptom            = "symptom"
     Vital              = "vital"
+    Assessment         = "assessment"
+    Careplan           = "careplan"
+    CareplanTask       = "careplan-task"
+    UserTask           = "user-task"

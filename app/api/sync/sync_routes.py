@@ -1,11 +1,14 @@
 from typing import Optional
 from fastapi import APIRouter, Query, status, BackgroundTasks
 from app.api.sync.sync_handler import (
+    sync_assessment_events_,
     sync_biometric_events_,
+    sync_careplan_events_,
     sync_lab_record_events_,
     sync_medication_events_,
     sync_symptom_events_,
     sync_user_login_session_events_,
+    sync_user_task_events_,
     sync_users_,
 )
 from app.common.validators import validate_data_sync_search_filter
@@ -72,5 +75,35 @@ async def sync_biometric_events(background_tasks: BackgroundTasks,
     filters = validate_data_sync_search_filter(start_date, end_date)
     background_tasks.add_task(sync_biometric_events_, filters)
     message = "Biometrics events synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp
+
+@router.post("/events/assessments", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_assessment_events(background_tasks: BackgroundTasks,
+                            start_date: Optional[str]  = Query(None, alias="StartDate"),
+                            end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_assessment_events_, filters)
+    message = "Assessment events synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp
+
+@router.post("/events/careplans", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_careplan_events(background_tasks: BackgroundTasks,
+                            start_date: Optional[str]  = Query(None, alias="StartDate"),
+                            end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_careplan_events_, filters)
+    message = "Careplan events synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp
+
+@router.post("/events/user-tasks", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_user_task_events(background_tasks: BackgroundTasks,
+                            start_date: Optional[str]  = Query(None, alias="StartDate"),
+                            end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_user_task_events_, filters)
+    message = "User Task events synchronization has started."
     resp = ResponseModel[bool](Message=message, Data=True)
     return resp

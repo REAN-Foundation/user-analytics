@@ -1,6 +1,9 @@
 from app.domain_types.schemas.data_sync import DataSyncSearchFilter
+from app.modules.data_sync.assessments.assessment_events_synchronizer import AssessmentEventsSynchronizer
+from app.modules.data_sync.careplans.careplan_events_synchronizer import CareplanEventsSynchronizer
 from app.modules.data_sync.lab_records.lab_record_events_synchonizer import LabRecordEventsSynchronizer
 from app.modules.data_sync.symptoms.symptom_events_synchronizer import SymptomEventsSynchronizer
+from app.modules.data_sync.user_tasks.user_task_events_synchronizer import UserTaskEventsSynchronizer
 from app.modules.data_sync.vitals.blood_glucose_events_synchronizer import BloodGlucoseEventsSynchronizer
 from app.modules.data_sync.vitals.cholesterol_events_synchronizer import CholesterolEventsSynchronizer
 from app.modules.data_sync.vitals.oxygen_saturation_events_synchronizer import OxygenSaturationEventsSynchronizer
@@ -87,5 +90,42 @@ def sync_biometric_events_(filters: DataSyncSearchFilter):
         CholesterolEventsSynchronizer.sync_cholesterol_create_events(filters)
         CholesterolEventsSynchronizer.sync_cholesterol_delete_events(filters)
         print("Biometric events synchronization completed.")
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_assessment_events")
+def sync_assessment_events_(filters: DataSyncSearchFilter):
+    try:
+        print("Starting assessment events synchronization...")
+        AssessmentEventsSynchronizer.sync_assessment_create_events(filters)
+        AssessmentEventsSynchronizer.sync_assessment_start_events(filters)
+        AssessmentEventsSynchronizer.sync_assessment_complete_events(filters)
+        print("Assessment events synchronization completed.")
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_careplan_events")
+def sync_careplan_events_(filters: DataSyncSearchFilter):
+    try:
+        print("Starting careplan events synchronization...")
+        CareplanEventsSynchronizer.sync_careplan_enroll_events(filters)
+        CareplanEventsSynchronizer.sync_careplan_start_events(filters)
+        # CareplanEventsSynchronizer.sync_careplan_stop_events(filters)
+        CareplanEventsSynchronizer.sync_careplan_complete_events(filters)
+        CareplanEventsSynchronizer.sync_careplan_task_start_events(filters)
+        CareplanEventsSynchronizer.sync_careplan_task_complete_events(filters)
+        CareplanEventsSynchronizer.sync_careplan_task_cancel_events(filters)
+        print("Careplan events synchronization completed.")
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_user_task_events")
+def sync_user_task_events_(filters: DataSyncSearchFilter):
+    try:
+        print("Starting user task events synchronization...")
+        UserTaskEventsSynchronizer.sync_user_task_start_events(filters)
+        UserTaskEventsSynchronizer.sync_user_task_complete_events(filters)
+        UserTaskEventsSynchronizer.sync_user_task_cancel_events(filters)
+        print("User task events synchronization completed.")
     except Exception as e:
         print(e)
