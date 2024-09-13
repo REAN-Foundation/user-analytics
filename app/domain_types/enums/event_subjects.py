@@ -25,3 +25,6 @@ class EventSubject(str, Enum):
     Careplan           = "careplan"
     CareplanTask       = "careplan-task"
     UserTask           = "user-task"
+    Step               = "step"
+    Sleep              = "sleep"
+    Nutrition          = "nutrition"
