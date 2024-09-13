@@ -170,7 +170,7 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 async def generate_user_engagement_report_excel() -> str:
     try:
         # Example analysis code
-        analysis_code = '22'
+        analysis_code = '28'
 
         # Load JSON data from the file for basic analytics
         basic_analysis_data_path = 'test_data/basic_statistic.json'
@@ -206,23 +206,23 @@ async def generate_user_engagement_report_excel() -> str:
 async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatistics, writer) -> None:
     df_stats = pd.DataFrame({
         'Property': [
-            'Tenant ID', 
-            'Tenant Name', 
-            'Start Date', 
-            'End Date', 
-            'Total Users', 
-            'Total Patients', 
-            'Total Active Patients'
-        ],
-        'Value': [
-            basic_analytics.TenantId,
-            basic_analytics.TenantName,
-            basic_analytics.StartDate.strftime('%Y-%m-%d'),
-            basic_analytics.EndDate.strftime('%Y-%m-%d'),
-            basic_analytics.TotalUsers,
-            basic_analytics.TotalPatients,
-            basic_analytics.TotalActivePatients
-        ]
+        'Tenant ID', 
+        'Tenant Name', 
+        'Start Date', 
+        'End Date', 
+        'Total Users', 
+        'Total Patients', 
+        'Total Active Patients'
+    ],
+    'Value': [
+        basic_analytics.TenantId,
+        basic_analytics.TenantName,
+        basic_analytics.StartDate.strftime('%Y-%m-%d'),
+        basic_analytics.EndDate.strftime('%Y-%m-%d'),
+        basic_analytics.TotalUsers,
+        basic_analytics.TotalPatients,
+        basic_analytics.TotalActivePatients
+    ]
     })
   
     sheet_name = 'Basic Analytics Statistics'
@@ -243,11 +243,9 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
     # Add title
     worksheet.merge_range('B1:C1', 'Basic Statistics', title_format)
     
-    # Set column widths for better readability
+    # # Set column widths for better readability
     worksheet.set_column('B:B', 20) 
     worksheet.set_column('C:C', 15) 
-    worksheet.set_column('O:O', 15)  
-    worksheet.set_column('N:N', 20) 
 
     if basic_analytics.PatientRegistrationHistory:
         
@@ -259,21 +257,12 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         )
         # Write Patient Registration History
         startrow_patient_data = 13
-        worksheet.write(startrow_patient_data - 1, 2, 'Patient Registration History', title_format)
-        # worksheet.merge_range(startrow_patient_data - 1, 1, startrow_patient_data - 1, 2, 'Patient Registration History', title_format)
-        worksheet.write(startrow_patient_data, 2, '')  # Increment row for blank line
-
-
-    # Adjust your starting row for the data after the blank line
-        startrow_patient_data += 2
-        df_patient_registration.rename(columns={'month': 'Month', 'user_count': 'User Count'}, inplace=True)
-        df_patient_registration.to_excel(writer, sheet_name=sheet_name, index=False, startrow=startrow_patient_data, startcol=1)
-    
-        # Line chart for Patient Registration History
+        df_patient_registration = write_data_to_excel(
+                df_patient_registration, sheet_name, startrow_patient_data, 1, writer,
+                'Patient Registration History',
+                {'month': 'Month', 'user_count': 'User Count'}
+            )
         chart = workbook.add_chart({'type': 'column'})
-        # worksheet.conditional_format(startrow_patient_data + 1, 1, startrow_patient_data + len(df_patient_registration), len(df_patient_registration.columns),   
-        #                              {'type': '3_color_scale'})
-        
         chart.add_series({
             'name': 'User Count',
             'categories': [sheet_name, startrow_patient_data + 1, 1, startrow_patient_data + len(df_patient_registration), 1],  # Adjusted categories
@@ -294,14 +283,11 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             fill_col='user_count',
         )
         startrow_dereg_data = 13
-        worksheet.write(startrow_dereg_data - 1, 13, 'Patient Deregistration History', title_format)
-        # worksheet.merge_range(startrow_dereg_data - 1, 1, startrow_dereg_data - 1, 2, 'Patient Deregistration History', title_format)
-        worksheet.write(startrow_dereg_data, 2, '') 
-        startrow_dereg_data += 2
-        df_dereg_history.rename(columns={'month': 'Month', 'user_count': 'User Count'}, inplace=True)
-        df_dereg_history.to_excel(writer, sheet_name=sheet_name, index=False, startrow=startrow_dereg_data, startcol=13)  
-        # worksheet.conditional_format(startrow_dereg_data + 1, 13, startrow_dereg_data + len(df_dereg_history), len(df_dereg_history.columns),   
-        #                      {'type': '3_color_scale'})
+        df_dereg_history = write_data_to_excel(
+                df_dereg_history, sheet_name, startrow_dereg_data, 13, writer,
+                'Patient Deregistration History',
+                {'month': 'Month', 'user_count': 'User Count'}
+            )
         chart = workbook.add_chart({'type': 'column'})
         
         chart.add_series({
