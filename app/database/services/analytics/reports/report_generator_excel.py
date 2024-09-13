@@ -134,7 +134,7 @@ def reindex_dataframe_to_all_months(df, date_col, fill_col, fill_value=0, date_f
     return df_reindexed
 
 def write_data_to_excel(df, sheet_name: str, start_row: int, start_col: int, writer, title: str, rename_columns=None):
-    title_format = writer.book.add_format({'bold': True, 'font_size': 14, 'align': 'center', 'valign': 'vcenter'})
+    title_format = writer.book.add_format({'bold': True, 'font_size': 14, 'align': 'left', 'valign': 'vcenter'})
     worksheet = writer.sheets[sheet_name]
     
     # Write the title before data
@@ -171,7 +171,7 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 async def generate_user_engagement_report_excel() -> str:
     try:
         # Example analysis code
-        analysis_code = '7'
+        analysis_code = '14'
 
         # Load JSON data from the file for basic analytics
         basic_analysis_data_path = 'test_data/basic_statistic.json'
@@ -196,7 +196,8 @@ async def generate_user_engagement_report_excel() -> str:
         with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
              await add_basic_analytics_statistics(basic_analysis, writer) 
              await add_patient_demographics_data(basic_analysis, writer) 
-             await add_generic_engagement_data(generic_engagement_metrics, writer) 
+             await add_generic_engagement_data(generic_engagement_metrics, writer)
+             await add_feature_engagement_data(feature_engagement_metrics, writer)
         return excel_file_path
     except Exception as e:
         print(e)
@@ -307,8 +308,8 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         
         chart.add_series({
             'name': 'User Count',
-            'categories': [sheet_name, startrow_dereg_data + 1, 1, startrow_dereg_data + len(df_dereg_history), 1],  # Adjusted categories
-            'values': [sheet_name, startrow_dereg_data + 1, 2, startrow_dereg_data + len(df_dereg_history), 2],  # Adjusted values
+            'categories': [sheet_name, startrow_dereg_data + 1, 13, startrow_dereg_data + len(df_dereg_history), 13],  # Adjusted categories
+            'values': [sheet_name, startrow_dereg_data + 1, 14, startrow_dereg_data + len(df_dereg_history), 14],  # Adjusted values
         })
         
         chart.set_title({'name': 'Patient Deregistration History'})
@@ -452,6 +453,8 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
         col_monthly = 8
         col_login_freq = 20 # New column for LoginFrequency
         col_stickiness = 23  # New column for StickinessRatio
+        col_retention_days = 36
+        col_retention_intervals = 40
         # col_visited_features = 28
         
         sheet_name = 'Generic Engagement'
@@ -469,9 +472,9 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 {'activity_date': 'Activity Date', 'daily_active_users': 'Daily Active Users'}
             )
             chart_daily_active_users = create_chart(writer.book, 'column', 'Daily Active Users', 'Generic Engagement', start_row, col_daily, len(df_daily_active_users), 'Date', 'Active Users')
-            worksheet.insert_chart(start_row , col_monthly + 3, chart_daily_active_users)
-            
-             # # Write Weekly Active Users data to Excel
+            worksheet.insert_chart(start_row , col_monthly + 3, chart_daily_active_users)     
+
+        # # Write Weekly Active Users data to Excel
         if generic_engagement_metrics.WeeklyActiveUsers:
             df_weekly_active_users = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
              # Combine week_start_date and week_end_date into a single column
@@ -517,13 +520,63 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
             )
             chart_stickiness_ratio = create_chart(writer.book, 'pie', 'Stickiness Ratio', 'Generic Engagement', start_row, col_stickiness, len(df_stickiness_ratio))
             worksheet.insert_chart(start_row + 16, col_stickiness + 5, chart_stickiness_ratio)
+            
+        if generic_engagement_metrics.RetentionRateOnSpecificDays:
+            retention_specific_days = generic_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
+            df_retention_days = pd.DataFrame(retention_specific_days)
+            df_retention_days = write_data_to_excel(
+                df_retention_days, 'Generic Engagement', start_row, col_retention_days, writer,
+                'Retention Rate on Specific Days',
+                {'day': 'Day', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
+            )
+            # chart_retention_days = create_chart(
+            #     writer.book, 'column', 'Retention Rate on Specific Days', 'Generic Engagement', start_row,
+            #     col_retention_days, len(df_retention_days), 'Day', 'Retention Rate'
+            # )
+            # worksheet.insert_chart(start_row, col_retention_intervals + 5, chart_retention_days)
+            chart_retention_days = writer.book.add_chart({'type': 'column'})
+            chart_retention_days.add_series({
+                'name': 'Retention Rate',
+                'categories': [sheet_name, start_row + 1, col_retention_days, start_row + len(df_retention_days), col_retention_days],
+                'values': [sheet_name, start_row + 1, col_retention_days + 1, start_row + len(df_retention_days), col_retention_days + 1],
+            })
+            chart_retention_days.set_title({'name': 'Retention Rate on Specific Days'})
+            chart_retention_days.set_x_axis({'name': 'Day'})
+            chart_retention_days.set_y_axis({'name': 'Retention Rate'})
+            worksheet.insert_chart(start_row, col_retention_intervals + 5, chart_retention_days)
+            
+        if generic_engagement_metrics.RetentionRateInSpecificIntervals:
+            retention_intervals = generic_engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']
+            df_retention_intervals = pd.DataFrame(retention_intervals)
 
+            df_retention_intervals = write_data_to_excel(
+                df_retention_intervals, 'Generic Engagement', start_row, col_retention_intervals, writer,
+                'Retention Rate in Specific Intervals',
+                {'interval': 'Interval', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
+            )
+
+            # chart_retention_intervals = create_chart(
+            #     writer.book, 'column', 'Retention Rate in Specific Intervals', 'Generic Engagement', start_row,
+            #     col_retention_intervals, len(df_retention_intervals), 'Interval', 'Retention Rate'
+            # )
+            chart_retention_intervals = writer.book.add_chart({'type': 'column'})
+            chart_retention_intervals.add_series({
+                'name': 'Retention Rate',
+                'categories': [sheet_name, start_row + 1, col_retention_intervals, start_row + len(df_retention_intervals), col_retention_intervals],
+                'values': [sheet_name, start_row + 1, col_retention_intervals + 1, start_row + len(df_retention_intervals), col_retention_intervals + 1],
+            })
+            chart_retention_intervals.set_title({'name': 'Retention Rate in Specific Intervals'})
+            chart_retention_intervals.set_x_axis({'name': 'Interval'})
+            chart_retention_intervals.set_y_axis({'name': 'Retention Rate'})
+
+            worksheet.insert_chart(start_row + 16, col_retention_intervals + 5, chart_retention_intervals)
+        
     except Exception as e:
         print(f"An error occurred: {e}")
         
 ################################################################################################
 
-async def add_feature_engagement_report(feature_engagement_metrics: FeatureEngagementMetrics, writer):
+async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagementMetrics, writer):
     try:      
         sheet_name = 'Feature Engagement-Medication'
         if sheet_name not in writer.sheets:
@@ -569,14 +622,4 @@ async def add_feature_engagement_report(feature_engagement_metrics: FeatureEngag
     except Exception as e:
         print(f"Error generating report: {e}")
         return ""
-                 
-
-    try:
-        reports_path = get_report_folder_path()
-        excel_file_path = os.path.join(reports_path, f"feature_engagement_report_{analysis_code}.xlsx")
-        with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
-            await add_feature_engagement_report(feature_engagement_metrics, writer)
-        return excel_file_path
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return ""
+                
