@@ -64,6 +64,24 @@ class EventType(str, Enum):
     VitalsUpdate = "vitals-update",
     VitalsDelete = "vitals-delete",
 
+    # VitalAddPulse = "vital-add-pulse"
+    # VitalDeletePulse = "vital-delete-pulse"
+    # VitalAddTemperature = "vital-add-temperature"
+    # VitalDeleteTemperature = "vital-delete-temperature"
+    # VitalAddBloodPressure = "vital-add-blood-pressure"
+    # VitalDeleteBloodPressure = "vital-delete-blood-pressure"
+    # VitalAddBloodSugar = "vital-add-blood-sugar"
+    # VitalDeleteBloodSugar = "vital-delete-blood-sugar"
+    # VitalAddWeight = "vital-add-weight"
+    # VitalDeleteWeight = "vital-delete-weight"
+    # VitalAddHeight = "vital-add-height"
+    # VitalDeleteHeight = "vital-delete-height"
+    # VitalAddOxygenSaturation = "vital-add-oxygen-saturation"
+    # VitalDeleteOxygenSaturation = "vital-delete-oxygen-saturation"
+    # VitalAddRespiratoryRate = "vital-add-respiratory-rate"
+    # VitalAddCholesterol = "vital-add-cholesterol"
+    # VitalDeleteCholesterol = "vital-delete-cholesterol"
+
     VitalsAlertTriggered = "vitals-alert-triggered"
     VitalsAlertResolved = "vitals-alert-resolved"
 
@@ -71,6 +89,7 @@ class EventType(str, Enum):
 
     # Lab test events
     LabRecordAdd = "lab-record-add"
+    LabRecordDelete = "lab-record-delete"
     LabRecordSearch = "lab-record-search"
     LabOrderCreate = "lab-order-create"
     LabOrderUpdate = "lab-order-update"

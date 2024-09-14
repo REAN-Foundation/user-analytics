@@ -6,6 +6,7 @@ from app.database.mysql_connector import MySQLConnector
 import mysql.connector
 
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.event import EventCreateModel
 from app.modules.data_sync.connectors import get_analytics_db_connector, get_reancare_db_connector
 
 ############################################################
