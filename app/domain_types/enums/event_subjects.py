@@ -36,6 +36,7 @@ class EventSubject(str, Enum):
 
     Assessment            = "assessment"
     AssessmentQuestion    = "assessment-question"
+    CareplanAssessment    = "careplan-assessment"
     DailyAssessment       = "daily-assessment"
     EnergyLevelAssessment = "energy-level-assessment"
     SymptomAssessment     = "symptom-assessment"

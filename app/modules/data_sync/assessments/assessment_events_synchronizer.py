@@ -285,6 +285,7 @@ class AssessmentEventsSynchronizer:
             print(f"Error syncing User Assessment Start Events: {error}")
 
     #endregion
+    
     #region Complete Assessment events
 
     @staticmethod

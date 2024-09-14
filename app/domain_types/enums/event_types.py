@@ -141,13 +141,6 @@ class EventType(str, Enum):
     CareplanStop = "careplan-stop"
     CareplanComplete = "careplan-complete"
 
-    #Careplan tasks
-    CareplanTaskStart = "careplan-task-start"
-    CareplanTaskComplete = "careplan-task-complete"
-    CareplanTaskCancel = "careplan-task-cancel"
-    CareplanTaskFail = "careplan-task-fail"
-    CareplanTaskReschedule = "careplan-task-reschedule"
-
     # User task events
     UserTaskStart = "user-task-start"
     UserTaskComplete = "user-task-complete"
