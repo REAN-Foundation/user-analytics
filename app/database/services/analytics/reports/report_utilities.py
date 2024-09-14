@@ -8,59 +8,74 @@ from tabulate import tabulate
 ###############################################################################
 
 def save_figure(
-        fig: plt.Figure,
+        figure: plt.Figure,
         name: str
     ):
-    fig.savefig(f'./basic_statistics/{name}.png', dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    figure.savefig(f'./basic_statistics/{name}.png', dpi=300, bbox_inches='tight')
+    plt.close(figure)
 
 def plot_bar_chart(
-        df: pd.DataFrame,
-        x_col: str,
-        y_col: str,
+        data_frame: pd.DataFrame,
+        x_column: str,
+        y_column: str,
         title: str,
         x_label: str,
         y_label: str,
-        palette: str,
-        file_name: str,
+        color_palette: str,
+        file_path: str,
         rotation: int = 45
     ):
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.barplot(x=x_col, y=y_col, data=df, palette=palette, ax=ax, legend=False)
+    sns.barplot(
+        x=x_column,
+        y=y_column,
+        data=data_frame,
+        palette=color_palette,
+        ax=ax,
+        legend=False)
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.tick_params(axis='x', rotation=rotation)
-    save_figure(fig, file_name)
-
+    save_figure(fig, file_path)
 
 def plot_pie_chart(
-        df: pd.DataFrame,
-        value_col: str,
-        label_col: str,
+        data_frame: pd.DataFrame,
+        value_column: str,
+        label_column: str,
         title: str,
-        palette: str,
-        file_name: str
+        color_palette: str,
+        file_path: str
     ):
     fig, ax = plt.subplots(figsize=(8, 8))
-    ax.pie(df[value_col], labels=df[label_col], autopct='%1.1f%%', colors=sns.color_palette(palette))
+    ax.pie(
+        data_frame[value_column],
+        labels=data_frame[label_column],
+        wedgeprops=dict(width=0.5),
+        autopct='%1.1f%%',
+        colors=sns.color_palette(color_palette))
     ax.set_title(title)
-    save_figure(fig, file_name)
-
+    save_figure(fig, file_path)
 
 def plot_line_chart(
-        df: pd.DataFrame,
-        x_col: str,
-        y_col: str,
+        data_frame: pd.DataFrame,
+        x_column: str,
+        y_column: str,
         title: str,
         x_label: str,
         y_label: str,
-        palette: str,
+        color_palette: str,
         file_name: str,
         rotation: int = 45
     ):
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.lineplot(x=x_col, y=y_col, data=df, palette=palette, ax=ax, legend=False)
+    sns.lineplot(
+        x=x_column,
+        y=y_column,
+        data=data_frame,
+        palette=color_palette,
+        ax=ax,
+        legend=False)
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
@@ -69,19 +84,19 @@ def plot_line_chart(
 ###############################################################################
 
 def reindex_dataframe_to_all_dates(
-        df: pd.DataFrame,
-        date_col: str,
-        fill_col: str,
-        freq: str,
+        data_frame: pd.DataFrame,
+        date_column: str,
+        fill_column: str,
+        frequency: str,
         date_format: str = '%Y-%m-%d',
         fill_value: int = 0
     ) -> pd.DataFrame:
-    df[date_col] = pd.to_datetime(df[date_col], format=date_format, errors='coerce')  # Handle invalid date formats
-    start_date = df[date_col].min()
-    end_date = df[date_col].max()
-    all_dates = pd.date_range(start=start_date, end=end_date, freq=freq)
-    all_dates_df = pd.DataFrame({date_col: all_dates})
-    df_reindexed = pd.merge(all_dates_df, df, on=date_col, how='left').fillna({fill_col: fill_value})
+    data_frame[date_column] = pd.to_datetime(data_frame[date_column], format=date_format, errors='coerce')  # Handle invalid date formats
+    start_date   = data_frame[date_column].min()
+    end_date     = data_frame[date_column].max()
+    all_dates    = pd.date_range(start=start_date, end=end_date, freq=frequency)
+    all_dates_df = pd.DataFrame({date_column: all_dates})
+    df_reindexed = pd.merge(all_dates_df, data_frame, on=date_column, how='left').fillna({fill_column: fill_value})
     return df_reindexed
 
 ###############################################################################

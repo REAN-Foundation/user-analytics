@@ -5,7 +5,7 @@ import json
 import os
 from app.database.services.analytics.common import get_report_folder_path
 from app.domain_types.schemas.analytics import EngagementMetrics
-from app.database.services.analytics.reports.report_generator_images import generate_user_engagement_report_images
+from app.database.services.analytics.reports.report_generator_images import generate_report_images
 from app.database.services.analytics.reports.report_generator_markdown import generate_user_engagement_report_markdown
 
 ###############################################################################
@@ -20,7 +20,7 @@ async def generate_user_engagement_report_pdf(
         if not os.path.exists(report_folder_path):
             os.makedirs(report_folder_path, exist_ok=True)
 
-        images_generated = await generate_user_engagement_report_images(
+        images_generated = await generate_report_images(
             report_folder_path, metrics)
         if not images_generated:
             return None
