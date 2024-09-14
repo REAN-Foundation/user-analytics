@@ -1,4 +1,15 @@
 FROM python:3.10
+
+# Install dependencies including pandoc
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    pandoc \
+    texlive-xetex \
+    texlive-fonts-recommended \
+    texlive-plain-generic \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 RUN python -m venv venv
 RUN . venv/bin/activate
