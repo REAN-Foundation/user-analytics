@@ -1,0 +1,80 @@
+{
+  "TenantId":null,
+  "TenantName":"unspecified",
+  "StartDate":"2023-03-20T00:00:00",
+  "EndDate":"2024-09-10T00:00:00",
+  "TotalUsers":178,
+  "TotalPatients":149,
+  "TotalActivePatients":305,
+  "PatientRegistrationHistory":[
+    {"month":"2023-03","user_count":11},
+    {"month":"2023-04","user_count":3},
+    {"month":"2023-05","user_count":3},
+    {"month":"2023-06","user_count":1},
+    {"month":"2023-07","user_count":31},
+    {"month":"2023-08","user_count":16},
+    {"month":"2023-09","user_count":7},
+    {"month":"2023-10","user_count":3},
+    {"month":"2023-11","user_count":2},
+    {"month":"2023-12","user_count":2},
+    {"month":"2024-02","user_count":17},
+    {"month":"2024-03","user_count":6},
+    {"month":"2024-04","user_count":9},
+    {"month":"2024-05","user_count":6},
+    {"month":"2024-06","user_count":11},
+    {"month":"2024-07","user_count":11},
+    {"month":"2024-08","user_count":10}
+  ],
+  "PatientDeregistrationHistory": [
+    {"month": "2023-05", "user_count": 1},
+    {"month": "2023-09", "user_count": 2},
+    {"month": "2024-04", "user_count": 1},
+    {"month": "2024-05", "user_count": 3},
+    {"month": "2024-06", "user_count": 1},
+    {"month": "2024-08", "user_count": 2}
+],
+"PatientDemographics": {
+      "AgeGroups": [
+          {"age_group": "0-18", "count": 2},
+          {"age_group": "19-30", "count": 57},
+          {"age_group": "31-45", "count": 38},
+          {"age_group": "Unknown", "count": 52}
+      ],
+      "GenderGroups": [
+          {"gender": "Female", "count": 87},
+          {"gender": "Unknown", "count": 52},
+          {"gender": "Male", "count": 10}
+      ],
+      "LocationGroups": [],
+      "EthnicityGroups": [
+          {"ethnicity": "", "count": 143},
+          {"ethnicity": "Not Hispanic/Latino", "count": 3},
+          {"ethnicity": "South-Asian", "count": 2},
+          {"ethnicity": "Prefer not to say", "count": 1}
+      ],
+      "RaceGroups": [
+          {"race": "", "count": 145},
+          {"race": "Native Hawaiian or Other Pacific Islander", "count": 1},
+          {"race": "Asian", "count": 1},
+          {"race": "American Indian/Alaskan Native", "count": 2}
+      ],
+      "HealthSystemDistribution": [
+          {"health_system": "Unknown", "count": 144},
+          {"health_system": "Nebraska Health System", "count": 2},
+          {"health_system": "abc", "count": 1},
+          {"health_system": "Kaiser Permanente", "count": 1},
+          {"health_system": "Conway Medical Center", "count": 1}
+      ],
+      "HospitalDistribution": [
+          {"hospital": "Unknown", "count": 144},
+          {"hospital": "Heart and Vascular Center at Bellevue Health Center", "count": 2},
+          {"hospital": "xyz", "count": 1},
+          {"hospital": "Kaiser Freemont", "count": 1},
+          {"hospital": "Conway Medical Center", "count": 1}
+      ],
+      "SurvivorOrCareGiverDistribution": [
+          {"caregiver_status": "No", "count": 148},
+          {"caregiver_status": "Yes", "count": 1}
+        ]
+    }
+}
