@@ -4,10 +4,15 @@ from app.api.sync.sync_handler import (
     sync_assessment_events_,
     sync_biometric_events_,
     sync_careplan_events_,
+    sync_exercise_events_,
+    sync_goal_events_,
     sync_lab_record_events_,
     sync_medication_events_,
+    sync_meditation_events_,
+    sync_mood_events_,
     sync_nutrition_events_,
     sync_sleep_events_,
+    sync_stand_events_,
     sync_step_events_,
     sync_symptom_events_,
     sync_user_login_session_events_,
@@ -142,12 +147,52 @@ async def sync_nutrition_events(background_tasks: BackgroundTasks,
     resp = ResponseModel[bool](Message=message, Data=True)
     return resp
 
-# @router.post("/events/exercises", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
-# async def sync_exercise_events(background_tasks: BackgroundTasks,
-#                                 start_date: Optional[str]  = Query(None, alias="StartDate"),
-#                                 end_date: Optional[str]  = Query(None, alias="EndDate")):
-#     filters = validate_data_sync_search_filter(start_date, end_date)
-#     background_tasks.add_task(sync_exercise_events_, filters)
-#     message = "Exercise synchronization has started."
-#     resp = ResponseModel[bool](Message=message, Data=True)
-#     return resp
+@router.post("/events/stands", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_stand_events(background_tasks: BackgroundTasks,
+                                start_date: Optional[str]  = Query(None, alias="StartDate"),
+                                end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_stand_events_, filters)
+    message = "Stand synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp
+
+@router.post("/events/moods", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_mood_events(background_tasks: BackgroundTasks,
+                                start_date: Optional[str]  = Query(None, alias="StartDate"),
+                                end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_mood_events_, filters)
+    message = "Mood synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp
+
+@router.post("/events/meditations", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_meditation_events(background_tasks: BackgroundTasks,
+                                start_date: Optional[str]  = Query(None, alias="StartDate"),
+                                end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_meditation_events_, filters)
+    message = "Meditation synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp
+
+@router.post("/events/goals", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_goal_events(background_tasks: BackgroundTasks,
+                                start_date: Optional[str]  = Query(None, alias="StartDate"),
+                                end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_goal_events_, filters)
+    message = "Goal synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp
+
+@router.post("/events/exercises", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_exercise_events(background_tasks: BackgroundTasks,
+                                start_date: Optional[str]  = Query(None, alias="StartDate"),
+                                end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_exercise_events_, filters)
+    message = "Exercise synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp

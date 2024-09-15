@@ -1,9 +1,13 @@
 from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.assessments.assessment_events_synchronizer import AssessmentEventsSynchronizer
 from app.modules.data_sync.careplans.careplan_events_synchronizer import CareplanEventsSynchronizer
+from app.modules.data_sync.goals.goal_events_synchronizer import GoalEventsSynchronizer
 from app.modules.data_sync.lab_records.lab_record_events_synchonizer import LabRecordEventsSynchronizer
+from app.modules.data_sync.meditations.meditation_events_synchronizer import MeditationEventsSynchronizer
+from app.modules.data_sync.mood.mood_events_synchronizer import MoodEventsSynchronizer
 from app.modules.data_sync.nutrition.nutrition_events_synchronizer import NutritionEventsSynchronizer
 from app.modules.data_sync.sleep.sleep_events_synchronizer import SleepEventsSynchronizer
+from app.modules.data_sync.stand.stand_events_synchronizer import StandEventsSynchronizer
 from app.modules.data_sync.steps.step_events_synchronizer import StepEventsSynchronizer
 from app.modules.data_sync.symptoms.symptom_events_synchronizer import SymptomEventsSynchronizer
 from app.modules.data_sync.user_tasks.user_task_events_synchronizer import UserTaskEventsSynchronizer
@@ -101,8 +105,10 @@ def sync_assessment_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting assessment events synchronization...")
         AssessmentEventsSynchronizer.sync_assessment_create_events(filters)
+        AssessmentEventsSynchronizer.sync_assessment_delete_events(filters)
         AssessmentEventsSynchronizer.sync_assessment_start_events(filters)
         AssessmentEventsSynchronizer.sync_assessment_complete_events(filters)
+        AssessmentEventsSynchronizer.sync_assessment_question_answered_events(filters)
         print("Assessment events synchronization completed.")
     except Exception as e:
         print(e)
@@ -112,12 +118,12 @@ def sync_careplan_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting careplan events synchronization...")
         CareplanEventsSynchronizer.sync_careplan_enroll_events(filters)
-        CareplanEventsSynchronizer.sync_careplan_start_events(filters)
+        # CareplanEventsSynchronizer.sync_careplan_start_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_stop_events(filters)
         CareplanEventsSynchronizer.sync_careplan_complete_events(filters)
-        CareplanEventsSynchronizer.sync_careplan_task_start_events(filters)
-        CareplanEventsSynchronizer.sync_careplan_task_complete_events(filters)
-        CareplanEventsSynchronizer.sync_careplan_task_cancel_events(filters)
+        # CareplanEventsSynchronizer.sync_careplan_task_start_events(filters)
+        # CareplanEventsSynchronizer.sync_careplan_task_complete_events(filters)
+        CareplanEventsSynchronizer.sync_careplan_stop_events(filters)
         print("Careplan events synchronization completed.")
     except Exception as e:
         print(e)
@@ -159,18 +165,62 @@ def sync_nutrition_events_(filters: DataSyncSearchFilter):
         NutritionEventsSynchronizer.sync_nutrition_update_events(filters),
         NutritionEventsSynchronizer.sync_nutrition_complete_events(filters),
         NutritionEventsSynchronizer.sync_nutrition_cancel_events(filters)
+        NutritionEventsSynchronizer.sync_water_intake_create_events(filters)
+        NutritionEventsSynchronizer.sync_water_intake_update_events(filters)
+        NutritionEventsSynchronizer.sync_water_intake_delete_events(filters)
         print("Nutrition events synchronization completed.")
     except Exception as e:
         print(e)
 
-# @trace_span("handler: sync_exercise_events")
-# def sync_exercise_events_(filters: DataSyncSearchFilter):
-#     try:
-#         print("Starting exercise events synchronization...")
-#         ExerciseEventsSynchronizer.sync_exercise_start_events(filters),
-#         ExerciseEventsSynchronizer.sync_exercise_update_events(filters),
-#         ExerciseEventsSynchronizer.sync_exercise_complete_events(filters),
-#         ExerciseEventsSynchronizer.sync_exercise_cancel_events(filters),
-#         print("Exercise events synchronization completed.")
-#     except Exception as e:
-#         print(e)
+@trace_span("handler: sync_stand_events")
+def sync_stand_events_(filters: DataSyncSearchFilter):
+    try:
+        print("Starting stand events synchronization...")
+        StandEventsSynchronizer.sync_stand_create_events(filters),
+        print("Stand events synchronization completed.")
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_mood_events")
+def sync_mood_events_(filters: DataSyncSearchFilter):
+    try:
+        print("Starting mood events synchronization...")
+        MoodEventsSynchronizer.sync_mood_create_events(filters),
+        print("Mood events synchronization completed.")
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_meditation_events")
+def sync_meditation_events_(filters: DataSyncSearchFilter):
+    try:
+        print("Starting meditation events synchronization...")
+        MeditationEventsSynchronizer.sync_meditation_start_events(filters),
+        MeditationEventsSynchronizer.sync_meditation_complete_events(filters),
+        print("Meditation events synchronization completed.")
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_goal_events")
+def sync_goal_events_(filters: DataSyncSearchFilter):
+    try:
+        print("Starting goal events synchronization...")
+        GoalEventsSynchronizer.sync_goal_create_events(filters),
+        GoalEventsSynchronizer.sync_goal_start_events(filters),
+        GoalEventsSynchronizer.sync_goal_update_events(filters),
+        GoalEventsSynchronizer.sync_goal_complete_events(filters),
+        GoalEventsSynchronizer.sync_goal_cancel_events(filters),
+        print("Goal events synchronization completed.")
+    except Exception as e:
+        print(e)
+
+@trace_span("handler: sync_exercise_events")
+def sync_exercise_events_(filters: DataSyncSearchFilter):
+    try:
+        print("Starting exercise events synchronization...")
+        ExerciseEventsSynchronizer.sync_exercise_start_events(filters),
+        ExerciseEventsSynchronizer.sync_exercise_update_events(filters),
+        ExerciseEventsSynchronizer.sync_exercise_complete_events(filters),
+        ExerciseEventsSynchronizer.sync_exercise_cancel_events(filters),
+        print("Exercise events synchronization completed.")
+    except Exception as e:
+        print(e)

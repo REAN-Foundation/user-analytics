@@ -49,9 +49,9 @@ class PulseEventsSynchronizer:
     @staticmethod
     def add_analytics_pulse_create_event(pulse):
         try:
-            event_name = EventType.VitalAddPulse.value
+            event_name = EventType.VitalsAdd.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsPulse.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -70,13 +70,13 @@ class PulseEventsSynchronizer:
                 'TenantId': pulse['TenantId'],
                 'SessionId': None,
                 'ResourceId': pulse['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a biometric pulse.",
                 'Attributes': str(attributes),
                 'Timestamp': pulse['CreatedAt'],
@@ -102,7 +102,7 @@ class PulseEventsSynchronizer:
             if pulses:
                 for pulse in pulses:
                     existing_event = DataSynchronizer.get_existing_event(
-                        pulse['UserId'], pulse['id'], EventType.VitalAddPulse)
+                        pulse['UserId'], pulse['id'], EventType.VitalsAdd)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -162,9 +162,9 @@ class PulseEventsSynchronizer:
     @staticmethod
     def add_analytics_pulse_delete_event(pulse):
         try:
-            event_name = EventType.VitalDeletePulse.value
+            event_name = EventType.VitalsDelete.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsPulse.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -183,13 +183,13 @@ class PulseEventsSynchronizer:
                 'TenantId': pulse['TenantId'],
                 'SessionId': None,
                 'ResourceId': pulse['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User deleted a biometric pulse.",
                 'Attributes': str(attributes),
                 'Timestamp': pulse['DeletedAt'],
@@ -215,7 +215,7 @@ class PulseEventsSynchronizer:
             if deleted_pulses:
                 for pulse in deleted_pulses:
                     existing_event = DataSynchronizer.get_existing_event(
-                        pulse['UserId'], pulse['id'], EventType.VitalDeletePulse)
+                        pulse['UserId'], pulse['id'], EventType.VitalsDelete)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:

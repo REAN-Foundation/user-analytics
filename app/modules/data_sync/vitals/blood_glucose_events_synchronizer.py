@@ -50,9 +50,9 @@ class BloodGlucoseEventsSynchronizer:
     @staticmethod
     def add_analytics_blood_glucose_create_event(blood_glucose):
         try:
-            event_name = EventType.VitalAddBloodSugar.value
+            event_name = EventType.VitalsAdd.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBloodGlucose.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -72,13 +72,13 @@ class BloodGlucoseEventsSynchronizer:
                 'TenantId': blood_glucose['TenantId'],
                 'SessionId': None,
                 'ResourceId': blood_glucose['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a blood glucose.",
                 'Attributes': str(attributes),
                 'Timestamp': blood_glucose['CreatedAt'],
@@ -104,7 +104,7 @@ class BloodGlucoseEventsSynchronizer:
             if blood_glucose_records:
                 for blood_glucose in blood_glucose_records:
                     existing_event = DataSynchronizer.get_existing_event(
-                        blood_glucose['UserId'], blood_glucose['id'], EventType.VitalAddBloodSugar)
+                        blood_glucose['UserId'], blood_glucose['id'], EventType.VitalsAdd)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -165,9 +165,9 @@ class BloodGlucoseEventsSynchronizer:
     @staticmethod
     def add_analytics_blood_glucose_delete_event(blood_glucose):
         try:
-            event_name = EventType.VitalDeleteOxygenSaturation.value
+            event_name = EventType.VitalsDelete.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBloodGlucose.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -187,13 +187,13 @@ class BloodGlucoseEventsSynchronizer:
                 'TenantId': blood_glucose['TenantId'],
                 'SessionId': None,
                 'ResourceId': blood_glucose['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User deleted a blood glucose.",
                 'Attributes': str(attributes),
                 'Timestamp': blood_glucose['DeletedAt'],
@@ -219,7 +219,7 @@ class BloodGlucoseEventsSynchronizer:
             if blood_glucose_records:
                 for blood_glucose in blood_glucose_records:
                     existing_event = DataSynchronizer.get_existing_event(
-                        blood_glucose['UserId'], blood_glucose['id'], EventType.VitalDeleteBloodSugar)
+                        blood_glucose['UserId'], blood_glucose['id'], EventType.VitalsDelete)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:

@@ -63,7 +63,7 @@ class UserTaskEventsSynchronizer:
     @staticmethod
     def add_analytics_user_task_start_event(user_task):
         try:
-            event_name = EventType.TaskStart.value
+            event_name = EventType.UserTaskStart.value
             event_category = EventCategory.UserTask.value
             event_subject = EventSubject.UserTask.value
             # user = DataSynchronizer.get_user(medication['UserId'])
@@ -96,13 +96,13 @@ class UserTaskEventsSynchronizer:
                 'TenantId': user_task['TenantId'],
                 'SessionId': None,
                 'ResourceId': user_task['id'],
-                'ResourceType': "User-Task",
+                'ResourceType': "user-task",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User task is started.",
                 'Attributes': str(attributes),
                 'Timestamp': user_task['StartedAt'],
@@ -128,7 +128,7 @@ class UserTaskEventsSynchronizer:
             if user_tasks:
                 for user_task in user_tasks:
                     existing_event = DataSynchronizer.get_existing_event(
-                        user_task['UserId'], user_task['id'], EventType.TaskStart)
+                        user_task['UserId'], user_task['id'], EventType.UserTaskStart)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -200,7 +200,7 @@ class UserTaskEventsSynchronizer:
     @staticmethod
     def add_analytics_user_task_complete_event(user_task):
         try:
-            event_name = EventType.TaskComplete.value
+            event_name = EventType.UserTaskComplete.value
             event_category = EventCategory.UserTask.value
             event_subject = EventSubject.UserTask.value
             # user = DataSynchronizer.get_user(medication['UserId'])
@@ -233,13 +233,13 @@ class UserTaskEventsSynchronizer:
                 'TenantId': user_task['TenantId'],
                 'SessionId': None,
                 'ResourceId': user_task['id'],
-                'ResourceType': "User-Task",
+                'ResourceType': "user-task",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User task is completed.",
                 'Attributes': str(attributes),
                 'Timestamp': user_task['FinishedAt'],
@@ -265,7 +265,7 @@ class UserTaskEventsSynchronizer:
             if user_tasks:
                 for user_task in user_tasks:
                     existing_event = DataSynchronizer.get_existing_event(
-                        user_task['UserId'], user_task['id'], EventType.TaskComplete)
+                        user_task['UserId'], user_task['id'], EventType.UserTaskComplete)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -337,7 +337,7 @@ class UserTaskEventsSynchronizer:
     @staticmethod
     def add_analytics_user_task_cancel_event(user_task):
         try:
-            event_name = EventType.TaskCancel.value
+            event_name = EventType.UserTaskCancel.value
             event_category = EventCategory.UserTask.value
             event_subject = EventSubject.UserTask.value
             # user = DataSynchronizer.get_user(medication['UserId'])
@@ -370,13 +370,13 @@ class UserTaskEventsSynchronizer:
                 'TenantId': user_task['TenantId'],
                 'SessionId': None,
                 'ResourceId': user_task['id'],
-                'ResourceType': "User-Task",
+                'ResourceType': "user-task",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User task is completed.",
                 'Attributes': str(attributes),
                 'Timestamp': user_task['CancelledAt'],
@@ -402,7 +402,7 @@ class UserTaskEventsSynchronizer:
             if user_tasks:
                 for user_task in user_tasks:
                     existing_event = DataSynchronizer.get_existing_event(
-                        user_task['UserId'], user_task['id'], EventType.TaskCancel)
+                        user_task['UserId'], user_task['id'], EventType.UserTaskCancel)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:

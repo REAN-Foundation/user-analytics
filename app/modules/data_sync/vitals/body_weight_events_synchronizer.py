@@ -47,9 +47,9 @@ class BodyWeightEventsSynchronizer:
     @staticmethod
     def add_analytics_body_weight_create_event(body_weight):
         try:
-            event_name = EventType.VitalAddWeight.value
+            event_name = EventType.VitalsAdd.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBodyWeight.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -66,13 +66,13 @@ class BodyWeightEventsSynchronizer:
                 'TenantId': body_weight['TenantId'],
                 'SessionId': None,
                 'ResourceId': body_weight['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a biometric body weight.",
                 'Attributes': str(attributes),
                 'Timestamp': body_weight['CreatedAt'],
@@ -98,7 +98,7 @@ class BodyWeightEventsSynchronizer:
             if body_weights:
                 for body_weight in body_weights:
                     existing_event = DataSynchronizer.get_existing_event(
-                        body_weight['UserId'], body_weight['id'], EventType.VitalAddWeight)
+                        body_weight['UserId'], body_weight['id'], EventType.VitalsAdd)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -156,9 +156,9 @@ class BodyWeightEventsSynchronizer:
     @staticmethod
     def add_analytics_body_weight_delete_event(body_weight):
         try:
-            event_name = EventType.VitalDeleteWeight.value
+            event_name = EventType.VitalsDelete.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBodyWeight.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -175,13 +175,13 @@ class BodyWeightEventsSynchronizer:
                 'TenantId': body_weight['TenantId'],
                 'SessionId': None,
                 'ResourceId': body_weight['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User deleted a biometric body weight.",
                 'Attributes': str(attributes),
                 'Timestamp': body_weight['DeletedAt'],
@@ -207,7 +207,7 @@ class BodyWeightEventsSynchronizer:
             if deleted_body_weights:
                 for body_weight in deleted_body_weights:
                     existing_event = DataSynchronizer.get_existing_event(
-                        body_weight['UserId'], body_weight['id'], EventType.VitalDeleteWeight)
+                        body_weight['UserId'], body_weight['id'], EventType.VitalsAdd)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:

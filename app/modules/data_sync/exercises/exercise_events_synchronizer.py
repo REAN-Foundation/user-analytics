@@ -15,32 +15,38 @@ class ExerciseEventsSynchronizer:
     @staticmethod
     def get_reancare_exercise_start_events(filters: DataSyncSearchFilter):
         try:
-            selection_condition = f"AND exercise.StartTime between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
+            selection_condition = f"AND exercise.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
                 exercise.id,
                 exercise.EhrId,
                 exercise.PatientUserId as UserId,
-                exercise.Meditation,
-                exercise.Description,
+                exercise.Provider,
+                exercise.TerraSummaryId,
+                exercise.Exercise,
+                exercise.Description,               
                 exercise.Category,
-                exercise.DurationInMins,               
+                exercise.CaloriesBurned,
+                exercise.Intensity,
+                exercise.ImageResourceId,
                 exercise.StartTime,
-                exercise.EndTime,
+                exercise.EndTime,               
+                exercise.DurationInMin,
+                exercise.PhysicalActivityQuestion,
+                exercise.PhysicalActivityQuestionAns,
                 exercise.CreatedAt,
                 exercise.UpdatedAt,
                 exercise.DeletedAt,
                 user.id as UserId,
                 user.TenantId as TenantId,
                 user.CreatedAt as UserRegistrationDate
-            from exercise_meditations as exercise
+            from exercise_physical_activities as exercise
             JOIN users as user ON exercise.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
                 {selection_condition}
             """
-            print(query)
             rows = rean_db_connector.execute_read_query(query)
             return rows
         except Exception as error:
@@ -60,12 +66,19 @@ class ExerciseEventsSynchronizer:
             attributes = {
                 'EhrId': exercise['EhrId'],
                 'PatientUserId': exercise['UserId'],
-                'Meditation': exercise['Meditation'],
+                'Provider': exercise['Provider'],
+                'TerraSummaryId': exercise['TerraSummaryId'],
+                'Exercise': exercise['Exercise'],
                 'Description': exercise['Description'],
                 'Category': exercise['Category'],
-                'DurationInMins': exercise['DurationInMins'],
+                'CaloriesBurned': exercise['CaloriesBurned'],
+                'Intensity': exercise['Intensity'],
+                'ImageResourceId': exercise['ImageResourceId'],
                 'StartTime': exercise['StartTime'],
                 'EndTime': exercise['EndTime'],
+                'DurationInMin': exercise['DurationInMin'],
+                'PhysicalActivityQuestion': exercise['PhysicalActivityQuestion'],
+                'PhysicalActivityQuestionAns': exercise['PhysicalActivityQuestionAns']
              }
             exercise = {
                 'UserId': exercise['UserId'],
@@ -136,19 +149,26 @@ class ExerciseEventsSynchronizer:
                 exercise.id,
                 exercise.EhrId,
                 exercise.PatientUserId as UserId,
-                exercise.Meditation,
-                exercise.Description,
+                exercise.Provider,
+                exercise.TerraSummaryId,
+                exercise.Exercise,
+                exercise.Description,               
                 exercise.Category,
-                exercise.DurationInMins,               
+                exercise.CaloriesBurned,
+                exercise.Intensity,
+                exercise.ImageResourceId,
                 exercise.StartTime,
-                exercise.EndTime,
+                exercise.EndTime,               
+                exercise.DurationInMin,
+                exercise.PhysicalActivityQuestion,
+                exercise.PhysicalActivityQuestionAns,
                 exercise.CreatedAt,
                 exercise.UpdatedAt,
                 exercise.DeletedAt,
                 user.id as UserId,
                 user.TenantId as TenantId,
                 user.CreatedAt as UserRegistrationDate
-            from exercise_meditations as exercise
+            from exercise_physical_activities as exercise
             JOIN users as user ON exercise.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
@@ -175,12 +195,19 @@ class ExerciseEventsSynchronizer:
             attributes = {
                 'EhrId': exercise['EhrId'],
                 'PatientUserId': exercise['UserId'],
-                'Meditation': exercise['Meditation'],
+                'Provider': exercise['Provider'],
+                'TerraSummaryId': exercise['TerraSummaryId'],
+                'Exercise': exercise['Exercise'],
                 'Description': exercise['Description'],
                 'Category': exercise['Category'],
-                'DurationInMins': exercise['DurationInMins'],
+                'CaloriesBurned': exercise['CaloriesBurned'],
+                'Intensity': exercise['Intensity'],
+                'ImageResourceId': exercise['ImageResourceId'],
                 'StartTime': exercise['StartTime'],
                 'EndTime': exercise['EndTime'],
+                'DurationInMin': exercise['DurationInMin'],
+                'PhysicalActivityQuestion': exercise['PhysicalActivityQuestion'],
+                'PhysicalActivityQuestionAns': exercise['PhysicalActivityQuestionAns']
              }
             exercise = {
                 'UserId': exercise['UserId'],
@@ -251,24 +278,31 @@ class ExerciseEventsSynchronizer:
                 exercise.id,
                 exercise.EhrId,
                 exercise.PatientUserId as UserId,
-                exercise.Meditation,
-                exercise.Description,
+                exercise.Provider,
+                exercise.TerraSummaryId,
+                exercise.Exercise,
+                exercise.Description,               
                 exercise.Category,
-                exercise.DurationInMins,               
+                exercise.CaloriesBurned,
+                exercise.Intensity,
+                exercise.ImageResourceId,
                 exercise.StartTime,
-                exercise.EndTime,
+                exercise.EndTime,               
+                exercise.DurationInMin,
+                exercise.PhysicalActivityQuestion,
+                exercise.PhysicalActivityQuestionAns,
                 exercise.CreatedAt,
                 exercise.UpdatedAt,
                 exercise.DeletedAt,
                 user.id as UserId,
                 user.TenantId as TenantId,
                 user.CreatedAt as UserRegistrationDate
-            from exercise_meditations as exercise
+            from exercise_physical_activities as exercise
             JOIN users as user ON exercise.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
                 AND
-                exercise.DeletedAt IS NOT null
+                exercise.EndTime IS NOT null
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -290,12 +324,19 @@ class ExerciseEventsSynchronizer:
             attributes = {
                 'EhrId': exercise['EhrId'],
                 'PatientUserId': exercise['UserId'],
-                'Meditation': exercise['Meditation'],
+                'Provider': exercise['Provider'],
+                'TerraSummaryId': exercise['TerraSummaryId'],
+                'Exercise': exercise['Exercise'],
                 'Description': exercise['Description'],
                 'Category': exercise['Category'],
-                'DurationInMins': exercise['DurationInMins'],
+                'CaloriesBurned': exercise['CaloriesBurned'],
+                'Intensity': exercise['Intensity'],
+                'ImageResourceId': exercise['ImageResourceId'],
                 'StartTime': exercise['StartTime'],
                 'EndTime': exercise['EndTime'],
+                'DurationInMin': exercise['DurationInMin'],
+                'PhysicalActivityQuestion': exercise['PhysicalActivityQuestion'],
+                'PhysicalActivityQuestionAns': exercise['PhysicalActivityQuestionAns']
              }
             exercise = {
                 'UserId': exercise['UserId'],
@@ -309,9 +350,9 @@ class ExerciseEventsSynchronizer:
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
                 'ActionType': "User-Action",
-                'ActionStatement': "User added a exercise.",
+                'ActionStatement': "User completed a exercise.",
                 'Attributes': str(attributes),
-                'Timestamp': exercise['UpdatedAt'],
+                'Timestamp': exercise['EndTime'],
                 'UserRegistrationDate': exercise['UserRegistrationDate']
             }
             new_event_added = DataSynchronizer.add_event(exercise)
@@ -356,26 +397,33 @@ class ExerciseEventsSynchronizer:
     @staticmethod
     def get_reancare_exercise_cancel_events(filters: DataSyncSearchFilter):
         try:
-            selection_condition = f"AND exercise.EndTime between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
+            selection_condition = f"AND exercise.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
                 exercise.id,
                 exercise.EhrId,
                 exercise.PatientUserId as UserId,
-                exercise.Meditation,
-                exercise.Description,
+                exercise.Provider,
+                exercise.TerraSummaryId,
+                exercise.Exercise,
+                exercise.Description,               
                 exercise.Category,
-                exercise.DurationInMins,               
+                exercise.CaloriesBurned,
+                exercise.Intensity,
+                exercise.ImageResourceId,
                 exercise.StartTime,
-                exercise.EndTime,
+                exercise.EndTime,               
+                exercise.DurationInMin,
+                exercise.PhysicalActivityQuestion,
+                exercise.PhysicalActivityQuestionAns,
                 exercise.CreatedAt,
                 exercise.UpdatedAt,
                 exercise.DeletedAt,
                 user.id as UserId,
                 user.TenantId as TenantId,
                 user.CreatedAt as UserRegistrationDate
-            from exercise_meditations as exercise
+            from exercise_physical_activities as exercise
             JOIN users as user ON exercise.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
@@ -402,12 +450,19 @@ class ExerciseEventsSynchronizer:
             attributes = {
                 'EhrId': exercise['EhrId'],
                 'PatientUserId': exercise['UserId'],
-                'Meditation': exercise['Meditation'],
+                'Provider': exercise['Provider'],
+                'TerraSummaryId': exercise['TerraSummaryId'],
+                'Exercise': exercise['Exercise'],
                 'Description': exercise['Description'],
                 'Category': exercise['Category'],
-                'DurationInMins': exercise['DurationInMins'],
+                'CaloriesBurned': exercise['CaloriesBurned'],
+                'Intensity': exercise['Intensity'],
+                'ImageResourceId': exercise['ImageResourceId'],
                 'StartTime': exercise['StartTime'],
                 'EndTime': exercise['EndTime'],
+                'DurationInMin': exercise['DurationInMin'],
+                'PhysicalActivityQuestion': exercise['PhysicalActivityQuestion'],
+                'PhysicalActivityQuestionAns': exercise['PhysicalActivityQuestionAns']
              }
             exercise = {
                 'UserId': exercise['UserId'],
@@ -421,9 +476,9 @@ class ExerciseEventsSynchronizer:
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
                 'ActionType': "User-Action",
-                'ActionStatement': "User added a exercise.",
+                'ActionStatement': "User cancel a exercise.",
                 'Attributes': str(attributes),
-                'Timestamp': exercise['UpdatedAt'],
+                'Timestamp': exercise['DeletedAt'],
                 'UserRegistrationDate': exercise['UserRegistrationDate']
             }
             new_event_added = DataSynchronizer.add_event(exercise)

@@ -52,9 +52,9 @@ class CholesterolEventsSynchronizer:
     @staticmethod
     def add_analytics_cholesterol_create_event(cholesterol):
         try:
-            event_name = EventType.VitalAddCholesterol.value
+            event_name = EventType.VitalsAdd.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsCholesterol.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -76,13 +76,13 @@ class CholesterolEventsSynchronizer:
                 'TenantId': cholesterol['TenantId'],
                 'SessionId': None,
                 'ResourceId': cholesterol['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a blood cholesterol.",
                 'Attributes': str(attributes),
                 'Timestamp': cholesterol['CreatedAt'],
@@ -108,7 +108,7 @@ class CholesterolEventsSynchronizer:
             if cholesterol_records:
                 for cholesterol in cholesterol_records:
                     existing_event = DataSynchronizer.get_existing_event(
-                        cholesterol['UserId'], cholesterol['id'], EventType.VitalAddCholesterol)
+                        cholesterol['UserId'], cholesterol['id'], EventType.VitalsAdd)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -171,9 +171,9 @@ class CholesterolEventsSynchronizer:
     @staticmethod
     def add_analytics_cholesterol_delete_event(cholesterol):
         try:
-            event_name = EventType.VitalDeleteCholesterol.value
+            event_name = EventType.VitalsDelete.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsCholesterol.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -195,13 +195,13 @@ class CholesterolEventsSynchronizer:
                 'TenantId': cholesterol['TenantId'],
                 'SessionId': None,
                 'ResourceId': cholesterol['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User deleted a blood cholesterol.",
                 'Attributes': str(attributes),
                 'Timestamp': cholesterol['DeletedAt'],
@@ -227,7 +227,7 @@ class CholesterolEventsSynchronizer:
             if cholesterol_records:
                 for cholesterol in cholesterol_records:
                     existing_event = DataSynchronizer.get_existing_event(
-                        cholesterol['UserId'], cholesterol['id'], EventType.VitalDeleteCholesterol)
+                        cholesterol['UserId'], cholesterol['id'], EventType.VitalsDelete)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:

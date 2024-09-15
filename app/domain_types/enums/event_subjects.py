@@ -46,4 +46,12 @@ class EventSubject(str, Enum):
     LabRecord = "lab-record"
     Step      = "step"
     Sleep     = "sleep"
+    Stand     = "stand",
     Nutrition = "nutrition"
+    Mood      = "mood"
+    Meditation = "meditation"
+    Goal      = "goal"
+    Exercise  = "exercise"
+    Water = "water"
+
+    PhysicalActivity = "physical-activity"

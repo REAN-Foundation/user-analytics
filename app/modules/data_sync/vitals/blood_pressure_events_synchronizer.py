@@ -50,9 +50,9 @@ class BloodPressureEventsSynchronizer:
     @staticmethod
     def add_analytics_blood_pressure_create_event(blood_pressure):
         try:
-            event_name = EventType.VitalAddBloodPressure.value
+            event_name = EventType.VitalsAdd.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBloodPressure.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -72,13 +72,13 @@ class BloodPressureEventsSynchronizer:
                 'TenantId': blood_pressure['TenantId'],
                 'SessionId': None,
                 'ResourceId': blood_pressure['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a blood pressure.",
                 'Attributes': str(attributes),
                 'Timestamp': blood_pressure['CreatedAt'],
@@ -104,7 +104,7 @@ class BloodPressureEventsSynchronizer:
             if blood_pressure_records:
                 for blood_pressure in blood_pressure_records:
                     existing_event = DataSynchronizer.get_existing_event(
-                        blood_pressure['UserId'], blood_pressure['id'], EventType.VitalAddBloodPressure)
+                        blood_pressure['UserId'], blood_pressure['id'], EventType.VitalsAdd)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -165,9 +165,9 @@ class BloodPressureEventsSynchronizer:
     @staticmethod
     def add_analytics_blood_pressure_delete_event(blood_pressure):
         try:
-            event_name = EventType.VitalDeleteBloodPressure.value
+            event_name = EventType.VitalsDelete.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBloodPressure.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -187,13 +187,13 @@ class BloodPressureEventsSynchronizer:
                 'TenantId': blood_pressure['TenantId'],
                 'SessionId': None,
                 'ResourceId': blood_pressure['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User deleted a blood pressure.",
                 'Attributes': str(attributes),
                 'Timestamp': blood_pressure['DeletedAt'],
@@ -219,7 +219,7 @@ class BloodPressureEventsSynchronizer:
             if deleted_blood_pressure_records:
                 for blood_pressure in deleted_blood_pressure_records:
                     existing_event = DataSynchronizer.get_existing_event(
-                        blood_pressure['UserId'], blood_pressure['id'], EventType.VitalDeleteBloodPressure)
+                        blood_pressure['UserId'], blood_pressure['id'], EventType.VitalsDelete)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:

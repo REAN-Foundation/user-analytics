@@ -49,9 +49,9 @@ class BodyTemperatureEventsSynchronizer:
     @staticmethod
     def add_analytics_body_temperature_create_event(body_temperature):
         try:
-            event_name = EventType.VitalAddTemperature.value
+            event_name = EventType.VitalsAdd.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBodyTemperature.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -70,13 +70,13 @@ class BodyTemperatureEventsSynchronizer:
                 'TenantId': body_temperature['TenantId'],
                 'SessionId': None,
                 'ResourceId': body_temperature['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a biometric body temperature.",
                 'Attributes': str(attributes),
                 'Timestamp': body_temperature['CreatedAt'],
@@ -102,7 +102,7 @@ class BodyTemperatureEventsSynchronizer:
             if body_temperatures:
                 for body_temperature in body_temperatures:
                     existing_event = DataSynchronizer.get_existing_event(
-                        body_temperature['UserId'], body_temperature['id'], EventType.VitalAddTemperature)
+                        body_temperature['UserId'], body_temperature['id'], EventType.VitalsAdd)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -162,9 +162,9 @@ class BodyTemperatureEventsSynchronizer:
     @staticmethod
     def add_analytics_body_temperature_delete_event(body_temperature):
         try:
-            event_name = EventType.VitalDeleteTemperature.value
+            event_name = EventType.VitalsDelete.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBodyTemperature.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -183,13 +183,13 @@ class BodyTemperatureEventsSynchronizer:
                 'TenantId': body_temperature['TenantId'],
                 'SessionId': None,
                 'ResourceId': body_temperature['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User deleted a biometric body temperature.",
                 'Attributes': str(attributes),
                 'Timestamp': body_temperature['DeletedAt'],
@@ -215,7 +215,7 @@ class BodyTemperatureEventsSynchronizer:
             if deleted_body_temperatures:
                 for body_temperature in deleted_body_temperatures:
                     existing_event = DataSynchronizer.get_existing_event(
-                        body_temperature['UserId'], body_temperature['id'], EventType.VitalDeleteTemperature)
+                        body_temperature['UserId'], body_temperature['id'], EventType.VitalsDelete)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:

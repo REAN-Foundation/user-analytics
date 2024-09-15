@@ -75,7 +75,7 @@ class StepEventsSynchronizer:
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a step.",
                 'Attributes': str(attributes),
                 'Timestamp': step['CreatedAt'],
