@@ -49,9 +49,9 @@ class OxygenSaturationEventsSynchronizer:
     @staticmethod
     def add_analytics_oxygen_saturation_create_event(oxygen_saturation):
         try:
-            event_name = EventType.VitalAddOxygenSaturation.value
+            event_name = EventType.VitalsAdd.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBloodOxygenSaturation.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -70,13 +70,13 @@ class OxygenSaturationEventsSynchronizer:
                 'TenantId': oxygen_saturation['TenantId'],
                 'SessionId': None,
                 'ResourceId': oxygen_saturation['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a blood oxygen saturation.",
                 'Attributes': str(attributes),
                 'Timestamp': oxygen_saturation['CreatedAt'],
@@ -102,7 +102,7 @@ class OxygenSaturationEventsSynchronizer:
             if oxygen_saturation_records:
                 for oxygen_saturation in oxygen_saturation_records:
                     existing_event = DataSynchronizer.get_existing_event(
-                        oxygen_saturation['UserId'], oxygen_saturation['id'], EventType.VitalAddOxygenSaturation)
+                        oxygen_saturation['UserId'], oxygen_saturation['id'], EventType.VitalsAdd)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:
@@ -162,9 +162,9 @@ class OxygenSaturationEventsSynchronizer:
     @staticmethod
     def add_analytics_oxygen_saturation_delete_event(oxygen_saturation):
         try:
-            event_name = EventType.VitalDeleteOxygenSaturation.value
+            event_name = EventType.VitalsDelete.value
             event_category = EventCategory.Vitals.value
-            event_subject = EventSubject.Vital.value
+            event_subject = EventSubject.VitalsBloodOxygenSaturation.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -183,13 +183,13 @@ class OxygenSaturationEventsSynchronizer:
                 'TenantId': oxygen_saturation['TenantId'],
                 'SessionId': None,
                 'ResourceId': oxygen_saturation['id'],
-                'ResourceType': "Biometric",
+                'ResourceType': "biometric",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User deleted a blood oxygen saturation.",
                 'Attributes': str(attributes),
                 'Timestamp': oxygen_saturation['DeletedAt'],
@@ -215,7 +215,7 @@ class OxygenSaturationEventsSynchronizer:
             if oxygen_saturation_records:
                 for oxygen_saturation in oxygen_saturation_records:
                     existing_event = DataSynchronizer.get_existing_event(
-                        oxygen_saturation['UserId'], oxygen_saturation['id'], EventType.VitalDeleteOxygenSaturation)
+                        oxygen_saturation['UserId'], oxygen_saturation['id'], EventType.VitalsDelete)
                     if existing_event is not None:
                         existing_event_count += 1
                     else:

@@ -27,6 +27,7 @@ class EventCategory(str, Enum):
     Mood            = "mood"
     Sleep           = "sleep"
     Steps           = "steps"
+    Stand           = "stand"
     Device          = "device"
     Survey          = "survey"
     Assessment      = "assessment"
@@ -38,6 +39,7 @@ class EventCategory(str, Enum):
     Settings        = "settings"
     Feedback        = "feedback"
     Support         = "support"
+    Meditation      = 'meditation'
 
 
 
