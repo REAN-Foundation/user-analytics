@@ -69,12 +69,9 @@ async def calculate(
 
         features = [
             EventCategory.Login,
-            # EventCategory.Profile,
             EventCategory.Medication,
             EventCategory.Symptoms,
             EventCategory.Vitals,
-            # EventCategory.LabRecords,
-            # EventCategory.Documents,
             EventCategory.Careplan,
         ]
         metrics_by_feature = []
@@ -214,7 +211,6 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
     except Exception as e:
         print(e)
 
-
 async def calculate_feature_engagement_metrics(
         feature: str, filters: AnalyticsFilters | None = None)-> FeatureEngagementMetrics|None:
     try:
@@ -328,6 +324,28 @@ async def get_analysis_code():
     existing_count += 1
     return f"{today}-{existing_count}"
 
+async def get_tenant_by_id(tenantId: UUID4 | None):
+    tenant = None
+    try:
+        session = get_db_session()
+        tenant = await session.query(Tennat).filter(Tenant.id == tenantId).first()
+    except Exception as e:
+        print(e)
+    finally:
+        session.close()
+    return tenant
+
+async def get_all_tenants():
+    tenants = []
+    try:
+        session = get_db_session()
+        tenants = await session.query(Tenant).filter(Tenant.DeletedAt != None).all()
+    except Exception as e:
+        print(e)
+    finally:
+        session.close()
+    return tenants
+
 ###############################################################################
 
 async def save_analytics(analysis_code: str, metrics: EngagementMetrics)-> dict:
@@ -378,3 +396,42 @@ async def get_analysis_by_code(analysis_code: str)-> dict:
         return analysis.__dict__
     except Exception as e:
         print(e)
+
+###############################################################################
+
+async def generate_daily_analytics():
+    try:
+        session = get_db_session()
+
+        tenants = []
+        tenants_ = get_all_tenants()
+        if len(tenants_) == 1 and tenants_[0].TenantName == 'default':
+            tenants.append({
+                TenantId: None,
+                TenantCode: None,
+            })
+        else:
+            for tenant in tenants_:
+                tenants.append({
+                    TenantId: tenant.id,
+                    TenantCode: tenant.TenantCode,
+                })
+        
+        for tenant in tenants:
+            filters = AnalyticsFilters(
+                TenantId = tenant['TenantId'],
+                TenantName = tenant['TenantCode'],
+                RoleId = get_role_id(),
+                StartDate = date.today() - timedelta(days=PAST_DAYS_TO_CONSIDER),
+                EndDate = date.today(),
+                Source = None
+            )
+            analysis_code = await get_analysis_code()
+            if tenant.TenantCode is not None:
+                analysis_code = analysis_code + '_' + tenant.TenantCode
+            metrics = await calculate(analysis_code, filters)
+
+    except Exception as e:
+        print(e)
+    finally:
+        session.close()

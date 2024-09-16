@@ -62,7 +62,7 @@ async def calculate_feature_engagement_metrics(feature: str, filters: AnalyticsF
     return resp
 ###############################################################################
 
-@router.post("/metrics",
+@router.post("/calculate-metrics",
             status_code=status.HTTP_200_OK,
             response_model=ResponseModel[CalculateMetricsResponse|None])
 async def calculate_metrics(
@@ -72,6 +72,10 @@ async def calculate_metrics(
     analysis_code = get_analysis_code_()
     base_url = os.getenv("BASE_URL")
     filters_updated = check_filter_params(filters)
+    if filters_updated.TenantId is not None:
+        tenant = await 
+        analysis_code = analysis_code + '_' + tenant.TenantCode
+    metrics = await calculate(analysis_code, filters)
 
     background_tasks.add_task(calculate_, analysis_code, filters_updated)
 
@@ -111,9 +115,9 @@ def download_user_engagement_metrics(analysis_code: str, file_format: str):
 ###############################################################################
 
 # This end point is only for testing the excel report generation code 
-@router.get("/excel-test-report",
-            status_code=status.HTTP_200_OK)
-async def get_excel_data():
-    await generate_user_engagement_report_excel()
-    message = "Excel sheet created successfully."
-    return message
+# @router.get("/excel-test-report",
+#             status_code=status.HTTP_200_OK)
+# async def get_excel_data():
+#     await generate_user_engagement_report_excel()
+#     message = "Excel sheet created successfully."
+#     return message
