@@ -69,7 +69,7 @@ async def calculate_metrics(
         background_tasks: BackgroundTasks,
         filters: AnalyticsFilters):
 
-    analysis_code = get_analysis_code_()
+    analysis_code = await get_analysis_code_()
     base_url = os.getenv("BASE_URL")
     filters_updated = check_filter_params(filters)
 
@@ -77,8 +77,6 @@ async def calculate_metrics(
         tenant = await get_tenant_by_id(filters_updated.TenantId)
         if tenant is not None:
             analysis_code = analysis_code + '_' + tenant.TenantCode
-
-    metrics = await calculate_(analysis_code, filters)
 
     background_tasks.add_task(calculate_, analysis_code, filters_updated)
 

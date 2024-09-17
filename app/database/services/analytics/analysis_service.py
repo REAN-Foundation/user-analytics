@@ -71,7 +71,7 @@ async def calculate(
         generic_metrics = await calculate_generic_engagement_metrics(filters)
 
         features = [
-            EventCategory.Login,
+            EventCategory.LoginSession,
             EventCategory.Medication,
             EventCategory.Symptoms,
             EventCategory.Vitals,
