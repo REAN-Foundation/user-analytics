@@ -1,27 +1,31 @@
 
-import asyncio
 import os
-from typing import List
 
-import pandas as pd
-from app.database.services.analytics.reports.report_utilities import (
-    plot_bar_chart,
-    plot_pie_chart,
-    reindex_dataframe_to_all_dates
-)
+from app.database.services.analytics.common import get_analytics_template_path
 from app.domain_types.schemas.analytics import (
-    BasicAnalyticsStatistics,
-    EngagementMetrics,
-    FeatureEngagementMetrics,
-    GenericEngagementMetrics
+    EngagementMetrics
 )
 
 ###############################################################################
 
 async def generate_report_markdown(
-        report_folder_path: str,
+        markdown_file_path: str,
         metrics: EngagementMetrics) -> bool:
 
-    pass
+    # Generate the report
+    template_path_ = get_analytics_template_path()
+    template_path = os.path.join(template_path_, "analytics-report-template.md")
+    template_str = ""
+    with open(template_path, "r") as file:
+        template_str = file.read()
+
+    # Replace the placeholders in the template
+    template_str = template_str.replace("{{report_title}}", metrics.title)
+
+    # Save the report
+    with open(markdown_file_path, "w") as file:
+        file.write(template_str)
+
+    return True
 
 ###############################################################################

@@ -65,6 +65,10 @@ def get_report_folder_path():
         os.makedirs(reports_path, exist_ok=True)
     return reports_path
 
+def get_analytics_template_path():
+    cwd = os.getcwd()
+    template_path = os.path.join(cwd, 'docs', 'analytics', 'templates')
+    return template_path
 
 ###############################################################################
 
