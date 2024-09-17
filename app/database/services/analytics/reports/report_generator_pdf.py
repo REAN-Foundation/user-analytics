@@ -20,7 +20,7 @@ async def generate_user_engagement_report_pdf(
         if not os.path.exists(report_folder_path):
             os.makedirs(report_folder_path, exist_ok=True)
 
-        images_generated = await generate_report_images(report_folder_path, metrics)
+        images_generated = generate_report_images(report_folder_path, metrics)
         if not images_generated:
             return None
 

@@ -11,7 +11,8 @@ def save_figure(
         figure: plt.Figure,
         name: str
     ):
-    figure.savefig(f'./basic_statistics/{name}.png', dpi=300, bbox_inches='tight')
+    image = f'{name}.png'
+    figure.savefig(image, dpi=300, bbox_inches='tight')
     plt.close(figure)
 
 def plot_bar_chart(
