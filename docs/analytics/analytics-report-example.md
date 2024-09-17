@@ -49,7 +49,12 @@ This report provides an analysis of general usage statistics, system-wide and fe
 The analysis is performed considering the following contraints.
 
 
-{{report_details_table}}
+| Filter       | Value                      | Description                       |
+|--------------|----------------------------|-----------------------------------|
+| Tenant Code  | unspecified                | Unique identifier for the tenant. |
+| Tenant Name  | American Heart Association | Name of the tenant/organization   |
+| Start Date   | 2023-01-01                 | Start date of the analysis period.|
+| End Date     | 2023-01-31                 | End date of the analysis period.  |
 
 ---
 
@@ -59,7 +64,12 @@ This section provides an overview of the basic analytics related to the tenant, 
 
 ### Overview
 
-{{basic_statistics_overview_table}}
+| Name                  | Values | Description                                  |
+|-----------------------|--------|----------------------------------------------|
+| Total Users           | 5000   | Overall count of users associated with the tenant. |
+| Total Patients        | 3000   | Total number of patients registered within the system. |
+| Total Active Patients | 2000   | Total number of active (Not-deleted) patients|
+
 
   **Registration / Deregistration History**
   Trends of how many users registered or deregistered from the system on a given day, in a given week or a month.

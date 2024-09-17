@@ -54,7 +54,7 @@ class LabRecordEventsSynchronizer:
         try:
             event_name = EventType.LabRecordAdd.value
             event_category = EventCategory.LabRecords.value
-            event_subject = EventSubject.LabRecord.value
+            event_subject = lab_record['TypeName']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -173,7 +173,7 @@ class LabRecordEventsSynchronizer:
         try:
             event_name = EventType.LabRecordDelete.value
             event_category = EventCategory.LabRecords.value
-            event_subject = EventSubject.LabRecord.value
+            event_subject = lab_record['TypeName']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")

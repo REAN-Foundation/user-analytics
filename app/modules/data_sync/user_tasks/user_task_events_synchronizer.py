@@ -18,7 +18,7 @@ class UserTaskEventsSynchronizer:
             selection_condition = f"AND userTask.StartedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
-            SELECT 
+            SELECT
                 userTask.id,
                 userTask.UserId,
                 userTask.DisplayId,
@@ -65,7 +65,7 @@ class UserTaskEventsSynchronizer:
         try:
             event_name = EventType.UserTaskStart.value
             event_category = EventCategory.UserTask.value
-            event_subject = EventSubject.UserTask.value
+            event_subject = user_task['Category']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -155,7 +155,7 @@ class UserTaskEventsSynchronizer:
             selection_condition = f"AND userTask.FinishedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
-            SELECT 
+            SELECT
                 userTask.id,
                 userTask.UserId,
                 userTask.DisplayId,
@@ -202,7 +202,7 @@ class UserTaskEventsSynchronizer:
         try:
             event_name = EventType.UserTaskComplete.value
             event_category = EventCategory.UserTask.value
-            event_subject = EventSubject.UserTask.value
+            event_subject = user_task['Category']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -292,7 +292,7 @@ class UserTaskEventsSynchronizer:
             selection_condition = f"AND userTask.CancelledAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
-            SELECT 
+            SELECT
                 userTask.id,
                 userTask.UserId,
                 userTask.DisplayId,
@@ -339,7 +339,7 @@ class UserTaskEventsSynchronizer:
         try:
             event_name = EventType.UserTaskCancel.value
             event_category = EventCategory.UserTask.value
-            event_subject = EventSubject.UserTask.value
+            event_subject = user_task['Category']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")

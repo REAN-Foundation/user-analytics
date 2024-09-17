@@ -58,7 +58,7 @@ class SymptomEventsSynchronizer:
         try:
             event_name = EventType.SymptomAdd.value
             event_category = EventCategory.Symptoms.value
-            event_subject = EventSubject.Symptom.value
+            event_subject = symptom['Symptom']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -184,7 +184,7 @@ class SymptomEventsSynchronizer:
         try:
             event_name = EventType.SymptomUpdate.value
             event_category = EventCategory.Symptoms.value
-            event_subject = EventSubject.Symptom.value
+            event_subject = symptom['Symptom']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -310,7 +310,7 @@ class SymptomEventsSynchronizer:
         try:
             event_name = EventType.SymptomDelete.value
             event_category = EventCategory.Symptoms.value
-            event_subject = EventSubject.Symptom.value
+            event_subject = symptom['Symptom']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")

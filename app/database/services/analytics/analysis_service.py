@@ -76,6 +76,7 @@ async def calculate(
             EventCategory.Symptoms,
             EventCategory.Vitals,
             EventCategory.Careplan,
+            EventCategory.UserTask,
         ]
         metrics_by_feature = []
         for feature in features:

@@ -88,16 +88,16 @@ async def calculate_metrics(
         StartDate    = str(filters_updated.StartDate),
         EndDate      = str(filters_updated.EndDate),
         AnalysisCode = analysis_code,
-        JsonURL      = f"{base_url}/api/analytics/download/{analysis_code}/formats/json",
-        ExcelURL     = f"{base_url}/api/analytics/download/{analysis_code}/formats/excel",
-        PdfURL       = f"{base_url}/api/analytics/download/{analysis_code}/formats/pdf",
-        URL          = f"{base_url}/api/analytics/metrics/{analysis_code}"
+        JsonURL      = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/json",
+        ExcelURL     = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/excel",
+        PdfURL       = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/pdf",
+        URL          = f"{base_url}/api/v1/analytics/metrics/{analysis_code}"
     )
     message = "Engagement metrics analysis started successfully. It may take a while to complete. You can access the results through the urls shared."
     resp = ResponseModel[CalculateMetricsResponse](Message=message, Data=res_model)
     return resp
 
-@router.get("/metrics/{analysis_code}",
+@router.get("/metrics/{analysis_code}", # 2024-09-17-1
             status_code=status.HTTP_200_OK,
             response_model=ResponseModel[EngagementMetrics|None])
 async def get_metrics(analysis_code: str):
