@@ -1,3 +1,4 @@
+import json
 import os
 from fastapi import APIRouter, status, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
@@ -99,7 +100,10 @@ async def calculate_metrics(
             status_code=status.HTTP_200_OK,
             response_model=ResponseModel[EngagementMetrics|None])
 async def get_metrics(analysis_code: str):
-    metrics = await get_metrics_(analysis_code)
+    analysis = await get_metrics_(analysis_code)
+    data_str = analysis.Data
+    parsed_data = json.loads(data_str)
+    metrics = EngagementMetrics(**parsed_data)
     message = "Engagement metrics retrieved successfully."
     resp = ResponseModel[EngagementMetrics](Message=message, Data=metrics)
     return resp

@@ -403,7 +403,8 @@ async def get_analysis_by_code(analysis_code: str)-> dict:
         if analysis is None:
             raise Exception(f"Analysis with code {analysis_code} not found")
         session.close()
-        return analysis.__dict__
+        # return analysis.__dict__
+        return analysis
     except Exception as e:
         print(e)
 
