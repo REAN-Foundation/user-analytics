@@ -1,6 +1,7 @@
 from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.assessments.assessment_events_synchronizer import AssessmentEventsSynchronizer
 from app.modules.data_sync.careplans.careplan_events_synchronizer import CareplanEventsSynchronizer
+from app.modules.data_sync.exercises.exercise_events_synchronizer import ExerciseEventsSynchronizer
 from app.modules.data_sync.goals.goal_events_synchronizer import GoalEventsSynchronizer
 from app.modules.data_sync.lab_records.lab_record_events_synchonizer import LabRecordEventsSynchronizer
 from app.modules.data_sync.meditations.meditation_events_synchronizer import MeditationEventsSynchronizer
@@ -104,7 +105,7 @@ def sync_biometric_events_(filters: DataSyncSearchFilter):
 def sync_assessment_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting assessment events synchronization...")
-        AssessmentEventsSynchronizer.sync_assessment_create_events(filters)
+        # AssessmentEventsSynchronizer.sync_assessment_create_events(filters)
         AssessmentEventsSynchronizer.sync_assessment_delete_events(filters)
         AssessmentEventsSynchronizer.sync_assessment_start_events(filters)
         AssessmentEventsSynchronizer.sync_assessment_complete_events(filters)
