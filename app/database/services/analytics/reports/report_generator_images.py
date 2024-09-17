@@ -24,8 +24,8 @@ async def generate_report_images(
 
     results = await asyncio.gather(
         generate_basic_statistics_images(report_folder_path, user_engagement_metrics.BasicStatistics),
-        generate_generic_engagement_images(report_folder_path, user_engagement_metrics.GenericEngagement),
-        generate_feature_engagement_images(report_folder_path, user_engagement_metrics.FeatureEngagement)
+        generate_generic_engagement_images(report_folder_path, user_engagement_metrics.GenericMetrics),
+        generate_feature_engagement_images(report_folder_path, user_engagement_metrics.FeatureMetrics)
     )
 
     return results

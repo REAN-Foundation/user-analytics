@@ -571,6 +571,8 @@ async def get_feature_average_usage_duration_minutes(feature: str, filters: Anal
         query = query.replace("__CHECKS__", checks_str)
 
         result = connector.execute_read_query(query)
+        if len(result) == 0:
+            return 0
         row = result[0]
         average_session_length = float(row['avg_duration_minutes'])
         return average_session_length

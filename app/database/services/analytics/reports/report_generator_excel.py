@@ -108,7 +108,6 @@ def get_report_folder_path() -> str:
 def read_json_file(file_path: str) -> dict:
     with open(file_path, 'r') as file:
         data = json.load(file)
-        print("data",data)
     return data
 
 # This fuction is for adding the missing month and make count 0

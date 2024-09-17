@@ -67,8 +67,10 @@ async def calculate(
 
     try:
         basic_stats = await calculate_basic_stats(filters)
+        print("Calculated basic stats")
 
         generic_metrics = await calculate_generic_engagement_metrics(filters)
+        print("Calculated generic metrics")
 
         features = [
             EventCategory.LoginSession,
@@ -81,11 +83,12 @@ async def calculate(
         metrics_by_feature = []
         for feature in features:
             engament = await calculate_feature_engagement_metrics(feature, filters)
+            print(f"Calculated metrics for {feature}")
             metrics_by_feature.append(engament)
 
         metrics = EngagementMetrics(
             TenantId        = filters.TenantId,
-            TenantName      = filters.TenantName,
+            TenantName      = filters.TenantName if filters.TenantName != None else 'Unspecified',
             StartDate       = str(filters.StartDate) if filters.StartDate else 'Unspecified',
             EndDate         = str(filters.EndDate) if filters.EndDate else 'Unspecified',
             BasicStatistics = basic_stats,
@@ -94,7 +97,10 @@ async def calculate(
         )
 
         saved_analytics = await save_analytics(analysis_code, metrics)
+        print(f"Saved analytics -> {analysis_code}")
+
         await generate_reports(analysis_code, metrics)
+        print(f"Generated reports -> {analysis_code}")
 
         return metrics
 
@@ -354,7 +360,7 @@ async def get_all_tenants():
 
 async def save_analytics(analysis_code: str, metrics: EngagementMetrics)-> dict:
 
-    print(f"Saving analytics -> {analysis_code} -> {metrics}")
+    print(f"Saving analytics -> {analysis_code}")
     session = get_db_session()
     base_url = os.getenv("BASE_URL")
 
@@ -367,10 +373,10 @@ async def save_analytics(analysis_code: str, metrics: EngagementMetrics)-> dict:
             Data       = str(metrics.model_dump_json()),
             StartDate  = metrics.StartDate,
             EndDate    = metrics.EndDate,
-            JsonURL    = f"{base_url}/api/analytics/download/{analysis_code}/formats/json",
-            ExcelURL   = f"{base_url}/api/analytics/download/{analysis_code}/formats/excel",
-            PdfURL     = f"{base_url}/api/analytics/download/{analysis_code}/formats/pdf",
-            URL        = f"{base_url}/api/analytics/metrics/{analysis_code}",
+            JsonUrl    = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/json",
+            ExcelUrl   = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/excel",
+            PdfUrl     = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/pdf",
+            Url        = f"{base_url}/api/v1/analytics/metrics/{analysis_code}",
             CreatedAt  = date.today(),
             UpdatedAt  = date.today()
         )
