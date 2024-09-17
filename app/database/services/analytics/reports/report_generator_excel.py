@@ -133,8 +133,55 @@ def reindex_dataframe_to_all_months(df, date_col, fill_col, fill_value=0, date_f
 
     return df_reindexed
 
+def reindex_dataframe_to_all_dates(df, date_col, fill_col, fill_value=0, date_format='%Y-%m-%d'):
+
+    # Convert the date column to datetime format
+    df[date_col] = pd.to_datetime(df[date_col], format=date_format)
+    
+    # Get the range of dates from the minimum to maximum date
+    start_date = df[date_col].min()
+    end_date = df[date_col].max()
+    all_dates = pd.date_range(start=start_date, end=end_date, freq='D')  # 'D' is used for daily frequency
+    
+    # Create a DataFrame with all dates
+    all_dates_df = pd.DataFrame({date_col: all_dates})
+    
+    # Merge and fill missing values with the specified fill value
+    df_reindexed = pd.merge(all_dates_df, df, on=date_col, how='left').fillna({fill_col: fill_value})
+
+    # Format the date column to 'YYYY-MM-DD'
+    df_reindexed[date_col] = df_reindexed[date_col].dt.strftime('%Y-%m-%d')
+
+    return df_reindexed
+
+def reindex_dataframe_to_all_weeks(df, start_date_col, end_date_col, fill_col, fill_value=0, date_format='%Y-%m-%d'):
+    # Convert start_date and end_date columns to datetime
+    df[start_date_col] = pd.to_datetime(df[start_date_col], format=date_format)
+    df[end_date_col] = pd.to_datetime(df[end_date_col], format=date_format)
+    
+    # Get the range of weeks from the minimum to maximum start date
+    min_date = df[start_date_col].min()
+    max_date = df[start_date_col].max()
+    all_weeks = pd.date_range(start=min_date, end=max_date, freq='W-MON')  # Weekly frequency starting on Mondays
+    
+    # Create a DataFrame with all weeks (start dates)
+    all_weeks_df = pd.DataFrame({start_date_col: all_weeks})
+    
+    # Merge and fill missing values with the specified fill value
+    df_reindexed = pd.merge(all_weeks_df, df, on=start_date_col, how='left').fillna({fill_col: fill_value})
+    
+    # Format the start_date and end_date columns to 'YYYY-MM-DD'
+    df_reindexed[start_date_col] = df_reindexed[start_date_col].dt.strftime('%Y-%m-%d')
+    df_reindexed[end_date_col] = df_reindexed[end_date_col].dt.strftime('%Y-%m-%d')
+    
+    return df_reindexed
+
 def write_data_to_excel(df, sheet_name: str, start_row: int, start_col: int, writer, title: str, rename_columns=None):
+    
     title_format = writer.book.add_format({'bold': True, 'font_size': 14, 'align': 'left', 'valign': 'vcenter'})
+    #     # Left-aligned format with a border
+    data_format = writer.book.add_format({'align': 'left'})
+    
     worksheet = writer.sheets[sheet_name]
     
     # Write the title before data
@@ -149,7 +196,7 @@ def write_data_to_excel(df, sheet_name: str, start_row: int, start_col: int, wri
     # Dynamically adjust column width without padding
     for i, col in enumerate(df.columns):
         max_len = max(df[col].astype(str).map(len).max(), len(col))  # No additional padding
-        worksheet.set_column(start_col + i, start_col + i, max_len)
+        worksheet.set_column(start_col + i, start_col + i, max_len, data_format)
     
     return df
 
@@ -170,7 +217,7 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 async def generate_user_engagement_report_excel() -> str:
     try:
         # Example analysis code
-        analysis_code = '28'
+        analysis_code = '6'
 
         # Load JSON data from the file for basic analytics
         basic_analysis_data_path = 'test_data/basic_statistic.json'
@@ -225,6 +272,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
     ]
     })
   
+    df_stats['Value'] = df_stats['Value'].fillna("Unspecified")
     sheet_name = 'Basic Analytics Statistics'
     df_stats.to_excel(writer, sheet_name=sheet_name, index=False, startrow=2, startcol=1)
     workbook = writer.book
@@ -235,17 +283,13 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
     field_bold_format = workbook.add_format({'bold': True, 'align': 'left'})  # Format for making Property column bold
     value_format = workbook.add_format({'align': 'left'})
 
+    # Add title
+    worksheet.merge_range('B1:C1', 'Basic Statistics', title_format)
+    
     # Apply bold format to the "Property" column and value format to the "Value" column
     for row_num in range(len(df_stats)):
         worksheet.write(row_num + 2, 1, df_stats.at[row_num, 'Property'], field_bold_format)  # Make Property column bold
         worksheet.write(row_num + 2, 2, df_stats.at[row_num, 'Value'], value_format)
-
-    # Add title
-    worksheet.merge_range('B1:C1', 'Basic Statistics', title_format)
-    
-    # # Set column widths for better readability
-    worksheet.set_column('B:B', 20) 
-    worksheet.set_column('C:C', 15) 
 
     if basic_analytics.PatientRegistrationHistory:
         
@@ -274,6 +318,10 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         chart.set_y_axis({'name': 'User Count'})
         
         worksheet.insert_chart('E17', chart)  
+        
+        # # Set column widths for better readability
+        worksheet.set_column('B:B', 20) 
+        worksheet.set_column('C:C', 15) 
         
     if basic_analytics.PatientDeregistrationHistory:
         df_dereg_history_ = pd.DataFrame(basic_analytics.PatientDeregistrationHistory)
@@ -450,6 +498,11 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
         # Write Daily Active Users data to Excel
         if generic_engagement_metrics.DailyActiveUsers:
             df_daily_active_users = pd.DataFrame(generic_engagement_metrics.DailyActiveUsers)
+            df_daily_active_users = reindex_dataframe_to_all_dates(
+                df_daily_active_users, 
+                date_col='activity_date',
+                fill_col= 'daily_active_users',
+            )
             df_daily_active_users = write_data_to_excel(
                 df_daily_active_users, 'Generic Engagement', start_row, col_daily, writer,
                 'Daily Active Users',
@@ -461,6 +514,12 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
         # # Write Weekly Active Users data to Excel
         if generic_engagement_metrics.WeeklyActiveUsers:
             df_weekly_active_users = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
+            # df_weekly_active_users = reindex_dataframe_to_all_weeks(
+            #     df_weekly_active_users, 
+            #     start_date_col='week_start_date',
+            #     end_date_col='week_end_date',
+            #     fill_col= 'weekly_active_users',
+            # )
             df_weekly_active_users = write_data_to_excel(
                 df_weekly_active_users, 'Generic Engagement', start_row, col_weekly, writer,'Weekly Active Users',
                 {'week_start_date': 'Week Start Date', 'week_end_date': 'Week End Date', 'weekly_active_users': 'Weekly Active Users'}
