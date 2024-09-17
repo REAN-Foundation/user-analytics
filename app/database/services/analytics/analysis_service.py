@@ -2,8 +2,11 @@ from datetime import date, timedelta
 import asyncio
 import os
 
+from pydantic import UUID4
+
 from app.database.database_accessor import get_db_session
 from app.database.models.analysis import Analysis
+from app.database.models.tenant import Tenant
 from app.database.services.analytics.basic_statistics import (
     get_all_registered_patients,
     get_all_registered_users,
@@ -328,7 +331,7 @@ async def get_tenant_by_id(tenantId: UUID4 | None):
     tenant = None
     try:
         session = get_db_session()
-        tenant = await session.query(Tennat).filter(Tenant.id == tenantId).first()
+        tenant = await session.query(Tenant).filter(Tenant.id == tenantId).first()
     except Exception as e:
         print(e)
     finally:
@@ -407,16 +410,16 @@ async def generate_daily_analytics():
         tenants_ = get_all_tenants()
         if len(tenants_) == 1 and tenants_[0].TenantName == 'default':
             tenants.append({
-                TenantId: None,
-                TenantCode: None,
+                "TenantId": None,
+                "TenantCode": None,
             })
         else:
             for tenant in tenants_:
                 tenants.append({
-                    TenantId: tenant.id,
-                    TenantCode: tenant.TenantCode,
+                    "TenantId": tenant['id'],
+                    "TenantCode": tenant['TenantCode'],
                 })
-        
+
         for tenant in tenants:
             filters = AnalyticsFilters(
                 TenantId = tenant['TenantId'],

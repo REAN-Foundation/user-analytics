@@ -1,0 +1,16 @@
+meta {
+  name: sync-lab-records
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/lab-records
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

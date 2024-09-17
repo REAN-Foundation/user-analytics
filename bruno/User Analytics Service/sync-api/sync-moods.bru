@@ -1,0 +1,16 @@
+meta {
+  name: sync-moods
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/moods
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

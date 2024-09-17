@@ -6,7 +6,7 @@ import os
 from app.database.services.analytics.common import get_report_folder_path
 from app.domain_types.schemas.analytics import EngagementMetrics
 from app.database.services.analytics.reports.report_generator_images import generate_report_images
-from app.database.services.analytics.reports.report_generator_markdown import generate_user_engagement_report_markdown
+from app.database.services.analytics.reports.report_generator_markdown import generate_report_markdown
 
 ###############################################################################
 
@@ -26,7 +26,7 @@ async def generate_user_engagement_report_pdf(
             return None
 
         markdown_file_path = os.path.join(report_folder_path, f"user_engagement_report_{analysis_code}.md")
-        markdown_generated = await generate_user_engagement_report_markdown(metrics)
+        markdown_generated = await generate_report_markdown(metrics)
         if not markdown_generated:
             return None
 

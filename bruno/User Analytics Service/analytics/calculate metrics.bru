@@ -1,0 +1,16 @@
+meta {
+  name: calculate metrics
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{BASE_URL}}/analytics/calculate-metrics
+  body: none
+  auth: none
+}
+
+headers {
+  content-type: application/json
+  x-api-key: {{API_KEY}}
+}

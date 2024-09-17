@@ -11,7 +11,7 @@ from app.api.analytics.analytics_handler import (
     get_analysis_code_
 )
 from app.common.utils import generate_random_code
-from app.database.services.analytics.analysis_service import check_filter_params
+from app.database.services.analytics.analysis_service import check_filter_params, get_tenant_by_id
 from app.database.services.analytics.reports.report_generator_excel import generate_user_engagement_report_excel
 from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.analytics import (
@@ -72,10 +72,13 @@ async def calculate_metrics(
     analysis_code = get_analysis_code_()
     base_url = os.getenv("BASE_URL")
     filters_updated = check_filter_params(filters)
+
     if filters_updated.TenantId is not None:
-        tenant = await 
-        analysis_code = analysis_code + '_' + tenant.TenantCode
-    metrics = await calculate(analysis_code, filters)
+        tenant = await get_tenant_by_id(filters_updated.TenantId)
+        if tenant is not None:
+            analysis_code = analysis_code + '_' + tenant.TenantCode
+
+    metrics = await calculate_(analysis_code, filters)
 
     background_tasks.add_task(calculate_, analysis_code, filters_updated)
 
@@ -114,7 +117,7 @@ def download_user_engagement_metrics(analysis_code: str, file_format: str):
 
 ###############################################################################
 
-# This end point is only for testing the excel report generation code 
+# This end point is only for testing the excel report generation code
 # @router.get("/excel-test-report",
 #             status_code=status.HTTP_200_OK)
 # async def get_excel_data():
