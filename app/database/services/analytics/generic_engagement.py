@@ -1,4 +1,4 @@
-from app.database.services.analytics.common import add_common_checks
+from app.database.services.analytics.common import add_common_checks, find_matching_first_chars
 from app.domain_types.enums.event_categories import EventCategory
 from app.domain_types.enums.event_types import EventType
 from app.domain_types.schemas.analytics import AnalyticsFilters
@@ -236,7 +236,9 @@ async def get_patients_login_frequency(filters: AnalyticsFilters):
 
         connector = get_analytics_db_connector()
 
-        event_name = EventType.UserLogin.value
+        # event_name = find_matching_first_chars(
+        #         EventType.UserLoginWithPassword.value,
+        #         EventType.UserLoginWithOtp.value)
 
         query = f"""
                 SELECT
@@ -245,7 +247,7 @@ async def get_patients_login_frequency(filters: AnalyticsFilters):
                 FROM events e
                 JOIN users AS user ON e.UserId = user.id
                 WHERE
-                    e.EventName = '{event_name}'
+                    e.EventName LIKE 'user-login%'
                     AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__
                 GROUP BY month

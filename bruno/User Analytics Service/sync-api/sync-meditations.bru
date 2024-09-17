@@ -1,0 +1,16 @@
+meta {
+  name: sync-meditations
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/meditations
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

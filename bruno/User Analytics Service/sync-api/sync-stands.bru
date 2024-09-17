@@ -1,0 +1,16 @@
+meta {
+  name: sync-stands
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/stands
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

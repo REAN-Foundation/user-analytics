@@ -1,6 +1,7 @@
 from app.domain_types.enums.event_categories import EventCategory
 from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 import mysql.connector
@@ -12,8 +13,9 @@ class MedicationEventsSynchronizer:
     #region Create Medication events
 
     @staticmethod
-    def get_reancare_medication_create_events():
+    def get_reancare_medication_create_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND medication.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -40,6 +42,7 @@ class MedicationEventsSynchronizer:
             JOIN users as user ON medication.PatientUserId = user.id
             WHERE
                 user.IsTestUser = 0
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -77,13 +80,13 @@ class MedicationEventsSynchronizer:
                 'TenantId': medication['TenantId'],
                 'SessionId': None,
                 'ResourceId': medication['id'],
-                'ResourceType': "Medication",
+                'ResourceType': "medication",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User added a medication.",
                 'Attributes': str(attributes),
                 'Timestamp': medication['CreatedAt'],
@@ -101,12 +104,12 @@ class MedicationEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_medication_create_events():
+    def sync_medication_create_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            meds = MedicationEventsSynchronizer.get_reancare_medication_create_events()
+            meds = MedicationEventsSynchronizer.get_reancare_medication_create_events(filters)
             if meds:
                 for med in meds:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -132,8 +135,9 @@ class MedicationEventsSynchronizer:
     #region Delete Medication events
 
     @staticmethod
-    def get_reancare_medication_delete_events():
+    def get_reancare_medication_delete_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND medication.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -162,6 +166,7 @@ class MedicationEventsSynchronizer:
                 user.IsTestUser = 0
                 AND
                 medication.DeletedAt IS NOT NULL
+                {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows
@@ -198,13 +203,13 @@ class MedicationEventsSynchronizer:
                 'TenantId': medication['TenantId'],
                 'SessionId': None,
                 'ResourceId': medication['id'],
-                'ResourceType': "Medication",
+                'ResourceType': "medication",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User deleted a medication.",
                 'Attributes': str(attributes),
                 'Timestamp': medication['DeletedAt'],
@@ -222,12 +227,12 @@ class MedicationEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_medication_delete_events():
+    def sync_medication_delete_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            deleted_meds = MedicationEventsSynchronizer.get_reancare_medication_delete_events()
+            deleted_meds = MedicationEventsSynchronizer.get_reancare_medication_delete_events(filters)
             if deleted_meds:
                 for med in deleted_meds:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -253,8 +258,9 @@ class MedicationEventsSynchronizer:
     #region Medication Schedule Taken events
 
     @staticmethod
-    def get_reancare_medication_schedule_taken_events():
+    def get_reancare_medication_schedule_taken_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND consumption.TakenAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -283,6 +289,7 @@ class MedicationEventsSynchronizer:
                 consumption.IsTaken = 1
                 AND
                 consumption.TakenAt IS NOT NULL
+                {selection_condition}
             ORDER BY consumption.TakenAt ASC
             LIMIT 10000
             OFFSET 0
@@ -317,13 +324,13 @@ class MedicationEventsSynchronizer:
                 'TenantId': schedule['TenantId'],
                 'SessionId': None,
                 'ResourceId': schedule['id'],
-                'ResourceType': "Medication-Schedule",
+                'ResourceType': "medication-schedule",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User took a medication.",
                 'Attributes': str(attributes),
                 'Timestamp': schedule['TakenAt'],
@@ -341,12 +348,12 @@ class MedicationEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_medication_schedule_taken_events():
+    def sync_medication_schedule_taken_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            taken_meds = MedicationEventsSynchronizer.get_reancare_medication_schedule_taken_events()
+            taken_meds = MedicationEventsSynchronizer.get_reancare_medication_schedule_taken_events(filters)
             if taken_meds:
                 for med in taken_meds:
                     existing_event = DataSynchronizer.get_existing_event(
@@ -372,8 +379,9 @@ class MedicationEventsSynchronizer:
     #region Medication Schedule Missed events
 
     @staticmethod
-    def get_reancare_medication_schedule_missed_events():
+    def get_reancare_medication_schedule_missed_events(filters: DataSyncSearchFilter):
         try:
+            selection_condition = f"AND consumption.UpdatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -405,6 +413,7 @@ class MedicationEventsSynchronizer:
                 consumption.TakenAt IS NULL
                 AND
                 consumption.IsMissed = 1
+                {selection_condition}
             ORDER BY consumption.CreatedAt ASC
             LIMIT 10000
             OFFSET 0
@@ -440,13 +449,13 @@ class MedicationEventsSynchronizer:
                 'TenantId': schedule['TenantId'],
                 'SessionId': None,
                 'ResourceId': schedule['id'],
-                'ResourceType': "Medication-Schedule",
+                'ResourceType': "medication-schedule",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
-                'ActionType': "User-Action",
+                'ActionType': "user-action",
                 'ActionStatement': "User missed a medication.",
                 'Attributes': str(attributes),
                 'Timestamp': schedule['UpdatedAt'],
@@ -464,12 +473,12 @@ class MedicationEventsSynchronizer:
             return None
 
     @staticmethod
-    def sync_medication_schedule_missed_events():
+    def sync_medication_schedule_missed_events(filters: DataSyncSearchFilter):
         try:
             existing_event_count = 0
             synched_event_count = 0
             event_not_synched = []
-            missed_meds = MedicationEventsSynchronizer.get_reancare_medication_schedule_missed_events()
+            missed_meds = MedicationEventsSynchronizer.get_reancare_medication_schedule_missed_events(filters)
             if missed_meds:
                 for med in missed_meds:
                     existing_event = DataSynchronizer.get_existing_event(
