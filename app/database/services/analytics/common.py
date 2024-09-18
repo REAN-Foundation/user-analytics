@@ -65,5 +65,23 @@ def get_report_folder_path():
         os.makedirs(reports_path, exist_ok=True)
     return reports_path
 
+def get_analytics_template_path():
+    cwd = os.getcwd()
+    template_path = os.path.join(cwd, 'docs', 'analytics', 'templates')
+    return template_path
 
 ###############################################################################
+
+def find_matching_first_chars(str1, str2):
+    # Get the minimum length of the two strings
+    min_len = min(len(str1), len(str2))
+
+    # Iterate through both strings up to the length of the shortest one
+    matching_chars = []
+    for i in range(min_len):
+        if str1[i] == str2[i]:
+            matching_chars.append(str1[i])
+        else:
+            break
+
+    return ''.join(matching_chars)

@@ -1,0 +1,16 @@
+meta {
+  name: sync-sleeps
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/sleeps
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

@@ -12,7 +12,7 @@ on:
   # Triggers the workflow on push or pull request events but only for the develop branch
   pull_request:
     branches: [develop]
-    
+
 jobs:
   Build-Docker-Image:
     environment: dev
@@ -54,7 +54,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-      
+
       - name: Copy env file
         run: aws s3 cp s3://${{ secrets.ENV_FILE_BUCKET_PATH }}/.env ./.env
 

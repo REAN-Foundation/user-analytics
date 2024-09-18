@@ -76,8 +76,8 @@ class FeatureEngagementMetrics(BaseModel):
     DropOffPoints                    : list|dict|None = Field(description="Most common points where users drop off after using the feature.")
 
 class EngagementMetrics(BaseModel):
-      TenantId        : UUID4                               = Field(description="Tenant ID")
-      TenantName      : str                                 = Field(description="Tenant Name")
+      TenantId        : UUID4|None                          = Field(description="Tenant ID")
+      TenantName      : str|None                            = Field(description="Tenant Name")
       StartDate       : datetime                            = Field(description="Start date for analytics")
       EndDate         : datetime                            = Field(description="End date for analytics")
       BasicStatistics : BasicAnalyticsStatistics|None       = Field(description="Basic analytics statistics")

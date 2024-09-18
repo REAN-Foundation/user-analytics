@@ -1,0 +1,16 @@
+meta {
+  name: sync-nutritions
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/nutritions
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

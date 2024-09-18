@@ -2,8 +2,11 @@ from datetime import date, timedelta
 import asyncio
 import os
 
+from pydantic import UUID4
+
 from app.database.database_accessor import get_db_session
 from app.database.models.analysis import Analysis
+from app.database.models.tenant import Tenant
 from app.database.services.analytics.basic_statistics import (
     get_all_registered_patients,
     get_all_registered_users,
@@ -64,27 +67,28 @@ async def calculate(
 
     try:
         basic_stats = await calculate_basic_stats(filters)
+        print("Calculated basic stats")
 
         generic_metrics = await calculate_generic_engagement_metrics(filters)
+        print("Calculated generic metrics")
 
         features = [
-            EventCategory.Login,
-            # EventCategory.Profile,
+            EventCategory.LoginSession,
             EventCategory.Medication,
             EventCategory.Symptoms,
             EventCategory.Vitals,
-            # EventCategory.LabRecords,
-            # EventCategory.Documents,
             EventCategory.Careplan,
+            EventCategory.UserTask,
         ]
         metrics_by_feature = []
         for feature in features:
             engament = await calculate_feature_engagement_metrics(feature, filters)
+            print(f"Calculated metrics for {feature}")
             metrics_by_feature.append(engament)
 
         metrics = EngagementMetrics(
             TenantId        = filters.TenantId,
-            TenantName      = filters.TenantName,
+            TenantName      = filters.TenantName if filters.TenantName != None else 'Unspecified',
             StartDate       = str(filters.StartDate) if filters.StartDate else 'Unspecified',
             EndDate         = str(filters.EndDate) if filters.EndDate else 'Unspecified',
             BasicStatistics = basic_stats,
@@ -93,7 +97,10 @@ async def calculate(
         )
 
         saved_analytics = await save_analytics(analysis_code, metrics)
+        print(f"Saved analytics -> {analysis_code}")
+
         await generate_reports(analysis_code, metrics)
+        print(f"Generated reports -> {analysis_code}")
 
         return metrics
 
@@ -214,7 +221,6 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
     except Exception as e:
         print(e)
 
-
 async def calculate_feature_engagement_metrics(
         feature: str, filters: AnalyticsFilters | None = None)-> FeatureEngagementMetrics|None:
     try:
@@ -328,11 +334,33 @@ async def get_analysis_code():
     existing_count += 1
     return f"{today}-{existing_count}"
 
+async def get_tenant_by_id(tenantId: UUID4 | None):
+    tenant = None
+    try:
+        session = get_db_session()
+        tenant = await session.query(Tenant).filter(Tenant.id == tenantId).first()
+    except Exception as e:
+        print(e)
+    finally:
+        session.close()
+    return tenant
+
+async def get_all_tenants():
+    tenants = []
+    try:
+        session = get_db_session()
+        tenants = await session.query(Tenant).filter(Tenant.DeletedAt != None).all()
+    except Exception as e:
+        print(e)
+    finally:
+        session.close()
+    return tenants
+
 ###############################################################################
 
 async def save_analytics(analysis_code: str, metrics: EngagementMetrics)-> dict:
 
-    print(f"Saving analytics -> {analysis_code} -> {metrics}")
+    print(f"Saving analytics -> {analysis_code}")
     session = get_db_session()
     base_url = os.getenv("BASE_URL")
 
@@ -345,10 +373,10 @@ async def save_analytics(analysis_code: str, metrics: EngagementMetrics)-> dict:
             Data       = str(metrics.model_dump_json()),
             StartDate  = metrics.StartDate,
             EndDate    = metrics.EndDate,
-            JsonURL    = f"{base_url}/api/analytics/download/{analysis_code}/formats/json",
-            ExcelURL   = f"{base_url}/api/analytics/download/{analysis_code}/formats/excel",
-            PdfURL     = f"{base_url}/api/analytics/download/{analysis_code}/formats/pdf",
-            URL        = f"{base_url}/api/analytics/metrics/{analysis_code}",
+            JsonUrl    = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/json",
+            ExcelUrl   = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/excel",
+            PdfUrl     = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/pdf",
+            Url        = f"{base_url}/api/v1/analytics/metrics/{analysis_code}",
             CreatedAt  = date.today(),
             UpdatedAt  = date.today()
         )
@@ -375,6 +403,46 @@ async def get_analysis_by_code(analysis_code: str)-> dict:
         if analysis is None:
             raise Exception(f"Analysis with code {analysis_code} not found")
         session.close()
-        return analysis.__dict__
+        # return analysis.__dict__
+        return analysis
     except Exception as e:
         print(e)
+
+###############################################################################
+
+async def generate_daily_analytics():
+    try:
+        session = get_db_session()
+
+        tenants = []
+        tenants_ = get_all_tenants()
+        if len(tenants_) == 1 and tenants_[0].TenantName == 'default':
+            tenants.append({
+                "TenantId": None,
+                "TenantCode": None,
+            })
+        else:
+            for tenant in tenants_:
+                tenants.append({
+                    "TenantId": tenant['id'],
+                    "TenantCode": tenant['TenantCode'],
+                })
+
+        for tenant in tenants:
+            filters = AnalyticsFilters(
+                TenantId = tenant['TenantId'],
+                TenantName = tenant['TenantCode'],
+                RoleId = get_role_id(),
+                StartDate = date.today() - timedelta(days=PAST_DAYS_TO_CONSIDER),
+                EndDate = date.today(),
+                Source = None
+            )
+            analysis_code = await get_analysis_code()
+            if tenant.TenantCode is not None:
+                analysis_code = analysis_code + '_' + tenant.TenantCode
+            metrics = await calculate(analysis_code, filters)
+
+    except Exception as e:
+        print(e)
+    finally:
+        session.close()

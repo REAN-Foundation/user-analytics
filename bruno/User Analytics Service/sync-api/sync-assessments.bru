@@ -1,0 +1,16 @@
+meta {
+  name: sync-assessments
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/assessments
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}
