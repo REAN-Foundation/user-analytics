@@ -113,64 +113,37 @@ def read_json_file(file_path: str) -> dict:
 
 # This fuction is for adding the missing month and make count 0
 def reindex_dataframe_to_all_months(df, date_col, fill_col, fill_value=0, date_format='%Y-%m'):
-
-    # Convert the date column to datetime format
     df[date_col] = pd.to_datetime(df[date_col], format=date_format)
-    
-    # Get the range of dates from the minimum to maximum date
     start_date = df[date_col].min()
     end_date = df[date_col].max()
     all_dates = pd.date_range(start=start_date, end=end_date, freq='MS')
-    
-    # Create a DataFrame with all months
     all_dates_df = pd.DataFrame({date_col: all_dates})
-    
-    # Merge and fill missing values with the specified fill value
     df_reindexed = pd.merge(all_dates_df, df, on=date_col, how='left').fillna({fill_col: fill_value})
-
-     # Format the date column to 'YYYY-MM' to display only year and month
     df_reindexed[date_col] = df_reindexed[date_col].dt.strftime('%Y-%m')
 
     return df_reindexed
 
 def reindex_dataframe_to_all_dates(df, date_col, fill_col, fill_value=0, date_format='%Y-%m-%d'):
 
-    # Convert the date column to datetime format
     df[date_col] = pd.to_datetime(df[date_col], format=date_format)
-    
-    # Get the range of dates from the minimum to maximum date
     start_date = df[date_col].min()
     end_date = df[date_col].max()
     all_dates = pd.date_range(start=start_date, end=end_date, freq='D')  # 'D' is used for daily frequency
-    
-    # Create a DataFrame with all dates
     all_dates_df = pd.DataFrame({date_col: all_dates})
-    
-    # Merge and fill missing values with the specified fill value
     df_reindexed = pd.merge(all_dates_df, df, on=date_col, how='left').fillna({fill_col: fill_value})
-
-    # Format the date column to 'YYYY-MM-DD'
     df_reindexed[date_col] = df_reindexed[date_col].dt.strftime('%Y-%m-%d')
 
     return df_reindexed
 
 def reindex_dataframe_to_all_weeks(df, start_date_col, end_date_col, fill_col, fill_value=0, date_format='%Y-%m-%d'):
-    # Convert start_date and end_date columns to datetime
     df[start_date_col] = pd.to_datetime(df[start_date_col], format=date_format)
     df[end_date_col] = pd.to_datetime(df[end_date_col], format=date_format)
-    
-    # Get the range of weeks from the minimum to maximum start date
     min_date = df[start_date_col].min()
     max_date = df[start_date_col].max()
-    all_weeks = pd.date_range(start=min_date, end=max_date, freq='W-MON')  # Weekly frequency starting on Mondays
+    all_weeks = pd.date_range(start=min_date, end=max_date, freq='W-MON')
     
-    # Create a DataFrame with all weeks (start dates)
     all_weeks_df = pd.DataFrame({start_date_col: all_weeks})
-    
-    # Merge and fill missing values with the specified fill value
     df_reindexed = pd.merge(all_weeks_df, df, on=start_date_col, how='left').fillna({fill_col: fill_value})
-    
-    # Format the start_date and end_date columns to 'YYYY-MM-DD'
     df_reindexed[start_date_col] = df_reindexed[start_date_col].dt.strftime('%Y-%m-%d')
     df_reindexed[end_date_col] = df_reindexed[end_date_col].dt.strftime('%Y-%m-%d')
     
@@ -178,24 +151,16 @@ def reindex_dataframe_to_all_weeks(df, start_date_col, end_date_col, fill_col, f
 
 def write_data_to_excel(df, sheet_name: str, start_row: int, start_col: int, writer, title: str, rename_columns=None):
     
-    title_format = writer.book.add_format({'bold': True, 'font_size': 14, 'align': 'left', 'valign': 'vcenter'})
-    #     # Left-aligned format with a border
+    title_format = writer.book.add_format({'bold': True, 'font_size': 14, 'align': 'left'})
     data_format = writer.book.add_format({'align': 'left'})
-    
     worksheet = writer.sheets[sheet_name]
-    
-    # Write the title before data
     worksheet.write(start_row - 1, start_col, title, title_format)
-    
-    # Rename columns if specified
     if rename_columns:
         df.rename(columns=rename_columns, inplace=True)
     
     df.to_excel(writer, sheet_name=sheet_name, index=False, startrow=start_row, startcol=start_col,)
-    
-    # Dynamically adjust column width without padding
     for i, col in enumerate(df.columns):
-        max_len = max(df[col].astype(str).map(len).max(), len(col))  # No additional padding
+        max_len = max(df[col].astype(str).map(len).max(), len(col))
         worksheet.set_column(start_col + i, start_col + i, max_len, data_format)
     
     return df
@@ -217,7 +182,7 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 async def generate_user_engagement_report_excel() -> str:
     try:
         # Example analysis code
-        analysis_code = '6'
+        analysis_code = '12'
 
         # Load JSON data from the file for basic analytics
         basic_analysis_data_path = 'test_data/basic_statistic.json'
@@ -253,102 +218,134 @@ async def generate_user_engagement_report_excel() -> str:
 async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatistics, writer) -> None:
     df_stats = pd.DataFrame({
         'Property': [
-        'Tenant ID', 
-        'Tenant Name', 
-        'Start Date', 
-        'End Date', 
-        'Total Users', 
-        'Total Patients', 
-        'Total Active Patients'
-    ],
-    'Value': [
-        basic_analytics.TenantId,
-        basic_analytics.TenantName,
-        basic_analytics.StartDate.strftime('%Y-%m-%d'),
-        basic_analytics.EndDate.strftime('%Y-%m-%d'),
-        basic_analytics.TotalUsers,
-        basic_analytics.TotalPatients,
-        basic_analytics.TotalActivePatients
-    ]
+            'Tenant ID', 
+            'Tenant Name', 
+            'Start Date', 
+            'End Date', 
+            'Total Users', 
+            'Total Patients', 
+            'Total Active Patients'
+        ],
+        'Value': [
+            basic_analytics.TenantId,
+            basic_analytics.TenantName,
+            basic_analytics.StartDate.strftime('%Y-%m-%d'),
+            basic_analytics.EndDate.strftime('%Y-%m-%d'),
+            basic_analytics.TotalUsers,
+            basic_analytics.TotalPatients,
+            basic_analytics.TotalActivePatients
+        ]
     })
-  
+
     df_stats['Value'] = df_stats['Value'].fillna("Unspecified")
     sheet_name = 'Basic Analytics Statistics'
-    df_stats.to_excel(writer, sheet_name=sheet_name, index=False, startrow=2, startcol=1)
+    df_stats.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=2, startcol=1)
     workbook = writer.book
     worksheet = writer.sheets[sheet_name]
-
-    # Define formats
-    title_format = workbook.add_format({'bold': True, 'font_size': 14, 'align': 'center', 'valign': 'vcenter'})
-    field_bold_format = workbook.add_format({'bold': True, 'align': 'left'})  # Format for making Property column bold
-    value_format = workbook.add_format({'align': 'left'})
-
-    # Add title
-    worksheet.merge_range('B1:C1', 'Basic Statistics', title_format)
     
-    # Apply bold format to the "Property" column and value format to the "Value" column
+    title_format = workbook.add_format({
+        'bold': True, 
+        'font_size': 14, 
+        'align': 'left', 
+        'valign': 'vcenter'
+    })
+
+    field_bold_format = workbook.add_format({
+        'bold': True, 
+        'align': 'left', 
+    })
+
+    value_format = workbook.add_format({
+        'align': 'left',
+    })
+
+    worksheet.merge_range('B1:C1', 'Basic Analytics Statistics', title_format)
+
     for row_num in range(len(df_stats)):
-        worksheet.write(row_num + 2, 1, df_stats.at[row_num, 'Property'], field_bold_format)  # Make Property column bold
+        worksheet.write(row_num + 2, 1, df_stats.at[row_num, 'Property'], field_bold_format)
         worksheet.write(row_num + 2, 2, df_stats.at[row_num, 'Value'], value_format)
 
-    if basic_analytics.PatientRegistrationHistory:
-        
-        df_patient_registration_ = pd.DataFrame(basic_analytics.PatientRegistrationHistory)
-        df_patient_registration = reindex_dataframe_to_all_months(
-            df_patient_registration_,
+    if basic_analytics.PatientRegistrationHistory and basic_analytics.PatientDeregistrationHistory:
+        patient_registration_history_df = pd.DataFrame(basic_analytics.PatientRegistrationHistory)
+        paitent_deregistration_history_df = pd.DataFrame(basic_analytics.PatientDeregistrationHistory)
+    
+        patient_registration_history_df = reindex_dataframe_to_all_months(
+            patient_registration_history_df,
             date_col='month',
             fill_col='user_count',
         )
-        # Write Patient Registration History
-        startrow_patient_data = 13
-        df_patient_registration = write_data_to_excel(
-                df_patient_registration, sheet_name, startrow_patient_data, 1, writer,
-                'Patient Registration History',
-                {'month': 'Month', 'user_count': 'User Count'}
-            )
-        chart = workbook.add_chart({'type': 'column'})
-        chart.add_series({
-            'name': 'User Count',
-            'categories': [sheet_name, startrow_patient_data + 1, 1, startrow_patient_data + len(df_patient_registration), 1],  # Adjusted categories
-            'values': [sheet_name, startrow_patient_data + 1, 2, startrow_patient_data + len(df_patient_registration), 2],  # Adjusted values
-        })
-        
-        chart.set_title({'name': 'Patient Registration History'})
-        chart.set_x_axis({'name': 'Month'})
-        chart.set_y_axis({'name': 'User Count'})
-        
-        worksheet.insert_chart('E17', chart)  
-        
-        # # Set column widths for better readability
-        worksheet.set_column('B:B', 20) 
-        worksheet.set_column('C:C', 15) 
-        
-    if basic_analytics.PatientDeregistrationHistory:
-        df_dereg_history_ = pd.DataFrame(basic_analytics.PatientDeregistrationHistory)
-        df_dereg_history = reindex_dataframe_to_all_months(
-            df_dereg_history_,
+        paitent_deregistration_history_df = reindex_dataframe_to_all_months(
+            paitent_deregistration_history_df,
             date_col='month',
             fill_col='user_count',
         )
-        startrow_dereg_data = 13
-        df_dereg_history = write_data_to_excel(
-                df_dereg_history, sheet_name, startrow_dereg_data, 13, writer,
-                'Patient Deregistration History',
-                {'month': 'Month', 'user_count': 'User Count'}
-            )
-        chart = workbook.add_chart({'type': 'column'})
         
-        chart.add_series({
-            'name': 'User Count',
-            'categories': [sheet_name, startrow_dereg_data + 1, 13, startrow_dereg_data + len(df_dereg_history), 13],  # Adjusted categories
-            'values': [sheet_name, startrow_dereg_data + 1, 14, startrow_dereg_data + len(df_dereg_history), 14],  # Adjusted values
+        df_combined = pd.merge(
+            patient_registration_history_df[['month', 'user_count']].rename(columns={'user_count': 'registration_count'}),
+            paitent_deregistration_history_df[['month', 'user_count']].rename(columns={'user_count': 'deregistration_count'}),
+            on='month',
+            how='outer'
+        ).fillna(0) 
+        
+        startrow_combined_data = 13
+        df_combined = write_data_to_excel(
+            df_combined, sheet_name, startrow_combined_data, 1, writer,
+            'Patient Registration & Deregistration History',
+            {'month': 'Month', 'registration_count': 'Registration Count', 'deregistration_count': 'Deregistration Count'}
+        )
+        patient_registration_chart = workbook.add_chart({'type': 'column'})
+        patient_registration_chart.set_legend({'none': True})
+     
+        patient_registration_chart.add_series({
+            'categories': [sheet_name, startrow_combined_data + 3, 1, startrow_combined_data + len(df_combined), 1],  # 'Month' categories
+            'values': [sheet_name, startrow_combined_data + 3, 2, startrow_combined_data + len(df_combined), 2],  # Registration Count values
+        })
+        patient_registration_chart.set_title({'name': 'Patient Registration History'})
+        patient_registration_chart.set_x_axis({
+        'major_gridlines': {
+            'visible': True,
+            'line': {'color': '#CCCCCC', 'dash_type': 'dot','transparency': 0.8}
+        }
+        })
+        patient_registration_chart.set_y_axis({
+            'major_gridlines': {
+                'visible': True,
+                'line': {'color': '#CCCCCC', 'dash_type': 'dot','transparency': 0.8}
+            }
+        })
+        # patient_registration_chart.set_x_axis({'name': ''})
+        # patient_registration_chart.set_y_axis({'name': 'Count'})
+        
+        worksheet.insert_chart('G3', patient_registration_chart)
+        
+        patient_deregistration_chart = workbook.add_chart({'type': 'column'})
+        patient_deregistration_chart.set_legend({'none': True})
+        patient_deregistration_chart.add_series({
+            'categories': [sheet_name, startrow_combined_data + 3, 1, startrow_combined_data + len(df_combined), 1],  # 'Month' categories
+            'values': [sheet_name, startrow_combined_data + 3, 3, startrow_combined_data + len(df_combined), 3],  # Deregistration Count values
         })
         
-        chart.set_title({'name': 'Patient Deregistration History'})
-        chart.set_x_axis({'name': 'Month'})
-        chart.set_y_axis({'name': 'User Count'})
+        patient_deregistration_chart.set_title({'name': 'Patient Deregistration History'})
+        patient_deregistration_chart.set_x_axis({
+        'major_gridlines': {
+            'visible': True,
+            'line': {'color': '#CCCCCC', 'dash_type': 'dot','transparency': 0.8}
+        }
+        })
+        patient_deregistration_chart.set_y_axis({
+            'major_gridlines': {
+                'visible': True,
+                'line': {'color': '#CCCCCC', 'dash_type': 'dot','transparency': 0.8}
+            }
+        })
+        # patient_deregistration_chart.set_x_axis({'name': 'Month'})
+        # patient_deregistration_chart.set_y_axis({'name': 'Count'})
+
+        worksheet.insert_chart('G20', patient_deregistration_chart)
         
-        worksheet.insert_chart('R17', chart)      
+        worksheet.set_column('D:D', 20,value_format) 
+        worksheet.set_column('B:B', 20, value_format) 
+        worksheet.set_column('C:C', 20, value_format)     
             
 async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistics, writer):
     try:
