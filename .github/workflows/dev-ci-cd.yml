@@ -4,6 +4,7 @@
 # To use this workflow, you will need to set up a .github/labeler.yml
 # file with configuration.  For more information, see:
 # https://github.com/actions/labeler
+#user-analytics service
 #########################################################
 
 name: Dev-CI-CD
@@ -75,7 +76,7 @@ jobs:
           tags: ${{ steps.login-ecr.outputs.registry }}/user-analytics-dev-uat:${{ steps.vars.outputs.branch }}_${{ steps.vars.outputs.sha_short }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-          
+
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

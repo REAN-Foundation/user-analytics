@@ -1,0 +1,55 @@
+
+{
+"Feature":"medication",
+"TenantId":null,
+"TenantName":"unspecified",
+"StartDate":"2023-03-21T00:00:00",
+"EndDate":"2024-09-11T00:00:00",
+"AccessFrequency":[
+  {"month":"2023-03","access_frequency":4},
+  {"month":"2023-04","access_frequency":4},
+  {"month":"2023-05","access_frequency":8},
+  {"month":"2023-06","access_frequency":39},
+  {"month":"2023-08","access_frequency":1},
+  {"month":"2023-10","access_frequency":2},
+  {"month":"2023-11","access_frequency":3},
+  {"month":"2023-12","access_frequency":1},
+  {"month":"2024-01","access_frequency":1},
+  {"month":"2024-03","access_frequency":2},
+  {"month":"2024-04","access_frequency":3},
+  {"month":"2024-05","access_frequency":4},
+  {"month":"2024-06","access_frequency":24}
+  ,{"month":"2024-08","access_frequency":1}],
+"AverageUsageDurationMinutes":132132.0,
+"EngagementRate":[
+    {"month":"2024-08","feature":"medication","engagement_rate":"20.0000"},{"month":"2024-06","feature":"medication","engagement_rate":"20.0000"},
+    {"month":"2024-05","feature":"medication","engagement_rate":"16.6667"},{"month":"2024-04","feature":"medication","engagement_rate":"33.3333"},
+    {"month":"2024-03","feature":"medication","engagement_rate":"100.0000"},{"month":"2024-01","feature":"medication","engagement_rate":"100.0000"},{"month":"2023-12","feature":"medication","engagement_rate":"33.3333"},
+    {"month":"2023-11","feature":"medication","engagement_rate":"100.0000"},
+    {"month":"2023-10","feature":"medication","engagement_rate":"100.0000"},{"month":"2023-08","feature":"medication","engagement_rate":"50.0000"},
+    {"month":"2023-06","feature":"medication","engagement_rate":"40.0000"},{"month":"2023-05","feature":"medication","engagement_rate":"66.6667"},
+    {"month":"2023-04","feature":"medication","engagement_rate":"40.0000"},{"month":"2023-03","feature":"medication","engagement_rate":"50.0000"}],
+"RetentionRateOnSpecificDays":
+    {"active_users":347,"retention_on_specific_days":[
+      {"day":1,"returning_users":2,"retention_rate":0.5764},
+      {"day":3,"returning_users":1,"retention_rate":0.2882},
+      {"day":7,"returning_users":1,"retention_rate":0.2882},
+      {"day":10,"returning_users":0,"retention_rate":0.0},
+      {"day":15,"returning_users":0,"retention_rate":0.0},
+      {"day":20,"returning_users":0,"retention_rate":0.0},
+      {"day":25,"returning_users":1,"retention_rate":0.2882},
+      {"day":30,"returning_users":1,"retention_rate":0.2882}
+      ]},
+"RetentionRateInSpecificIntervals":{
+  "active_users":347,"retention_in_specific_interval":[
+    {"interval":"0d-1d","returning_users":4,"retention_rate":1.1527},
+    {"interval":"1d-3d","returning_users":2,"retention_rate":0.5764},{"interval":"3d-7d","returning_users":2,"retention_rate":0.5764},
+    {"interval":"7d-10d","returning_users":2,"retention_rate":0.5764},{"interval":"10d-15d","returning_users":0,"retention_rate":0.0},
+    {"interval":"15d-20d","returning_users":2,"retention_rate":0.5764},{"interval":"20d-25d","returning_users":1,"retention_rate":0.2882},
+    {"interval":"25d-30d","returning_users":2,"retention_rate":0.5764}]},
+    
+"DropOffPoints":[
+  {"event_name":"medication-schedule-missed","dropoff_count":"2","total_users":2,"dropoff_rate":"100.0000"},
+  {"event_name":"medication-create","dropoff_count":"5","total_users":27,"dropoff_rate":"18.5185"},
+  {"event_name":"medication-schedule-taken","dropoff_count":"0","total_users":64,"dropoff_rate":"0.0000"},
+  {"event_name":"medication-delete","dropoff_count":"0","total_users":4,"dropoff_rate":"0.0000"}]}

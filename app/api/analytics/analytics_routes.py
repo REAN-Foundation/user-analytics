@@ -1,3 +1,4 @@
+import json
 import os
 from fastapi import APIRouter, status, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
@@ -11,7 +12,8 @@ from app.api.analytics.analytics_handler import (
     get_analysis_code_
 )
 from app.common.utils import generate_random_code
-from app.database.services.analytics.analysis_service import check_filter_params
+from app.database.services.analytics.analysis_service import check_filter_params, get_tenant_by_id
+from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
 from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
@@ -61,16 +63,21 @@ async def calculate_feature_engagement_metrics(feature: str, filters: AnalyticsF
     return resp
 ###############################################################################
 
-@router.post("/metrics",
+@router.post("/calculate-metrics",
             status_code=status.HTTP_200_OK,
             response_model=ResponseModel[CalculateMetricsResponse|None])
 async def calculate_metrics(
         background_tasks: BackgroundTasks,
         filters: AnalyticsFilters):
 
-    analysis_code = get_analysis_code_()
+    analysis_code = await get_analysis_code_()
     base_url = os.getenv("BASE_URL")
     filters_updated = check_filter_params(filters)
+
+    if filters_updated.TenantId is not None:
+        tenant = await get_tenant_by_id(filters_updated.TenantId)
+        if tenant is not None:
+            analysis_code = analysis_code + '_' + tenant.TenantCode
 
     background_tasks.add_task(calculate_, analysis_code, filters_updated)
 
@@ -80,20 +87,23 @@ async def calculate_metrics(
         StartDate    = str(filters_updated.StartDate),
         EndDate      = str(filters_updated.EndDate),
         AnalysisCode = analysis_code,
-        JsonURL      = f"{base_url}/api/analytics/download/{analysis_code}/formats/json",
-        ExcelURL     = f"{base_url}/api/analytics/download/{analysis_code}/formats/excel",
-        PdfURL       = f"{base_url}/api/analytics/download/{analysis_code}/formats/pdf",
-        URL          = f"{base_url}/api/analytics/metrics/{analysis_code}"
+        JsonURL      = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/json",
+        ExcelURL     = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/excel",
+        PdfURL       = f"{base_url}/api/v1/analytics/download/{analysis_code}/formats/pdf",
+        URL          = f"{base_url}/api/v1/analytics/metrics/{analysis_code}"
     )
     message = "Engagement metrics analysis started successfully. It may take a while to complete. You can access the results through the urls shared."
     resp = ResponseModel[CalculateMetricsResponse](Message=message, Data=res_model)
     return resp
 
-@router.get("/metrics/{analysis_code}",
+@router.get("/metrics/{analysis_code}", # 2024-09-17-1
             status_code=status.HTTP_200_OK,
             response_model=ResponseModel[EngagementMetrics|None])
 async def get_metrics(analysis_code: str):
-    metrics = await get_metrics_(analysis_code)
+    analysis = await get_metrics_(analysis_code)
+    data_str = analysis.Data
+    parsed_data = json.loads(data_str)
+    metrics = EngagementMetrics(**parsed_data)
     message = "Engagement metrics retrieved successfully."
     resp = ResponseModel[EngagementMetrics](Message=message, Data=metrics)
     return resp
@@ -108,3 +118,11 @@ def download_user_engagement_metrics(analysis_code: str, file_format: str):
     return StreamingResponse(stream, media_type="application/octet-stream")
 
 ###############################################################################
+
+# This end point is only for testing the excel report generation code
+# @router.get("/excel-test-report",
+#             status_code=status.HTTP_200_OK)
+# async def get_excel_data():
+#     await generate_report_excel()
+#     message = "Excel sheet created successfully."
+#     return message

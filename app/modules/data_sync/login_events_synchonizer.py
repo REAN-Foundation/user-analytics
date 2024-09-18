@@ -43,8 +43,8 @@ class LoginEventsSynchronizer:
     def add_login_session_events(session):
         try:
             event_name = EventType.UserLogin.value
-            event_subject = EventSubject.Login.value
-            event_category = EventCategory.Login.value
+            event_subject = EventSubject.LoginSession.value
+            event_category = EventCategory.LoginSession.value
             event = {
                 'UserId': session['UserId'],
                 'TenantId': session['TenantId'],

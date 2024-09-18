@@ -21,6 +21,7 @@ class Analysis(Base):
     JsonUrl    = Column(String(256), default=None, nullable=True)
     ExcelUrl   = Column(String(256), default=None, nullable=True)
     PdfUrl     = Column(String(256), default=None, nullable=True)
+    Url        = Column(String(256), default=None, nullable=True)
     CreatedAt  = Column(DateTime(timezone=True), server_default=func.now())
     UpdatedAt  = Column(DateTime(timezone=True), onupdate=func.now())
 

@@ -1,6 +1,7 @@
-
+from dotenv import load_dotenv
 import os
 from app.database.mysql_connector import MySQLConnector
+load_dotenv()
 
 ############################################################
 
