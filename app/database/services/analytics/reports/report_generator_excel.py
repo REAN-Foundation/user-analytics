@@ -8,13 +8,13 @@
 
 # ###############################################################################
 
-# async def generate_user_engagement_report_excel(
-#         analysis_code: str, user_engagement_metrics: GenericEngagementMetrics) -> str:
+# async def generate_report_excel(
+#         analysis_code: str, metrics: GenericEngagementMetrics) -> str:
 #     try:
-#        excel_file_path = os.path.join(reports_path, f"user_engagement_report_{analysis_code}.xlsx")
+#        excel_file_path = os.path.join(reports_path, f"report_{analysis_code}.xlsx")
 #         with pd.ExcelWriter(excel_file_path) as writer:
-#             await add_daily_active_users(user_engagement_metrics.DailyActiveUsers, writer)
-#             await add_weekly_active_users(user_engagement_metrics.WeeklyActiveUsers, writer)
+#             await add_daily_active_users(metrics.DailyActiveUsers, writer)
+#             await add_weekly_active_users(metrics.WeeklyActiveUsers, writer)
 #         return excel_file_path
 #     except Exception as e:
 #         print(e)
@@ -166,7 +166,7 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 
 #####################################################################
 
-async def generate_user_engagement_report_excel(
+async def generate_report_excel(
         analysis_code: str,
         metrics: EngagementMetrics) -> str | None:
     try:
@@ -191,7 +191,7 @@ async def generate_user_engagement_report_excel(
         feature_engagement_metrics = FeatureEngagementMetrics(**feature_engagement_data)
 
         reports_path = get_report_folder_path()
-        excel_file_path = os.path.join(reports_path, f"user_engagement_report_{analysis_code}.xlsx")
+        excel_file_path = os.path.join(reports_path, f"report_{analysis_code}.xlsx")
         with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
              await add_basic_analytics_statistics(basic_analysis, writer)
              await add_patient_demographics_data(basic_analysis, writer)

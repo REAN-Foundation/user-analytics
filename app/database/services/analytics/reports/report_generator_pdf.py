@@ -10,13 +10,13 @@ from app.database.services.analytics.reports.report_generator_markdown import ge
 
 ###############################################################################
 
-async def generate_user_engagement_report_pdf(
+async def generate_report_pdf(
         analysis_code: str,
         metrics: EngagementMetrics) -> str | None:
     try:
         reports_path = get_report_folder_path()
-        report_folder_path = os.path.join(reports_path, f"user_engagement_report_{analysis_code}")
-        pdf_file_path = os.path.join(report_folder_path, f"user_engagement_report_{analysis_code}.pdf")
+        report_folder_path = os.path.join(reports_path, f"report_{analysis_code}")
+        pdf_file_path = os.path.join(report_folder_path, f"report_{analysis_code}.pdf")
         if not os.path.exists(report_folder_path):
             os.makedirs(report_folder_path, exist_ok=True)
 
@@ -24,7 +24,7 @@ async def generate_user_engagement_report_pdf(
         if not images_generated:
             return None
 
-        markdown_file_path = os.path.join(report_folder_path, f"user_engagement_report_{analysis_code}.md")
+        markdown_file_path = os.path.join(report_folder_path, f"report_{analysis_code}.md")
         markdown_generated = await generate_report_markdown(metrics)
         if not markdown_generated:
             return None

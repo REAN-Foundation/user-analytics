@@ -42,9 +42,9 @@ from app.database.services.analytics.feature_engagement import (
     get_feature_average_usage_duration_minutes,
     get_feature_drop_off_points,
 )
-from app.database.services.analytics.reports.report_generator_excel import generate_user_engagement_report_excel
-from app.database.services.analytics.reports.report_generator_json import generate_user_engagement_report_json
-from app.database.services.analytics.reports.report_generator_pdf import generate_user_engagement_report_pdf
+from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
+from app.database.services.analytics.reports.report_generator_json import generate_report_json
+from app.database.services.analytics.reports.report_generator_pdf import generate_report_pdf
 from app.domain_types.enums.event_categories import EventCategory
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
@@ -306,9 +306,9 @@ def check_filter_params(filters: AnalyticsFilters | None = None) -> AnalyticsFil
 
 async def generate_reports(analysis_code: str, metrics: EngagementMetrics):
     try:
-        json_file_path = await generate_user_engagement_report_json(analysis_code, metrics)
-        excel_file_path = await generate_user_engagement_report_excel(analysis_code, metrics)
-        pdf_file_path = await generate_user_engagement_report_pdf(analysis_code, metrics)
+        json_file_path = await generate_report_json(analysis_code, metrics)
+        excel_file_path = await generate_report_excel(analysis_code, metrics)
+        pdf_file_path = await generate_report_pdf(analysis_code, metrics)
 
         print(f"JSON file path: {json_file_path}")
         print(f"Excel file path: {excel_file_path}")

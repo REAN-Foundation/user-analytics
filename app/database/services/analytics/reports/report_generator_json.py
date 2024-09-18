@@ -7,11 +7,11 @@ from app.domain_types.schemas.analytics import GenericEngagementMetrics
 
 ###############################################################################
 
-async def generate_user_engagement_report_json(
+async def generate_report_json(
         analysis_code: str, user_engagement_metrics: GenericEngagementMetrics) -> str:
     try:
         reports_path = get_report_folder_path()
-        json_file_path = os.path.join(reports_path, f"user_engagement_report_{analysis_code}.json")
+        json_file_path = os.path.join(reports_path, f"report_{analysis_code}.json")
         with open(json_file_path, "w") as json_file:
             json.dump(user_engagement_metrics.model_dump(mode='json'), json_file, indent=4)
         return json_file_path
