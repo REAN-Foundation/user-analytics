@@ -20,7 +20,7 @@ async def generate_report_markdown(
         template_str = file.read()
 
     # Replace the placeholders in the template
-    template_str = template_str.replace("{{report_title}}", metrics.title)
+    # template_str = template_str.replace("{{report_title}}", metrics.title)
 
     # Save the report
     with open(markdown_file_path, "w") as file:

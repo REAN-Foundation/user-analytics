@@ -13,7 +13,7 @@ from app.api.analytics.analytics_handler import (
 )
 from app.common.utils import generate_random_code
 from app.database.services.analytics.analysis_service import check_filter_params, get_tenant_by_id
-from app.database.services.analytics.reports.report_generator_excel import generate_user_engagement_report_excel
+from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
 from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
@@ -123,6 +123,6 @@ def download_user_engagement_metrics(analysis_code: str, file_format: str):
 # @router.get("/excel-test-report",
 #             status_code=status.HTTP_200_OK)
 # async def get_excel_data():
-#     await generate_user_engagement_report_excel()
+#     await generate_report_excel()
 #     message = "Excel sheet created successfully."
 #     return message

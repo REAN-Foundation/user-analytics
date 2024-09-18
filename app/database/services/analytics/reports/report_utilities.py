@@ -24,20 +24,24 @@ def plot_bar_chart(
         y_label: str,
         color_palette: str,
         file_path: str,
-        rotation: int = 45
+        rotation: int = 45,
+        show_every_nth: int = 5
     ):
     fig, ax = plt.subplots(figsize=(10, 6))
+
     sns.barplot(
         x=x_column,
         y=y_column,
         data=data_frame,
-        palette=color_palette,
+        palette=sns.color_palette("Spectral"), #sns.husl_palette(as_cmap=True),#
         ax=ax,
         legend=False)
+
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.tick_params(axis='x', rotation=rotation)
+    ax.xaxis.set_major_locator(plt.MaxNLocator(show_every_nth))
     save_figure(fig, file_path)
 
 def plot_pie_chart(
@@ -98,6 +102,7 @@ def reindex_dataframe_to_all_dates(
     all_dates    = pd.date_range(start=start_date, end=end_date, freq=frequency)
     all_dates_df = pd.DataFrame({date_column: all_dates})
     df_reindexed = pd.merge(all_dates_df, data_frame, on=date_column, how='left').fillna({fill_column: fill_value})
+    df_reindexed[date_column] = df_reindexed[date_column].dt.strftime(date_format)
     return df_reindexed
 
 ###############################################################################

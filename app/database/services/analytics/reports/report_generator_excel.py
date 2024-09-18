@@ -121,12 +121,12 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 
 #####################################################################
 
-async def generate_user_engagement_report_excel(
+async def generate_report_excel(
         analysis_code: str,
         metrics: EngagementMetrics) -> str | None:
     try:
         reports_path = get_report_folder_path()
-        excel_file_path = os.path.join(reports_path, f"user_engagement_report_{analysis_code}.xlsx")
+        excel_file_path = os.path.join(reports_path, f"report_{analysis_code}.xlsx")
         with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
              await add_basic_analytics_statistics(metrics.BasicStatistics, writer)
              await add_patient_demographics_data(metrics.BasicStatistics, writer)
@@ -255,13 +255,11 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
         else:
             worksheet = writer.sheets[sheet_name]
 
-        # Add the title at the top of the sheet
         title = "Patient Demographic Report"
         worksheet.merge_range('A1:Z1', title, writer.book.add_format({'bold': True, 'font_size': 16, 'align': 'center'}))
 
         patient_demographics = basic_analytics.PatientDemographics
-
-        # Part 1: Age, Gender, Ethnicity Groups
+        
         start_row = 3
         start_col = 1
         if patient_demographics.AgeGroups:
@@ -304,19 +302,6 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
             worksheet.insert_chart(start_row, 4, chart_ethnicity)
             start_row += len(df_ethnicity) + 13
 
-        # if patient_demographics.LocationGroups:
-        #     df_location = pd.DataFrame(patient_demographics.LocationGroups)
-        #     df_location = write_data_to_excel(
-        #         df_location, sheet_name, start_row, 1, writer,
-        #         'Location Distribution',
-        #         {'Location': 'location', 'count': 'Count'}
-        #     )
-        #     chart_location = create_chart(
-        #         writer.book, 'pie', 'Location Distribution', sheet_name, start_row, 1, len(df_location)
-        #     )
-        #     worksheet.insert_chart(start_row, 4, chart_location)
-        #     start_row += len(df_location) + 13
-            
         if patient_demographics.SurvivorOrCareGiverDistribution:
             df_survivor = pd.DataFrame(patient_demographics.SurvivorOrCareGiverDistribution)
             df_survivor = write_data_to_excel(
@@ -329,7 +314,6 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
             )
             worksheet.insert_chart(start_row, 4, chart_survivor)
 
-        # Part 2: Race, Health System, Hospital, Survivor/Caregiver Distributions
         start_row = 3
         start_col = 13
         if patient_demographics.RaceGroups:
@@ -372,17 +356,6 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
             worksheet.insert_chart(start_row, start_col + 3, chart_hospital)
             start_row += len(df_hospital) + 13
 
-        # if patient_demographics.SurvivorOrCareGiverDistribution:
-        #     df_survivor = pd.DataFrame(patient_demographics.SurvivorOrCareGiverDistribution)
-        #     df_survivor = write_data_to_excel(
-        #         df_survivor, sheet_name, start_row, start_col, writer,
-        #         'Survivor/Caregiver Distribution',
-        #         {'caregiver_status': 'Caregiver Status', 'count': 'Count'}
-        #     )
-        #     chart_survivor = create_chart(
-        #         writer.book, 'pie', 'Survivor/Caregiver Distribution', sheet_name, start_row, start_col, len(df_survivor)
-        #     )
-        #     worksheet.insert_chart(start_row, start_col + 4, chart_survivor)
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -400,8 +373,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
             worksheet = writer.sheets[sheet_name]
-        
-        # Write Daily Active Users data to Excel
+      
         if generic_engagement_metrics.DailyActiveUsers:
             daily_active_users_df = pd.DataFrame(generic_engagement_metrics.DailyActiveUsers)
             daily_active_users_df = reindex_dataframe_to_all_dates(
@@ -417,7 +389,6 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
             daily_active_users_chart = create_chart(writer.book, 'column', 'Daily Active Users', sheet_name, start_row, col_daily, len(daily_active_users_df_), value_col = col_daily+1)
             worksheet.insert_chart(start_row , col_monthly + 3, daily_active_users_chart)     
 
-        # # Write Weekly Active Users data to Excel
         if generic_engagement_metrics.WeeklyActiveUsers:
             weekly_active_users_df = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
             weekly_active_users_df_ = write_data_to_excel(
