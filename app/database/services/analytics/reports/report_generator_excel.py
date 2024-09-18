@@ -1,7 +1,15 @@
 import os
 import json
+from typing import Optional
 import pandas as pd
 from datetime import datetime
+from app.database.services.analytics.common import get_report_folder_path
+from app.database.services.analytics.reports.feature_generator_excel import feature_engagement
+from app.database.services.analytics.reports.report_utilities import(
+    create_chart, 
+    reindex_dataframe_to_all_missing_dates, 
+    write_data_to_excel
+)
 from app.domain_types.schemas.analytics import (
     BasicAnalyticsStatistics, 
     EngagementMetrics, 
@@ -10,116 +18,6 @@ from app.domain_types.schemas.analytics import (
 )
 
 ############################################################################################
-
-def get_report_folder_path() -> str:
-    cwd = os.getcwd()
-    today = datetime.today()
-    date_timestamp = today.strftime("%Y%m%d")
-    reports_path = os.path.join(cwd, 'tmp', 'analytics_reports', date_timestamp)
-    os.makedirs(reports_path, exist_ok=True)
-    return reports_path
-
-def read_json_file(file_path: str) -> dict:
-    with open(file_path, 'r') as file:
-        data = json.load(file)
-    return data
-
-def reindex_dataframe_to_all_months(df, date_col, fill_col, fill_value=0, date_format='%Y-%m'):
-    df[date_col] = pd.to_datetime(df[date_col], format=date_format)
-    start_date = df[date_col].min()
-    end_date = df[date_col].max()
-    all_dates = pd.date_range(start=start_date, end=end_date, freq='MS')
-    all_dates_df = pd.DataFrame({date_col: all_dates})
-    df_reindexed = pd.merge(all_dates_df, df, on=date_col, how='left').fillna({fill_col: fill_value})
-    df_reindexed[date_col] = df_reindexed[date_col].dt.strftime('%Y-%m')
-
-    return df_reindexed
-
-def reindex_dataframe_to_all_dates(df, date_col, fill_col, fill_value=0, date_format='%Y-%m-%d'):
-
-    df[date_col] = pd.to_datetime(df[date_col], format=date_format)
-    start_date = df[date_col].min()
-    end_date = df[date_col].max()
-    all_dates = pd.date_range(start=start_date, end=end_date, freq='D')  # 'D' is used for daily frequency
-    all_dates_df = pd.DataFrame({date_col: all_dates})
-    df_reindexed = pd.merge(all_dates_df, df, on=date_col, how='left').fillna({fill_col: fill_value})
-    df_reindexed[date_col] = df_reindexed[date_col].dt.strftime('%Y-%m-%d')
-
-    return df_reindexed
-
-def reindex_dataframe_to_all_weeks(df, start_date_col, end_date_col, fill_col, fill_value=0, date_format='%Y-%m-%d'):
-    df[start_date_col] = pd.to_datetime(df[start_date_col], format=date_format)
-    df[end_date_col] = pd.to_datetime(df[end_date_col], format=date_format)
-    min_date = df[start_date_col].min()
-    max_date = df[start_date_col].max()
-    all_weeks = pd.date_range(start=min_date, end=max_date, freq='W-MON')
-    
-    all_weeks_df = pd.DataFrame({start_date_col: all_weeks})
-    df_reindexed = pd.merge(all_weeks_df, df, on=start_date_col, how='left').fillna({fill_col: fill_value})
-    df_reindexed[start_date_col] = df_reindexed[start_date_col].dt.strftime('%Y-%m-%d')
-    df_reindexed[end_date_col] = df_reindexed[end_date_col].dt.strftime('%Y-%m-%d')
-    
-    return df_reindexed
-
-def write_data_to_excel(df, sheet_name: str, start_row: int, start_col: int, writer, title: str, rename_columns=None):
-    
-    title_format = writer.book.add_format({'bold': True, 'font_size': 14, 'align': 'left'})
-    data_format = writer.book.add_format({'align': 'left'})
-    header_format = writer.book.add_format({'border': 0,'bold':True})
-    
-    worksheet = writer.sheets[sheet_name]
-    worksheet.write(start_row - 2, start_col, title, title_format)
-    if rename_columns:
-        df.rename(columns=rename_columns, inplace=True)
-
-    df.to_excel(writer, sheet_name=sheet_name, index=False, startrow=start_row, startcol=start_col,)
-    for i, col in enumerate(df.columns):
-        worksheet.write(start_row, start_col + i, col, header_format)
-        
-    for i, col in enumerate(df.columns):
-        max_len = max(df[col].astype(str).map(len).max(), len(col))
-        worksheet.set_column(start_col + i, start_col + i, max_len, data_format)
-    
-    return df
-
-def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start_col, df_len, value_col, x_axis='', y_axis=''):
-
-    chart = workbook.add_chart({'type': chart_type})
-    
-    chart.add_series({
-        'name': series_name,
-        'categories': [sheet_name, start_row + 1, start_col, start_row + df_len, start_col],
-        'values': [sheet_name, start_row + 1, value_col, start_row + df_len, value_col],
-    })
-    
-    chart.set_title({'name': f'{series_name}'})
-    
-    if chart_type != 'pie':
-        chart.set_x_axis({
-            'name': x_axis,
-            'major_gridlines': {
-                'visible': True,
-                'line': {'color': '#CCCCCC', 'dash_type': 'dot', 'transparency': 0.8}
-            }
-        })
-        chart.set_y_axis({
-            'name': y_axis,
-            'major_gridlines': {
-                'visible': True,
-                'line': {'color': '#CCCCCC', 'dash_type': 'dot', 'transparency': 0.8}
-            }
-        })
-        chart.set_legend({'none': True})
-    
-    if chart_type == 'pie':
-        chart.set_legend({
-            'position': 'right',
-            'font': {'bold': True, 'size': 10}
-        })
-    
-    return chart
-
-#####################################################################
 
 async def generate_report_excel(
         analysis_code: str,
@@ -194,12 +92,12 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         patient_registration_history_df = pd.DataFrame(basic_analytics.PatientRegistrationHistory)
         paitent_deregistration_history_df = pd.DataFrame(basic_analytics.PatientDeregistrationHistory)
     
-        patient_registration_history_df = reindex_dataframe_to_all_months(
+        patient_registration_history_df = reindex_dataframe_to_all_missing_dates(
             patient_registration_history_df,
             date_col='month',
             fill_col='user_count',
         )
-        paitent_deregistration_history_df = reindex_dataframe_to_all_months(
+        paitent_deregistration_history_df = reindex_dataframe_to_all_missing_dates(
             paitent_deregistration_history_df,
             date_col='month',
             fill_col='user_count',
@@ -376,10 +274,11 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
       
         if generic_engagement_metrics.DailyActiveUsers:
             daily_active_users_df = pd.DataFrame(generic_engagement_metrics.DailyActiveUsers)
-            daily_active_users_df = reindex_dataframe_to_all_dates(
+            daily_active_users_df = reindex_dataframe_to_all_missing_dates(
                 daily_active_users_df, 
                 date_col='activity_date',
                 fill_col= 'daily_active_users',
+                frequency='daily'
             )
             daily_active_users_df_ = write_data_to_excel(
                 daily_active_users_df, sheet_name, start_row, col_daily, writer,
@@ -391,6 +290,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
 
         if generic_engagement_metrics.WeeklyActiveUsers:
             weekly_active_users_df = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
+            weekly_active_users_df = reindex_dataframe_to_all_missing_dates(weekly_active_users_df, start_date_col='week_start_date', end_date_col='week_end_date', fill_col='weekly_active_users', frequency='weekly')
             weekly_active_users_df_ = write_data_to_excel(
                 weekly_active_users_df, sheet_name, start_row, col_weekly, writer,'Weekly Active Users',
                 {'week_start_date': 'Week Start Date', 'week_end_date': 'Week End Date', 'weekly_active_users': 'Weekly Active Users'}
@@ -410,7 +310,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
 
         if generic_engagement_metrics.MonthlyActiveUsers:
             monthly_active_users_df = pd.DataFrame(generic_engagement_metrics.MonthlyActiveUsers)
-            monthly_active_users_reindex = reindex_dataframe_to_all_months(
+            monthly_active_users_reindex = reindex_dataframe_to_all_missing_dates(
                 monthly_active_users_df, 
                 date_col='activity_month',
                 fill_col= 'monthly_active_users',
@@ -427,8 +327,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
         print(f"An error occurred: {e}")
 
 async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagementMetrics, writer) -> None:
-    try:
-        
+    try:   
         start_row = 3
         col_login_freq = 1
         col_retention_days = 14
@@ -507,90 +406,14 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
 ################################################################################################
 
 async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagementMetrics, writer):
-    try:      
-        start_row = 3
-        col_access_frequency = 1 
-        col_engagement_rate = 5 
-        col_retention_days = 19
-        col_retention_intervals = 23
-        col_dopoff_points=38
-        sheet_name = 'Medication Engagement'
-        
-        if sheet_name not in writer.sheets:
-            worksheet = writer.book.add_worksheet(sheet_name)
-        else:
-            worksheet = writer.sheets[sheet_name]
-            
-        engagement_metrics = feature_engagement_metrics
-        
-        if feature_engagement_metrics.AccessFrequency:
-            access_frequency_df = pd.DataFrame(feature_engagement_metrics.AccessFrequency) 
-            access_frequency_reindex = reindex_dataframe_to_all_months(
-                    access_frequency_df,
-                    date_col='month',
-                    fill_col='access_frequency',
-                ) 
-            access_frequency_df_=  write_data_to_excel(
-                access_frequency_reindex, sheet_name, start_row, col_access_frequency, writer,
-                'Access Frequency',
-                {'month': 'Month', 'access_frequency': 'Access Frequency'}
-            )
-            access_frequency_chart = create_chart(writer.book, 'column', 'Access Frequency', 'Medication Engagement', start_row, col_access_frequency, len(access_frequency_df_), value_col = col_access_frequency+1)
-            worksheet.insert_chart(start_row , col_engagement_rate + 5, access_frequency_chart)
-        if engagement_metrics.EngagementRate:
-                engagement_rate_df= pd.DataFrame(engagement_metrics.EngagementRate)
-                engagement_rate_df['engagement_rate'] = pd.to_numeric(engagement_rate_df['engagement_rate'], errors='coerce')
-                engagement_rate_df_ = reindex_dataframe_to_all_months(
-                    engagement_rate_df,
-                    date_col='month',
-                    fill_col='engagement_rate',
-                )
-                engagement_rate_df =  write_data_to_excel(
-                    engagement_rate_df_, 'Medication Engagement', start_row, col_engagement_rate, writer,
-                    'Engagement Rate',
-                    {'month': 'Month','feature':'Feature', 'engagement_rate': 'Engagement Rate'}
-                )
-                
-                engagement_rate_chart = create_chart(writer.book, 'column', 'Engagement Rate', 'Medication Engagement', start_row, col_engagement_rate, len(engagement_rate_df), value_col = col_engagement_rate+2)
-                worksheet.insert_chart(start_row + 18 , col_engagement_rate + 5, engagement_rate_chart)
-
-        if engagement_metrics.RetentionRateOnSpecificDays:
-            retention_specific_days = engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
-            retention_days_df= pd.DataFrame(retention_specific_days)
-            retention_days_df_ = write_data_to_excel(
-                retention_days_df, 'Medication Engagement', start_row, col_retention_days, writer,
-                'Retention Rate on Specific Days',
-                {'day': 'Day', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
-            )
-            retention_days_chart = create_chart(writer.book, 'column', 'Retention Rate on Specific Days', 'Medication Engagement', start_row, col_retention_days, len(retention_days_df_), value_col = col_retention_days+2)
-            worksheet.insert_chart(start_row, col_retention_intervals + 5, retention_days_chart)
-
-        if engagement_metrics.RetentionRateInSpecificIntervals:
-            retention_intervals = engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']
-            retention_intervals_df = pd.DataFrame(retention_intervals)
-
-            retention_intervals_df_ = write_data_to_excel(
-                retention_intervals_df, 'Medication Engagement', start_row, col_retention_intervals, writer,
-                'Retention Rate in Specific Intervals',
-                {'interval': 'Interval', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
-            )
-            retention_intervals_chart = create_chart(writer.book, 'column', 'Retention Rate in Specific Intervals', 'Medication Engagement', start_row, col_retention_intervals, len(retention_intervals_df_), value_col = col_retention_intervals+2)
-            worksheet.insert_chart(start_row + 18, col_retention_intervals + 5, retention_intervals_chart)
-
-        if engagement_metrics.DropOffPoints:
-            drop_off_points_df = pd.DataFrame(engagement_metrics.DropOffPoints)
-            drop_off_points_df['dropoff_rate'] = pd.to_numeric(drop_off_points_df['dropoff_rate'], errors='coerce')
-            drop_off_points_df['dropoff_count'] = pd.to_numeric(drop_off_points_df['dropoff_count'], errors='coerce')
-            drop_off_points_df_ = write_data_to_excel(
-                drop_off_points_df, sheet_name, start_row, col_dopoff_points, writer,
-                'Dropoff Points',
-                {'event_name': 'Event Name', 'dropoff_count':'Dropoff Count','total_users':'Total Users', 'dropoff_rate': 'Dropoff Rate'}
-            )
-            drop_off_points_chart = create_chart(
-                writer.book, 'pie', 'Dropoff Points', sheet_name, start_row, col_dopoff_points, len(drop_off_points_df_),value_col=col_dopoff_points+1
-            )
-            worksheet.insert_chart(start_row, col_dopoff_points + 5, drop_off_points_chart)
-            
+    try:  
+        for metrics in feature_engagement_metrics:
+            sheet_name = metrics.Feature
+            await feature_engagement(
+                feature_feature_engagement_metrics=metrics,
+                writer=writer,
+                sheet_name=sheet_name 
+            )    
     except Exception as e:
         print(f"Error generating report: {e}")
         return ""
