@@ -308,11 +308,11 @@ async def generate_reports(analysis_code: str, metrics: EngagementMetrics):
     try:
         json_file_path = await generate_report_json(analysis_code, metrics)
         excel_file_path = await generate_report_excel(analysis_code, metrics)
-        pdf_file_path = await generate_report_pdf(analysis_code, metrics)
+        # pdf_file_path = await generate_report_pdf(analysis_code, metrics)
 
         print(f"JSON file path: {json_file_path}")
         print(f"Excel file path: {excel_file_path}")
-        print(f"PDF file path: {pdf_file_path}")
+        # print(f"PDF file path: {pdf_file_path}")
 
     except Exception as e:
         print(e)
