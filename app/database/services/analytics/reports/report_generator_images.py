@@ -25,7 +25,7 @@ def generate_report_images(
     generated_generic_metrics_images = generate_generic_engagement_images(report_folder_path, metrics.GenericMetrics)
     generated_feature_metrics_images = generate_feature_engagement_images(report_folder_path, metrics.FeatureMetrics)
 
-    return generated_stats_images and generated_generic_metrics_images and generated_feature_metrics_images
+    return generated_stats_images or generated_generic_metrics_images or generated_feature_metrics_images
 
 ###############################################################################
 

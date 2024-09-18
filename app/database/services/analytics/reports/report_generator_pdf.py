@@ -25,7 +25,7 @@ async def generate_report_pdf(
             return None
 
         markdown_file_path = os.path.join(report_folder_path, f"report_{analysis_code}.md")
-        markdown_generated = await generate_report_markdown(metrics)
+        markdown_generated = await generate_report_markdown(markdown_file_path, metrics)
         if not markdown_generated:
             return None
 
@@ -48,7 +48,12 @@ async def markdown_to_pdf(markdown_file_path: str, pdf_file_path: str) -> bool:
         md_dir = os.path.dirname(markdown_file_path)
 
         # Convert markdown to PDF using pandoc
-        output = pypandoc.convert_file(markdown_file_path, 'pdf', outputfile=pdf_file_path, extra_args=['--pdf-engine=xelatex'])
+        output = pypandoc.convert_file(
+            markdown_file_path,
+            'pdf',
+            outputfile=pdf_file_path,
+            extra_args=['--pdf-engine=xelatex'])
+
         assert output == "", "There was an issue with the conversion"
         print(f"PDF generated at {pdf_file_path}")
 
