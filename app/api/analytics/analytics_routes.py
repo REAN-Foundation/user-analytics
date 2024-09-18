@@ -15,6 +15,7 @@ from app.common.utils import generate_random_code
 from app.database.services.analytics.analysis_service import check_filter_params, get_tenant_by_id
 from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
 from app.domain_types.miscellaneous.response_model import ResponseModel
+from app.domain_types.miscellaneous.response_model import ResponseModel, ResponseStatusTypes
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
     BasicAnalyticsStatistics,
@@ -110,11 +111,11 @@ async def get_metrics(analysis_code: str):
 
 @router.get("/download/{analysis_code}/formats/{file_format}",
             status_code=status.HTTP_200_OK)
-def download_user_engagement_metrics(analysis_code: str, file_format: str):
+async def download_user_engagement_metrics(analysis_code: str, file_format: str):
     file_format_lower = file_format.lower()
     if file_format_lower not in ["json", "excel", "pdf"]:
         raise HTTPException(status_code=400, detail="Invalid file format. Supported formats are 'json', 'excel' and 'pdf'.")
-    stream = download_metrics_(analysis_code, file_format_lower)
+    stream =await download_metrics_(analysis_code, file_format_lower)
     return StreamingResponse(stream, media_type="application/octet-stream")
 
 ###############################################################################
