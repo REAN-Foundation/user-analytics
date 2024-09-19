@@ -547,6 +547,10 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
         start_row = 3
         start_col = 1
         sheet_name = 'Most Visited Features'
+        if sheet_name not in writer.sheets:
+            worksheet = writer.book.add_worksheet(sheet_name)
+        else:
+            worksheet = writer.sheets[sheet_name]
         
         if generic_engagement_metrics.MostCommonlyVisitedFeatures:
             most_commonly_visited_features_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedFeatures)  
@@ -572,6 +576,11 @@ async def add_most_visited_screens(generic_engagement_metrics: GenericEngagement
         start_row = 3
         start_col = 1
         sheet_name = 'Most Visited Screens'
+        
+        if sheet_name not in writer.sheets:
+            worksheet = writer.book.add_worksheet(sheet_name)
+        else:
+            worksheet = writer.sheets[sheet_name]
         
         if generic_engagement_metrics.MostCommonlyVisitedScreens:
             most_commonly_visited_screens_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedScreens)  
