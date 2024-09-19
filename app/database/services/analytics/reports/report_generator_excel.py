@@ -93,14 +93,14 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         paitent_deregistration_history_df = pd.DataFrame(basic_analytics.PatientDeregistrationHistory)
     
         patient_registration_history_df = reindex_dataframe_to_all_missing_dates(
-            patient_registration_history_df,
-            date_col='month',
-            fill_col='user_count',
+            data_frame = patient_registration_history_df,
+            date_col = 'month',
+            fill_col = 'user_count',
         )
         paitent_deregistration_history_df = reindex_dataframe_to_all_missing_dates(
-            paitent_deregistration_history_df,
-            date_col='month',
-            fill_col='user_count',
+            data_frame = paitent_deregistration_history_df,
+            date_col = 'month',
+            fill_col = 'user_count',
         )
         
         df_combined = pd.merge(
@@ -112,35 +112,38 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         
         startrow_combined_data = 13
         df_combined = write_data_to_excel(
-            df_combined, sheet_name, startrow_combined_data, 1, writer,
-            'Patient Registration & Deregistration History',
-            {'month': 'Month', 'registration_count': 'Registration Count', 'deregistration_count': 'Deregistration Count'}
+            data_frame = df_combined,
+            sheet_name = sheet_name,
+            start_row = startrow_combined_data,
+            start_col = 1,
+            writer = writer,
+            title = 'Patient Registration & Deregistration History',
+            rename_columns = {'month': 'Month', 'registration_count': 'Registration Count', 'deregistration_count': 'Deregistration Count'}
         )
         patient_registration_chart = create_chart(
-            workbook, 
-            'column',
-            'Patient Registration Count',
-            sheet_name,
-            start_row=13,
-            start_col=1, 
-            df_len=len(df_combined), 
-            value_col=2,
+            workbook = workbook, 
+            chart_type = 'column',
+            series_name = 'Patient Registration Count',
+            sheet_name = sheet_name,
+            start_row = 13,
+            start_col = 1, 
+            df_len = len(df_combined), 
+            value_col = 2,
         )
         worksheet.insert_chart('G3', patient_registration_chart)
         
         patient_deregistration_chart = create_chart(
-            workbook,
-            'column',
-            'Patient Deregistration Count',
-            sheet_name,
-            start_row=13,
-            start_col=1,
-            df_len=len(df_combined),
-            value_col=3,
+            workbook = workbook,
+            chart_type = 'column',
+            series_name = 'Patient Deregistration Count',
+            sheet_name = sheet_name,
+            start_row = 13,
+            start_col = 1,
+            df_len = len(df_combined),
+            value_col = 3,
         )
         
         worksheet.insert_chart('G20', patient_deregistration_chart)
-        
         worksheet.set_column('D:D', 20,value_format) 
         worksheet.set_column('B:B', 20, value_format) 
         worksheet.set_column('C:C', 20, value_format)     
@@ -163,25 +166,47 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
         if patient_demographics.AgeGroups:
             df_age = pd.DataFrame(patient_demographics.AgeGroups)
             df_age = write_data_to_excel(
-                df_age, sheet_name, start_row, start_col, writer,
-                'Age Distribution',
-                {'age_group': 'Age Group', 'count': 'Count'}
+                data_frame = df_age,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Age Distribution',
+                rename_columns = {'age_group': 'Age Group', 'count': 'Count'}
             )
             chart_age = create_chart(
-                writer.book, 'pie', 'Age Distribution', sheet_name, start_row, start_col, len(df_age), value_col = start_col+1
+                workbook = writer.book,
+                chart_type = 'pie',
+                series_name = 'Age Distribution',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                df_len = len(df_age),
+                value_col = start_col + 1
             )
             worksheet.insert_chart(start_row, 4, chart_age)
-            start_row += len(df_age) + 13  # Adjust start row for next section
+            start_row += len(df_age) + 13 
 
         if patient_demographics.GenderGroups:
             df_gender = pd.DataFrame(patient_demographics.GenderGroups)
             df_gender = write_data_to_excel(
-                df_gender, sheet_name, start_row, 1, writer,
-                'Gender Distribution',
-                {'gender': 'Gender', 'count': 'Count'}
+                data_frame = df_gender,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = 1, 
+                writer = writer,
+                title = 'Gender Distribution',
+                rename_columns = {'gender': 'Gender', 'count': 'Count'}
             )
             chart_gender = create_chart(
-                writer.book, 'pie', 'Gender Distribution', sheet_name, start_row, start_col, len(df_gender), value_col = start_col+1
+                workbook = writer.book,
+                chart_type = 'pie',
+                series_name = 'Gender Distribution',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                df_len = len(df_gender),
+                value_col = start_col+1
             )
             worksheet.insert_chart(start_row, 4, chart_gender)
             start_row += len(df_gender) + 13
@@ -190,12 +215,23 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
             df_ethnicity = pd.DataFrame(patient_demographics.EthnicityGroups)
             df_ethnicity['ethnicity'] = df_ethnicity['ethnicity'].replace('', 'Unspecified').fillna('Unspecified')
             df_ethnicity = write_data_to_excel(
-                df_ethnicity, sheet_name, start_row, start_col, writer,
-                'Ethnicity Distribution',
-                {'ethnicity': 'Ethnicity', 'count': 'Count'}
+                data_frame = df_ethnicity,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Ethnicity Distribution',
+                rename_columns = {'ethnicity': 'Ethnicity', 'count': 'Count'}
             )
             chart_ethnicity = create_chart(
-                writer.book, 'pie', 'Ethnicity Distribution', sheet_name, start_row, 1, len(df_ethnicity), value_col = start_col+1
+                workbook = writer.book,
+                chart_type = 'pie',
+                series_name = 'Ethnicity Distribution',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = 1,
+                df_len = len(df_ethnicity),
+                value_col = start_col + 1
             )
             worksheet.insert_chart(start_row, 4, chart_ethnicity)
             start_row += len(df_ethnicity) + 13
@@ -203,12 +239,23 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
         if patient_demographics.SurvivorOrCareGiverDistribution:
             df_survivor = pd.DataFrame(patient_demographics.SurvivorOrCareGiverDistribution)
             df_survivor = write_data_to_excel(
-                df_survivor, sheet_name, start_row, start_col, writer,
-                'Survivor/Caregiver Distribution',
-                {'caregiver_status': 'Caregiver Status', 'count': 'Count'}
+                data_frame = df_survivor,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Survivor/Caregiver Distribution',
+                rename_columns = {'caregiver_status': 'Caregiver Status', 'count': 'Count'}
             )
             chart_survivor = create_chart(
-                writer.book, 'pie', 'Survivor/Caregiver Distribution', sheet_name, start_row, start_col, len(df_survivor),value_col = start_col+1
+                workbook = writer.book,
+                chart_type = 'pie',
+                series_name = 'Survivor/Caregiver Distribution',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                df_len = len(df_survivor),
+                value_col = start_col + 1
             )
             worksheet.insert_chart(start_row, 4, chart_survivor)
 
@@ -218,12 +265,23 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
             df_race = pd.DataFrame(patient_demographics.RaceGroups)
             df_race['race'] = df_race['race'].replace('', 'Unspecified').fillna('Unspecified')
             df_race = write_data_to_excel(
-                df_race, sheet_name, start_row, start_col, writer,
+                df_race,
+                sheet_name,
+                start_row,
+                start_col,
+                writer,
                 'Race Distribution',
                 {'race': 'Race', 'count': 'Count'}
             )
             chart_race = create_chart(
-                writer.book, 'pie', 'Race Distribution', sheet_name, start_row, start_col, len(df_race), value_col = start_col+1
+                workbook = writer.book,
+                chart_type = 'pie',
+                series_name = 'Race Distribution',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                df_len = len(df_race),
+                value_col = start_col+1
             )
             worksheet.insert_chart(start_row, start_col + 3, chart_race)
             start_row += len(df_race) + 13
@@ -231,9 +289,13 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
         if patient_demographics.HealthSystemDistribution:
             df_health_system = pd.DataFrame(patient_demographics.HealthSystemDistribution)
             df_health_system = write_data_to_excel(
-                df_health_system, sheet_name, start_row, start_col, writer,
-                'Health System Distribution',
-                {'health_system': 'Health System', 'count': 'Count'}
+                data_frame = df_health_system,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Health System Distribution',
+                rename_columns = {'health_system': 'Health System', 'count': 'Count'}
             )
             chart_health_system = create_chart(
                 writer.book, 'pie', 'Health System Distribution', sheet_name, start_row, start_col, len(df_health_system), value_col = start_col+1
@@ -244,12 +306,23 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
         if patient_demographics.HospitalDistribution:
             df_hospital = pd.DataFrame(patient_demographics.HospitalDistribution)
             df_hospital = write_data_to_excel(
-                df_hospital, sheet_name, start_row, start_col, writer,
-                'Hospital Distribution',
-                {'hospital': 'Hospital', 'count': 'Count'}
+                data_frame = df_hospital,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Hospital Distribution',
+                rename_columns = {'hospital': 'Hospital', 'count': 'Count'}
             )
             chart_hospital = create_chart(
-                writer.book, 'pie', 'Hospital Distribution', sheet_name, start_row, start_col, len(df_hospital), value_col = start_col+1
+                workbook = writer.book,
+                chart_type ='pie',
+                series_name = 'Hospital Distribution',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                df_len = len(df_hospital),
+                value_col = start_col + 1
             )
             worksheet.insert_chart(start_row, start_col + 3, chart_hospital)
             start_row += len(df_hospital) + 13
@@ -275,52 +348,83 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
         if generic_engagement_metrics.DailyActiveUsers:
             daily_active_users_df = pd.DataFrame(generic_engagement_metrics.DailyActiveUsers)
             daily_active_users_df = reindex_dataframe_to_all_missing_dates(
-                daily_active_users_df, 
-                date_col='activity_date',
-                fill_col= 'daily_active_users',
-                frequency='daily'
+                data_frame = daily_active_users_df, 
+                date_col = 'activity_date',
+                fill_col = 'daily_active_users',
+                frequency = 'daily'
             )
             daily_active_users_df_ = write_data_to_excel(
-                daily_active_users_df, sheet_name, start_row, col_daily, writer,
-                'Daily Active Users',
-                {'activity_date': 'Activity Date', 'daily_active_users': 'Daily Active Users'}
+                data_frame = daily_active_users_df,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_daily,
+                writer = writer,
+                title = 'Daily Active Users',
+                rename_columns = {'activity_date': 'Activity Date', 'daily_active_users': 'Daily Active Users'}
             )
-            daily_active_users_chart = create_chart(writer.book, 'column', 'Daily Active Users', sheet_name, start_row, col_daily, len(daily_active_users_df_), value_col = col_daily+1)
+            daily_active_users_chart = create_chart(
+                workbook = writer.book,
+                chart_type = 'column',
+                series_name = 'Daily Active Users',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_daily,
+                df_len = len(daily_active_users_df_),
+                value_col = col_daily + 1
+            )
             worksheet.insert_chart(start_row , col_monthly + 3, daily_active_users_chart)     
 
         if generic_engagement_metrics.WeeklyActiveUsers:
             weekly_active_users_df = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
             weekly_active_users_df = reindex_dataframe_to_all_missing_dates(weekly_active_users_df, start_date_col='week_start_date', end_date_col='week_end_date', fill_col='weekly_active_users', frequency='weekly')
             weekly_active_users_df_ = write_data_to_excel(
-                weekly_active_users_df, sheet_name, start_row, col_weekly, writer,'Weekly Active Users',
-                {'week_start_date': 'Week Start Date', 'week_end_date': 'Week End Date', 'weekly_active_users': 'Weekly Active Users'}
+                data_frame = weekly_active_users_df,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_weekly,
+                writer = writer,
+                title = 'Weekly Active Users',
+                rename_columns = {'week_start_date': 'Week Start Date', 'week_end_date': 'Week End Date', 'weekly_active_users': 'Weekly Active Users'}
             ) 
             
             weekly_active_users_chart = create_chart(
-            writer.book,
-            'column',
-            'Weekly Active Users',
-            sheet_name,
-            start_row=start_row,
-            start_col=col_weekly, 
-            df_len=len(weekly_active_users_df_), 
-            value_col=col_weekly + 2,
+            workbook = writer.book,
+            chart_type = 'column',
+            series_name = 'Weekly Active Users',
+            sheet_name = sheet_name,
+            start_row = start_row,
+            start_col = col_weekly, 
+            df_len = len(weekly_active_users_df_), 
+            value_col = col_weekly + 2,
         )
         worksheet.insert_chart(start_row + 16, col_monthly + 3, weekly_active_users_chart)
 
         if generic_engagement_metrics.MonthlyActiveUsers:
             monthly_active_users_df = pd.DataFrame(generic_engagement_metrics.MonthlyActiveUsers)
             monthly_active_users_reindex = reindex_dataframe_to_all_missing_dates(
-                monthly_active_users_df, 
-                date_col='activity_month',
-                fill_col= 'monthly_active_users',
+                data_frame = monthly_active_users_df, 
+                date_col = 'activity_month',
+                fill_col = 'monthly_active_users',
             )
             monthly_active_users_df_ = write_data_to_excel(
-                monthly_active_users_reindex, sheet_name, start_row, col_monthly, writer,
-                'Monthly Active Users',
-                {'activity_month': 'Activity Month', 'monthly_active_users': 'Monthly Active Users'}
+                data_frame = monthly_active_users_reindex,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_monthly,
+                writer = writer,
+                title = 'Monthly Active Users',
+                rename_columns = {'activity_month': 'Activity Month', 'monthly_active_users': 'Monthly Active Users'}
             )
-            monthly_active_users_chart = create_chart(writer.book, 'column', 'Monthly Active Users', sheet_name, start_row, col_monthly, len(monthly_active_users_df_), value_col = col_monthly+1)
+            monthly_active_users_chart = create_chart(
+                workbook = writer.book,
+                chart_type = 'column',
+                series_name = 'Monthly Active Users',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_monthly,
+                df_len = len(monthly_active_users_df_),
+                value_col = col_monthly + 1
+            )
             worksheet.insert_chart(start_row + 32, col_monthly + 3, monthly_active_users_chart)
         
     except Exception as e:
@@ -332,7 +436,7 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
         col_login_freq = 1
         col_retention_days = 14
         col_retention_intervals = 18
-        col_most_com_vis_features=32
+        col_most_com_vis_features = 32
         
         sheet_name = 'Generic Engagement'
         if sheet_name not in writer.sheets:
@@ -343,42 +447,84 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
         if generic_engagement_metrics.LoginFrequency:
             df_login_freq = pd.DataFrame(generic_engagement_metrics.LoginFrequency)  
             df_login_freq = write_data_to_excel(
-                df_login_freq, 'Generic Engagement', start_row, col_login_freq, writer,
-                'Login Frequency',
-                {'month': 'Month', 'login_count': 'Login Count'}
+                data_frame = df_login_freq,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_login_freq,
+                writer = writer,
+                title = 'Login Frequency',
+                rename_columns = {'month': 'Month', 'login_count': 'Login Count'}
             )
-            chart_login_freq = create_chart(writer.book, 'column', 'Login Frequency', sheet_name, start_row, col_login_freq, len(df_login_freq), value_col=col_login_freq+1)
+            chart_login_freq = create_chart(
+                workbook = writer.book,
+                chart_type = 'column',
+                series_name = 'Login Frequency',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_login_freq,
+                df_len = len(df_login_freq),
+                value_col = col_login_freq+1)
             worksheet.insert_chart(start_row , col_login_freq + 4, chart_login_freq)
     
-            if generic_engagement_metrics.RetentionRateOnSpecificDays:
-                retention_specific_days = generic_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
-                retention_days_df = pd.DataFrame(retention_specific_days)
-                retention_days_df_ = write_data_to_excel(
-                    retention_days_df, sheet_name, start_row, col_retention_days, writer,
-                    'Retention Rate on Specific Days',
-                    {'day': 'Day', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
-                )
-                retention_rate_on_specific_days_chart = create_chart(writer.book, 'column', 'Retention Rate on Specific Days', sheet_name, start_row, col_retention_days, len(retention_days_df_), value_col = col_retention_days+2)
-                worksheet.insert_chart(start_row, col_retention_intervals + 5, retention_rate_on_specific_days_chart)
+        if generic_engagement_metrics.RetentionRateOnSpecificDays:
+            retention_specific_days = generic_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
+            retention_days_df = pd.DataFrame(retention_specific_days)
+            retention_days_df_ = write_data_to_excel(
+                data_frame = retention_days_df,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_retention_days,
+                writer = writer,
+                title = 'Retention Rate on Specific Days',
+                rename_columns = {'day': 'Day', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
+            )
+            retention_rate_on_specific_days_chart = create_chart(
+                workbook = writer.book,
+                chart_type = 'column',
+                series_name = 'Retention Rate on Specific Days',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_retention_days,
+                df_len = len(retention_days_df_),
+                value_col = col_retention_days + 2
+            )
+            worksheet.insert_chart(start_row, col_retention_intervals + 5, retention_rate_on_specific_days_chart)
+
         if generic_engagement_metrics.RetentionRateInSpecificIntervals:
             retention_intervals = generic_engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']
             retention_intervals_df = pd.DataFrame(retention_intervals)
-
             retention_intervals_df_ = write_data_to_excel(
-                retention_intervals_df, sheet_name, start_row, col_retention_intervals, writer,
-                'Retention Rate in Specific Intervals',
-                {'interval': 'Interval', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
+                data_frame = retention_intervals_df,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_retention_intervals,
+                writer = writer,
+                title = 'Retention Rate in Specific Intervals',
+                rename_columns = {'interval': 'Interval', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'}
             )
-            retention_intervals_chart = create_chart(writer.book, 'column', 'Retention Rate in Specific Intervals', sheet_name, start_row, col_retention_intervals, len(retention_intervals_df_), value_col = col_retention_intervals+2)
+            retention_intervals_chart = create_chart(
+                workbook=writer.book,
+                chart_type = 'column',
+                series_name = 'Retention Rate in Specific Intervals',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_retention_intervals,
+                df_len = len(retention_intervals_df_),
+                value_col = col_retention_intervals + 2
+            )
             worksheet.insert_chart(start_row + 18, col_retention_intervals + 5, retention_intervals_chart)
 
         if generic_engagement_metrics.MostCommonlyVisitedFeatures:
             most_commonly_visited_features_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedFeatures)  
             most_commonly_visited_features_df_ = write_data_to_excel(
-            most_commonly_visited_features_df, sheet_name, start_row, col_most_com_vis_features, writer,
-                    'Most visited features',
-                    {'month': 'Month','feature':'Feature', 'feature_usage_count': 'Feature Usage Count'}
-                )
+                data_frame = most_commonly_visited_features_df,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_most_com_vis_features,
+                writer = writer,
+                title = 'Most visited features',
+                rename_columns = {'month': 'Month','feature':'Feature', 'feature_usage_count': 'Feature Usage Count'}
+            )
             most_commonly_visited_features_chart = writer.book.add_chart({'type': 'column'})
             most_commonly_visited_features_chart.add_series({
                 'name': '',
@@ -410,10 +556,12 @@ async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagem
         for metrics in feature_engagement_metrics:
             sheet_name = metrics.Feature
             await feature_engagement(
-                feature_feature_engagement_metrics=metrics,
-                writer=writer,
-                sheet_name=sheet_name 
+                feature_feature_engagement_metrics = metrics,
+                writer = writer,
+                sheet_name = sheet_name 
             )    
     except Exception as e:
         print(f"Error generating report: {e}")
         return ""
+ 
+##################################################################################   
