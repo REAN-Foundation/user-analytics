@@ -1,5 +1,5 @@
 
-from typing import Optional
+from typing import Dict, Optional
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -234,3 +234,44 @@ def reindex_dataframe_to_all_missing_dates(
         df_reindexed[date_col] = df_reindexed[date_col].dt.strftime(date_format)
 
     return df_reindexed
+
+def write_grouped_data_to_excel(
+    data_frame: pd.DataFrame, 
+    sheet_name: str, 
+    start_row: int, 
+    start_col: int, 
+    writer: pd.ExcelWriter, 
+    title: str, 
+    group_by_column: str, 
+    feature_column: str, 
+    value_column: str, 
+    rename_columns: Optional[Dict[str, str]] = None
+) -> pd.DataFrame:
+ 
+    title_format = writer.book.add_format({'bold': True, 'font_size': 14})
+    header_format = writer.book.add_format({'border': 0, 'bold': True})
+    worksheet = writer.sheets[sheet_name]
+    worksheet.write(start_row - 2, start_col, title, title_format)
+
+    if rename_columns:
+        data_frame = data_frame.rename(columns=rename_columns)
+
+    grouped_df = data_frame.groupby(group_by_column)
+    worksheet.write(start_row - 1, start_col, group_by_column, header_format)
+    worksheet.write(start_row - 1, start_col + 1, feature_column, header_format)
+    worksheet.write(start_row - 1, start_col + 2, value_column, header_format)
+    row = start_row
+    for group_value, group in grouped_df:
+        worksheet.write(row, start_col, group_value)
+        for _, row_data in group.iterrows():
+            worksheet.write(row, start_col + 1, row_data[feature_column])
+            worksheet.write(row, start_col + 2, row_data[value_column])
+            row += 1
+        worksheet.write(row, start_col, '')
+        worksheet.write(row, start_col + 1, '')
+        worksheet.write(row, start_col + 2, '')
+        row += 1
+    for i, col in enumerate([group_by_column, feature_column, value_column]):
+        worksheet.set_column(start_col + i, start_col + i, max(len(col), 10))
+
+    return data_frame
