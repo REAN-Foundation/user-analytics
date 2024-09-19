@@ -39,7 +39,7 @@ async def generate_report_excel(
              await add_active_users_data(metrics.GenericMetrics, writer)
              await add_generic_engagement_data(metrics.GenericMetrics, writer)
              await add_most_visited_feature(metrics.GenericMetrics, writer)
-             await add_most_visited_screens(metrics.GenericMetrics, writer)
+            #  await add_most_visited_screens(metrics.GenericMetrics, writer)
              await add_feature_engagement_data(metrics.FeatureMetrics, writer)
 
             excel_buffer.seek(0)
@@ -77,7 +77,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         })
 
         df_stats['Value'] = df_stats['Value'].fillna("Unspecified")
-        sheet_name = 'Basic Analytics Statistics'
+        sheet_name = 'Basic Statistics'
         df_stats.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=2, startcol=1)
         workbook = writer.book
         worksheet = writer.sheets[sheet_name]
@@ -170,7 +170,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             
 async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistics, writer) -> bool:
     try:
-        sheet_name = 'Patient Demographics'
+        sheet_name = 'Demographics'
         if sheet_name not in writer.sheets:
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
@@ -545,8 +545,10 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
 async def add_most_visited_feature(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
     try:   
         start_row = 3
-        start_col = 1
-        sheet_name = 'Most Visited Features'
+        start_col_visited_feature = 1
+        start_col_visited_screens = 6
+        
+        sheet_name = 'Most Visited'
         if sheet_name not in writer.sheets:
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
@@ -558,7 +560,7 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
                 data_frame = most_commonly_visited_features_df, 
                 sheet_name = sheet_name, 
                 start_row = start_row, 
-                start_col = start_col, 
+                start_col = start_col_visited_feature, 
                 writer = writer, 
                 title = 'Most Visited Features', 
                 group_by_column = 'Month', 
@@ -566,29 +568,13 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
                 value_column = 'Usage Count',
                 rename_columns = {'month': 'Month', 'feature': 'Feature', 'feature_usage_count': 'Usage Count'}   
             )
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return False
-    return True
-        
-async def add_most_visited_screens(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
-    try:   
-        start_row = 3
-        start_col = 1
-        sheet_name = 'Most Visited Screens'
-        
-        if sheet_name not in writer.sheets:
-            worksheet = writer.book.add_worksheet(sheet_name)
-        else:
-            worksheet = writer.sheets[sheet_name]
-        
         if generic_engagement_metrics.MostCommonlyVisitedScreens:
             most_commonly_visited_screens_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedScreens)  
             write_grouped_data_to_excel(
                 data_frame = most_commonly_visited_screens_df, 
                 sheet_name = sheet_name, 
                 start_row = start_row, 
-                start_col = start_col, 
+                start_col = start_col_visited_screens, 
                 writer = writer, 
                 title = 'Most Visited Screens', 
                 group_by_column = 'Month', 
@@ -600,6 +586,36 @@ async def add_most_visited_screens(generic_engagement_metrics: GenericEngagement
         print(f"An error occurred: {e}")
         return False
     return True
+        
+# async def add_most_visited_screens(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
+#     try:   
+#         start_row = 3
+#         start_col = 1
+#         sheet_name = 'Most Visited Screens'
+        
+#         if sheet_name not in writer.sheets:
+#             worksheet = writer.book.add_worksheet(sheet_name)
+#         else:
+#             worksheet = writer.sheets[sheet_name]
+        
+#         if generic_engagement_metrics.MostCommonlyVisitedScreens:
+#             most_commonly_visited_screens_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedScreens)  
+#             write_grouped_data_to_excel(
+#                 data_frame = most_commonly_visited_screens_df, 
+#                 sheet_name = sheet_name, 
+#                 start_row = start_row, 
+#                 start_col = start_col, 
+#                 writer = writer, 
+#                 title = 'Most Visited Screens', 
+#                 group_by_column = 'Month', 
+#                 feature_column = 'Screen', 
+#                 value_column = 'Count',
+#                 rename_columns = {'month': 'Month', 'screen': 'Screen', 'count': 'Count'}   
+#             )
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
+#         return False
+#     return True
         
 ################################################################################################
 

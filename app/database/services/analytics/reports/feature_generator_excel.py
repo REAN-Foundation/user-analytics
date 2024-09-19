@@ -142,17 +142,17 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                 title = 'Dropoff Points',
                 rename_columns = {'event_name': 'Event Name', 'dropoff_count':'Dropoff Count','total_users':'Total Users', 'dropoff_rate': 'Dropoff Rate'}
             )
-            drop_off_points_chart = create_chart(
-                workbook = writer.book,
-                chart_type = 'pie',
-                series_name = 'Dropoff Points',
-                sheet_name = sheet_name,
-                start_row = start_row,
-                start_col = col_dopoff_points,
-                df_len = len(drop_off_points_df_),
-                value_col = col_dopoff_points + 1
-            )
-            worksheet.insert_chart(start_row, col_dopoff_points + 5, drop_off_points_chart)
+            # drop_off_points_chart = create_chart(
+            #     workbook = writer.book,
+            #     chart_type = 'pie',
+            #     series_name = 'Dropoff Points',
+            #     sheet_name = sheet_name,
+            #     start_row = start_row,
+            #     start_col = col_dopoff_points,
+            #     df_len = len(drop_off_points_df_),
+            #     value_col = col_dopoff_points + 1
+            # )
+            # worksheet.insert_chart(start_row, col_dopoff_points + 5, drop_off_points_chart)
             
     except Exception as e:
         print(f"Error generating report: {e}")
@@ -161,5 +161,5 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
   ##################################################################################
       
 def format_sheet_name(feature_name):
-    formatted_name = feature_name.replace('-', ' ').title() + ' Engagement'
+    formatted_name = feature_name.replace('-', ' ').title()
     return formatted_name  
