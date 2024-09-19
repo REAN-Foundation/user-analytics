@@ -198,15 +198,12 @@ async def get_patients_average_session_length_in_minutes(filters: AnalyticsFilte
                     AVG(session_length) AS avg_session_length_seconds
                 FROM (
                     SELECT
-                        e.SessionId,
                         TIMESTAMPDIFF(SECOND, MIN(e.Timestamp), MAX(e.Timestamp)) AS session_length
                     FROM events e
                     JOIN users AS user ON e.UserId = user.id
                         WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
-                        AND e.SessionId IS NOT NULL
                         __CHECKS__
-                    GROUP BY e.SessionId
                 ) AS session_durations;
             """
 
