@@ -89,11 +89,18 @@
     # except Exception as e:
     #     print(e)
 
+import io
 import os
 import json
 import pandas as pd
 from datetime import datetime
 from app.domain_types.schemas.analytics import BasicAnalyticsStatistics, EngagementMetrics, FeatureEngagementMetrics, GenericEngagementMetrics
+from app.modules.storage.provider.awa_s3_storage_service import S3Storage
+
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+region_name = os.getenv('AWS_REGION')
+bucket_name = os.getenv('AWS_BUCKET')
 
 # Function to get report folder path
 def get_report_folder_path() -> str:
@@ -166,12 +173,49 @@ def create_chart(workbook, chart_type, series_name, sheet_name, start_row, start
 
 #####################################################################
 
+# async def generate_report_excel(
+#         analysis_code: str,
+#         metrics: EngagementMetrics) -> str | None:
+#     try:
+#         # Example analysis code
+#         analysis_code = '28'
+
+#         # Load JSON data from the file for basic analytics
+#         basic_analysis_data_path = 'test_data/basic_statistic.json'
+#         basic_analysis_data = read_json_file(basic_analysis_data_path)
+
+#         # Load JSON data for generic engagement metrics
+#         generic_engagement_metrics_data_path = 'test_data/generic_engagement_metrics.json'
+#         generic_engagement_metrics_data = read_json_file(generic_engagement_metrics_data_path)
+
+#         # Load JSON data for feature engagement metrics
+#         feature_engagement_data_path = 'test_data/feature_engagement_metrics_medication.json'
+#         feature_engagement_data = read_json_file(feature_engagement_data_path)
+
+#         # Initialize the loaded data
+#         basic_analysis = BasicAnalyticsStatistics(**basic_analysis_data)
+#         generic_engagement_metrics = GenericEngagementMetrics(**generic_engagement_metrics_data)
+#         feature_engagement_metrics = FeatureEngagementMetrics(**feature_engagement_data)
+
+#         reports_path = get_report_folder_path()
+#         excel_file_path = os.path.join(reports_path, f"report_{analysis_code}.xlsx")
+#         with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
+#              await add_basic_analytics_statistics(basic_analysis, writer)
+#              await add_patient_demographics_data(basic_analysis, writer)
+#              await add_generic_engagement_data(generic_engagement_metrics, writer)
+#             #  await add_feature_engagement_data(feature_engagement_metrics, writer)
+#         return excel_file_path
+#     except Exception as e:
+#         print(e)
+#         return ""
+
+
 async def generate_report_excel(
         analysis_code: str,
         metrics: EngagementMetrics) -> str | None:
     try:
         # Example analysis code
-        analysis_code = '28'
+        # analysis_code = '28'
 
         # Load JSON data from the file for basic analytics
         basic_analysis_data_path = 'test_data/basic_statistic.json'
@@ -192,16 +236,25 @@ async def generate_report_excel(
 
         reports_path = get_report_folder_path()
         excel_file_path = os.path.join(reports_path, f"report_{analysis_code}.xlsx")
-        with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
-             await add_basic_analytics_statistics(basic_analysis, writer)
-             await add_patient_demographics_data(basic_analysis, writer)
-             await add_generic_engagement_data(generic_engagement_metrics, writer)
-            #  await add_feature_engagement_data(feature_engagement_metrics, writer)
-        return excel_file_path
+        with io.BytesIO() as excel_buffer:
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                await add_basic_analytics_statistics(basic_analysis, writer)
+                await add_patient_demographics_data(basic_analysis, writer)
+                await add_generic_engagement_data(generic_engagement_metrics, writer)
+                # await add_feature_engagement_data(feature_engagement_metrics, writer)
+
+            # Seek to the beginning of the BytesIO buffer before uploading
+            excel_buffer.seek(0)
+
+            # Upload to S3
+            storage = S3Storage(aws_access_key_id, aws_secret_access_key, region_name)
+            file_name = f"user_engagement_report_{analysis_code}.xlsx"
+            await storage.upload_excel_or_pdf(excel_buffer, bucket_name, file_name)
+            s3_file_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
     except Exception as e:
         print(e)
         return ""
-
+    
 ###################################################################################
 
 async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatistics, writer) -> None:
