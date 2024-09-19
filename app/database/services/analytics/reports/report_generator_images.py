@@ -66,21 +66,21 @@ def generate_basic_statistics_images(
             data_frame    = registration_history_df_filled,
             x_column      = 'month',
             y_column      = 'user_count',
-            title         = 'Patient Registration History',
+            title         = 'Registration History',
             x_label       = 'Month',
             y_label       = 'Number of Registrations',
             color_palette = 'Blues_d',
-            file_path     = os.path.join(location, 'patient_registration_history'))
+            file_path     = os.path.join(location, 'registration_history'))
 
         plot_bar_chart(
             data_frame    = deregistration_history_df_filled,
             x_column      = 'month',
             y_column      = 'user_count',
-            title         = 'Patient Deregistration History',
+            title         = 'Deregistration History',
             x_label       = 'Month',
             y_label       = 'Number of Deregistrations',
             color_palette = 'Reds_d',
-            file_path     = os.path.join(location, 'patient_deregistration_history'))
+            file_path     = os.path.join(location, 'deregistration_history'))
 
         plot_bar_chart(
             data_frame    = healthsystem_distribution_df,
@@ -106,9 +106,9 @@ def generate_basic_statistics_images(
             data_frame    = age_groups_df,
             value_column  = 'count',
             label_column  = 'age_group',
-            title         = 'Patient Age Groups',
+            title         = 'Patient Age Distribution',
             color_palette = 'Set3',
-            file_path     = os.path.join(location, 'patient_age_groups'))
+            file_path     = os.path.join(location, 'age_distribution'))
 
         plot_pie_chart(
             data_frame    = gender_groups_df,

@@ -1,3 +1,4 @@
+import io
 import os
 import json
 from typing import Optional
@@ -16,6 +17,14 @@ from app.domain_types.schemas.analytics import (
     FeatureEngagementMetrics, 
     GenericEngagementMetrics
 )
+from app.modules.storage.provider.awa_s3_storage_service import S3Storage
+
+#########################################################################################
+
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+region_name = os.getenv('AWS_REGION')
+bucket_name = os.getenv('AWS_BUCKET')
 
 ############################################################################################
 
@@ -25,17 +34,24 @@ async def generate_report_excel(
     try:
         reports_path = get_report_folder_path()
         excel_file_path = os.path.join(reports_path, f"report_{analysis_code}.xlsx")
-        with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
+        with io.BytesIO() as excel_buffer:
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
              await add_basic_analytics_statistics(metrics.BasicStatistics, writer)
              await add_patient_demographics_data(metrics.BasicStatistics, writer)
              await add_active_users_data(metrics.GenericMetrics, writer)
              await add_generic_engagement_data(metrics.GenericMetrics, writer)
              await add_feature_engagement_data(metrics.FeatureMetrics, writer)
-        return excel_file_path
+
+            excel_buffer.seek(0)
+
+            storage = S3Storage(aws_access_key_id, aws_secret_access_key, region_name)
+            file_name = f"user_engagement_report_{analysis_code}.xlsx"
+            await storage.upload_excel_or_pdf(excel_buffer, bucket_name, file_name)
+            s3_file_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
     except Exception as e:
         print(e)
         return ""
-
+    
 ###################################################################################
 
 async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatistics, writer) -> None:

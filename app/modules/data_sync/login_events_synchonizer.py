@@ -21,6 +21,7 @@ class LoginEventsSynchronizer:
                 session.ValidTill,
                 session.CreatedAt,
                 user.id as UserId,
+                user.RoleId,
                 user.TenantId,
                 user.CreatedAt as UserRegistrationDate
             from user_login_sessions as session
@@ -42,7 +43,7 @@ class LoginEventsSynchronizer:
     @staticmethod
     def add_login_session_events(session):
         try:
-            event_name = EventType.UserLogin.value
+            event_name: EventType = EventType.UserLoginWithOtp if session['RoleId'] == 2 else EventType.UserLoginWithPassword
             event_subject = EventSubject.LoginSession.value
             event_category = EventCategory.LoginSession.value
             event = {
@@ -84,7 +85,8 @@ class LoginEventsSynchronizer:
                 print("No user login sessions found.")
                 return None
             for session in sessions:
-                existing_event = DataSynchronizer.get_existing_event(session['UserId'], session['id'], EventType.UserLogin)
+                event_type: EventType = EventType.UserLoginWithOtp if session['RoleId'] == 2 else EventType.UserLoginWithPassword
+                existing_event = DataSynchronizer.get_existing_event(session['UserId'], session['id'], event_type)
                 if existing_event is not None:
                     existing_session_count += 1
                     continue

@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     JAEGER_AGENT_PORT: int = 6831
     METRICS_ENABLED: bool = False
 
+    AWS_ACCESS_KEY_ID: str='AWS_ACCESS_KEY_ID'
+    AWS_SECRET_ACCESS_KEY: str='AWS_SECRET_ACCESS_KEY'
+    AWS_REGION: str='AWS_REGION'
+    AWS_BUCKET: str='AWS_BUCKET'
+
     class Config:
         env_file = ".env"
         extra="forbid"
