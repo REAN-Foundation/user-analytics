@@ -16,8 +16,8 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
         col_retention_days = 19
         col_retention_intervals = 23
         col_dopoff_points = 38
-        
-        sheet_name = sheet_name
+
+        sheet_name = format_sheet_name(sheet_name)
         
         if sheet_name not in writer.sheets:
             worksheet = writer.book.add_worksheet(sheet_name)
@@ -157,3 +157,9 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
     except Exception as e:
         print(f"Error generating report: {e}")
         return ""
+    
+  ##################################################################################
+      
+def format_sheet_name(feature_name):
+    formatted_name = feature_name.replace('-', ' ').title() + ' Engagement'
+    return formatted_name  
