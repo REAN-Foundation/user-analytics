@@ -65,15 +65,11 @@ This section provides an overview of the basic analytics related to the tenant, 
   Trends of how many users registered or deregistered from the system on a given day, in a given week or a month.
 
 
-**History by Days**
-{{daily_registration_history_chart}}
-<!-- ![Daily User Registration History](path/to/registration_history_chart.png) -->
+**Registration and Deregistration History**
 
-**History by Weeks**
-{{weekly_registration_history_chart}}
+{{registration_history_chart}}
 
-**History by Months**
-{{monthly_registration_history_chart}}
+{{deregistration_history_chart}}
 
 ---
 
@@ -85,17 +81,7 @@ Demographics provide an understanding of the user base by categorizing them into
 
 {{age_distribution_chart}}
 
-| Age Group | Count | Percentage |
-|-----------|-------|------------|
-| 0-18      | 500   | 10%        |
-| 19-30     | 1000  | 20%        |
-| 31-45     | 1500  | 30%        |
-| 46-60     | 800   | 16%        |
-| 61-75     | 700   | 14%        |
-| 76-90     | 600   | 12%        |
-| 91-105    | 400   | 8%         |
-| 106-120   | 100   | 2%         |
-| Unknown   | 0     | 0%         |
+{{age_distribution_table}}
 
 **Gender Distribution**
 
