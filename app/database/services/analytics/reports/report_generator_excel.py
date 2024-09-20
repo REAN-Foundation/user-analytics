@@ -154,30 +154,32 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 rename_columns = {'month': 'Month', 'registration_count': 'Registration Count', 'deregistration_count': 'Deregistration Count'},
                 description = 'Trends of how many users registered or deregistered from the system on a given day, in a given week or a month.'
             )
-            patient_registration_chart = create_chart(
-                workbook = workbook, 
-                chart_type = 'column',
-                series_name = 'Patient Registration Count',
-                sheet_name = sheet_name,
-                start_row = startrow_combined_data + 2,
-                start_col = start_col, 
-                df_len = len(df_combined), 
-                value_col = 2,
-            )
-            worksheet.insert_chart('H4', patient_registration_chart)
             
-            patient_deregistration_chart = create_chart(
-                workbook = workbook,
-                chart_type = 'column',
-                series_name = 'Patient Deregistration Count',
-                sheet_name = sheet_name,
-                start_row = startrow_combined_data + 2,
-                start_col = start_col,
-                df_len = len(df_combined),
-                value_col = 3,
-            )
-            
-            worksheet.insert_chart('H21', patient_deregistration_chart)
+            reg_dereg_chart = workbook.add_chart({'type': 'column'})
+            reg_dereg_chart.add_series({
+                'name': 'Registration',
+                'categories': [sheet_name, startrow_combined_data + 3, start_col, startrow_combined_data + len(df_combined), start_col],
+                'values': [sheet_name, startrow_combined_data + 3, start_col + 1, startrow_combined_data + len(df_combined), start_col + 1],
+            })
+            reg_dereg_chart.add_series({
+                'name': 'Deregistration',
+                'categories': [sheet_name, startrow_combined_data + 3, start_col, startrow_combined_data + len(df_combined), start_col],
+                'values': [sheet_name, startrow_combined_data + 3, start_col + 2, startrow_combined_data + len(df_combined), start_col + 2],
+            })
+            reg_dereg_chart.set_x_axis({
+                'major_gridlines': {
+                    'visible': True,
+                    'line': {'color': '#CCCCCC', 'dash_type': 'dot', 'transparency': 0.8}
+                }
+            })
+            reg_dereg_chart.set_y_axis({
+                'major_gridlines': {
+                    'visible': True,
+                    'line': {'color': '#CCCCCC', 'dash_type': 'dot', 'transparency': 0.8}
+                }
+            })
+            reg_dereg_chart.set_title({'name': 'Patient Registration & Deregistration'})
+            worksheet.insert_chart('H21', reg_dereg_chart)
             worksheet.set_column('D:D', 20,value_format) 
             worksheet.set_column('B:B', 20, value_format) 
             worksheet.set_column('C:C', 20, value_format)  
