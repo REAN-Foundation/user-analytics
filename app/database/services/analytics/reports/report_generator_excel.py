@@ -1,18 +1,19 @@
 import io
 import os
 import pandas as pd
+from app.common.utils import print_exception
 from app.database.services.analytics.common import get_report_folder_path
 from app.database.services.analytics.reports.feature_generator_excel import feature_engagement
 from app.database.services.analytics.reports.report_utilities import(
-    create_chart, 
-    reindex_dataframe_to_all_missing_dates, 
+    create_chart,
+    reindex_dataframe_to_all_missing_dates,
     write_data_to_excel,
     write_grouped_data_to_excel
 )
 from app.domain_types.schemas.analytics import (
-    BasicAnalyticsStatistics, 
-    EngagementMetrics, 
-    FeatureEngagementMetrics, 
+    BasicAnalyticsStatistics,
+    EngagementMetrics,
+    FeatureEngagementMetrics,
     GenericEngagementMetrics
 )
 from app.modules.storage.provider.awa_s3_storage_service import S3Storage
@@ -48,21 +49,21 @@ async def generate_report_excel(
             await storage.upload_excel_or_pdf(excel_buffer, bucket_name, file_name)
             s3_file_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
     except Exception as e:
-        print(e)
+        print_exception(e)
         return excel_file_path
-    
+
 ###################################################################################
 
 async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatistics, writer) -> bool:
-    try: 
+    try:
         df_stats = pd.DataFrame({
             'Property': [
-                'Tenant ID', 
-                'Tenant Name', 
-                'Start Date', 
-                'End Date', 
-                'Total Users', 
-                'Total Patients', 
+                'Tenant ID',
+                'Tenant Name',
+                'Start Date',
+                'End Date',
+                'Total Users',
+                'Total Patients',
                 'Total Active Patients'
             ],
             'Value': [
@@ -81,17 +82,17 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         df_stats.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=2, startcol=1)
         workbook = writer.book
         worksheet = writer.sheets[sheet_name]
-        
+
         title_format = workbook.add_format({
-            'bold': True, 
-            'font_size': 14, 
-            'align': 'left', 
+            'bold': True,
+            'font_size': 14,
+            'align': 'left',
             'valign': 'vcenter'
         })
 
         field_bold_format = workbook.add_format({
-            'bold': True, 
-            'align': 'left', 
+            'bold': True,
+            'align': 'left',
         })
 
         value_format = workbook.add_format({
@@ -107,7 +108,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         if basic_analytics.PatientRegistrationHistory and basic_analytics.PatientDeregistrationHistory:
             patient_registration_history_df = pd.DataFrame(basic_analytics.PatientRegistrationHistory)
             paitent_deregistration_history_df = pd.DataFrame(basic_analytics.PatientDeregistrationHistory)
-        
+
             patient_registration_history_df = reindex_dataframe_to_all_missing_dates(
                 data_frame = patient_registration_history_df,
                 date_col = 'month',
@@ -118,14 +119,14 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 date_col = 'month',
                 fill_col = 'user_count',
             )
-            
+
             df_combined = pd.merge(
                 patient_registration_history_df[['month', 'user_count']].rename(columns={'user_count': 'registration_count'}),
                 paitent_deregistration_history_df[['month', 'user_count']].rename(columns={'user_count': 'deregistration_count'}),
                 on='month',
                 how='outer'
-            ).fillna(0) 
-            
+            ).fillna(0)
+
             startrow_combined_data = 13
             df_combined = write_data_to_excel(
                 data_frame = df_combined,
@@ -137,17 +138,17 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 rename_columns = {'month': 'Month', 'registration_count': 'Registration Count', 'deregistration_count': 'Deregistration Count'}
             )
             patient_registration_chart = create_chart(
-                workbook = workbook, 
+                workbook = workbook,
                 chart_type = 'column',
                 series_name = 'Patient Registration Count',
                 sheet_name = sheet_name,
                 start_row = 13,
-                start_col = 1, 
-                df_len = len(df_combined), 
+                start_col = 1,
+                df_len = len(df_combined),
                 value_col = 2,
             )
             worksheet.insert_chart('G3', patient_registration_chart)
-            
+
             patient_deregistration_chart = create_chart(
                 workbook = workbook,
                 chart_type = 'column',
@@ -158,16 +159,18 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 df_len = len(df_combined),
                 value_col = 3,
             )
-            
+
             worksheet.insert_chart('G20', patient_deregistration_chart)
-            worksheet.set_column('D:D', 20,value_format) 
-            worksheet.set_column('B:B', 20, value_format) 
-            worksheet.set_column('C:C', 20, value_format)   
+            worksheet.set_column('D:D', 20,value_format)
+            worksheet.set_column('B:B', 20, value_format)
+            worksheet.set_column('C:C', 20, value_format)
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print_exception(e)
         return False
-    return True  
-            
+
+    return True
+
 async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistics, writer) -> bool:
     try:
         sheet_name = 'Patient Demographics'
@@ -180,7 +183,7 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
         worksheet.merge_range('A1:Z1', title, writer.book.add_format({'bold': True, 'font_size': 16, 'align': 'center'}))
 
         patient_demographics = basic_analytics.PatientDemographics
-        
+
         start_row = 3
         start_col = 1
         if patient_demographics.AgeGroups:
@@ -205,7 +208,7 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
                 value_col = start_col + 1
             )
             worksheet.insert_chart(start_row, 4, chart_age)
-            start_row += len(df_age) + 13 
+            start_row += len(df_age) + 13
 
         if patient_demographics.GenderGroups:
             df_gender = pd.DataFrame(patient_demographics.GenderGroups)
@@ -213,7 +216,7 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
                 data_frame = df_gender,
                 sheet_name = sheet_name,
                 start_row = start_row,
-                start_col = 1, 
+                start_col = 1,
                 writer = writer,
                 title = 'Gender Distribution',
                 rename_columns = {'gender': 'Gender', 'count': 'Count'}
@@ -348,30 +351,30 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
             start_row += len(df_hospital) + 13
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print_exception(e)
         return False
-    return True
 
+    return True
 
 #####################################################################################
 
 async def add_active_users_data(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
-    try: 
+    try:
         start_row = 3
-        col_daily = 1 
-        col_weekly = 4 
+        col_daily = 1
+        col_weekly = 4
         col_monthly = 8
-        
+
         sheet_name = 'Active Users'
         if sheet_name not in writer.sheets:
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
             worksheet = writer.sheets[sheet_name]
-      
+
         if generic_engagement_metrics.DailyActiveUsers:
             daily_active_users_df = pd.DataFrame(generic_engagement_metrics.DailyActiveUsers)
             daily_active_users_df = reindex_dataframe_to_all_missing_dates(
-                data_frame = daily_active_users_df, 
+                data_frame = daily_active_users_df,
                 date_col = 'activity_date',
                 fill_col = 'daily_active_users',
                 frequency = 'daily'
@@ -395,7 +398,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
                 df_len = len(daily_active_users_df_),
                 value_col = col_daily + 1
             )
-            worksheet.insert_chart(start_row , col_monthly + 3, daily_active_users_chart)     
+            worksheet.insert_chart(start_row , col_monthly + 3, daily_active_users_chart)
 
         if generic_engagement_metrics.WeeklyActiveUsers:
             weekly_active_users_df = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
@@ -408,16 +411,16 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
                 writer = writer,
                 title = 'Weekly Active Users',
                 rename_columns = {'week_start_date': 'Week Start Date', 'week_end_date': 'Week End Date', 'weekly_active_users': 'Weekly Active Users'}
-            ) 
-            
+            )
+
             weekly_active_users_chart = create_chart(
             workbook = writer.book,
             chart_type = 'column',
             series_name = 'Weekly Active Users',
             sheet_name = sheet_name,
             start_row = start_row,
-            start_col = col_weekly, 
-            df_len = len(weekly_active_users_df_), 
+            start_col = col_weekly,
+            df_len = len(weekly_active_users_df_),
             value_col = col_weekly + 2,
         )
         worksheet.insert_chart(start_row + 16, col_monthly + 3, weekly_active_users_chart)
@@ -425,7 +428,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
         if generic_engagement_metrics.MonthlyActiveUsers:
             monthly_active_users_df = pd.DataFrame(generic_engagement_metrics.MonthlyActiveUsers)
             monthly_active_users_reindex = reindex_dataframe_to_all_missing_dates(
-                data_frame = monthly_active_users_df, 
+                data_frame = monthly_active_users_df,
                 date_col = 'activity_month',
                 fill_col = 'monthly_active_users',
             )
@@ -449,27 +452,28 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
                 value_col = col_monthly + 1
             )
             worksheet.insert_chart(start_row + 32, col_monthly + 3, monthly_active_users_chart)
-        
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print_exception(e)
         return False
+
     return True
 
 async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
-    try:   
+    try:
         start_row = 3
         col_login_freq = 1
         col_retention_days = 14
         col_retention_intervals = 18
-        
+
         sheet_name = 'Generic Engagement'
         if sheet_name not in writer.sheets:
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
             worksheet = writer.sheets[sheet_name]
-        
+
         if generic_engagement_metrics.LoginFrequency:
-            df_login_freq = pd.DataFrame(generic_engagement_metrics.LoginFrequency)  
+            df_login_freq = pd.DataFrame(generic_engagement_metrics.LoginFrequency)
             df_login_freq = write_data_to_excel(
                 data_frame = df_login_freq,
                 sheet_name = sheet_name,
@@ -489,7 +493,7 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 df_len = len(df_login_freq),
                 value_col = col_login_freq+1)
             worksheet.insert_chart(start_row , col_login_freq + 4, chart_login_freq)
-    
+
         if generic_engagement_metrics.RetentionRateOnSpecificDays:
             retention_specific_days = generic_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
             retention_days_df = pd.DataFrame(retention_specific_days)
@@ -538,12 +542,13 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
             )
             worksheet.insert_chart(start_row + 18, col_retention_intervals + 5, retention_intervals_chart)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print_exception(e)
         return False
+
     return True
-        
+
 async def add_most_visited_feature(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
-    try:   
+    try:
         start_row = 3
         start_col = 1
         sheet_name = 'Most Visited Features'
@@ -551,70 +556,72 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
             worksheet = writer.sheets[sheet_name]
-        
+
         if generic_engagement_metrics.MostCommonlyVisitedFeatures:
-            most_commonly_visited_features_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedFeatures)  
+            most_commonly_visited_features_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedFeatures)
             write_grouped_data_to_excel(
-                data_frame = most_commonly_visited_features_df, 
-                sheet_name = sheet_name, 
-                start_row = start_row, 
-                start_col = start_col, 
-                writer = writer, 
-                title = 'Most Visited Features', 
-                group_by_column = 'Month', 
-                feature_column = 'Feature', 
+                data_frame = most_commonly_visited_features_df,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Most Visited Features',
+                group_by_column = 'Month',
+                feature_column = 'Feature',
                 value_column = 'Usage Count',
-                rename_columns = {'month': 'Month', 'feature': 'Feature', 'feature_usage_count': 'Usage Count'}   
+                rename_columns = {'month': 'Month', 'feature': 'Feature', 'feature_usage_count': 'Usage Count'}
             )
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print_exception(e)
         return False
+
     return True
-        
+
 async def add_most_visited_screens(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
-    try:   
+    try:
         start_row = 3
         start_col = 1
         sheet_name = 'Most Visited Screens'
-        
+
         if sheet_name not in writer.sheets:
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
             worksheet = writer.sheets[sheet_name]
-        
+
         if generic_engagement_metrics.MostCommonlyVisitedScreens:
-            most_commonly_visited_screens_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedScreens)  
+            most_commonly_visited_screens_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedScreens)
             write_grouped_data_to_excel(
-                data_frame = most_commonly_visited_screens_df, 
-                sheet_name = sheet_name, 
-                start_row = start_row, 
-                start_col = start_col, 
-                writer = writer, 
-                title = 'Most Visited Screens', 
-                group_by_column = 'Month', 
-                feature_column = 'Screen', 
+                data_frame = most_commonly_visited_screens_df,
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Most Visited Screens',
+                group_by_column = 'Month',
+                feature_column = 'Screen',
                 value_column = 'Count',
-                rename_columns = {'month': 'Month', 'screen': 'Screen', 'count': 'Count'}   
+                rename_columns = {'month': 'Month', 'screen': 'Screen', 'count': 'Count'}
             )
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print_exception(e)
         return False
+
     return True
-        
+
 ################################################################################################
 
 async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagementMetrics, writer) -> bool:
-    try:  
+    try:
         for metrics in feature_engagement_metrics:
             sheet_name = metrics.Feature
             await feature_engagement(
                 feature_feature_engagement_metrics = metrics,
                 writer = writer,
-                sheet_name = sheet_name 
-            )    
+                sheet_name = sheet_name
+            )
     except Exception as e:
         print(f"Error generating report: {e}")
         return False
     return True
- 
-##################################################################################   
+
+##################################################################################

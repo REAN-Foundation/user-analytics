@@ -1,5 +1,5 @@
 import os
-from app.common.utils import generate_random_code
+from app.common.utils import print_exception
 from app.database.services.analytics.analysis_service import (
     calculate,
     calculate_basic_stats,
@@ -8,7 +8,7 @@ from app.database.services.analytics.analysis_service import (
     get_analysis_by_code,
     get_analysis_code
 )
-from app.domain_types.miscellaneous.exceptions import HTTPError, NotFound
+from app.domain_types.miscellaneous.exceptions import HTTPError
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
     BasicAnalyticsStatistics,
@@ -45,7 +45,7 @@ async def calculate_feature_engagement_metrics_(feature: str, filters: Analytics
 #     try:
 #         pass
 #     except Exception as e:
-#         print(e)
+#         print_exception(e)
 
 @trace_span("handler: download_metrics")
 async def download_metrics_(analysis_code:str, file_format_lower: str):
@@ -59,7 +59,7 @@ async def download_metrics_(analysis_code:str, file_format_lower: str):
             raise Exception(message='Unable to download report!')
         return content
     except Exception as e:
-        print(e)
+        print_exception(e)
         raise HTTPError(status_code=500, message='Unable to download report!')
 
 @trace_span("handler: get_metrics")
@@ -68,7 +68,7 @@ def get_metrics_(analysis_code:str):
         analysis = get_analysis_by_code(analysis_code)
         return analysis
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 ###############################################################################
 

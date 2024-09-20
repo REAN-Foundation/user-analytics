@@ -4,6 +4,7 @@ import io
 import pypandoc
 import json
 import os
+from app.common.utils import print_exception
 from app.database.services.analytics.common import get_report_folder_path
 from app.domain_types.schemas.analytics import EngagementMetrics
 from app.database.services.analytics.reports.report_generator_images import generate_report_images
@@ -42,7 +43,7 @@ async def generate_report_pdf(
         return pdf_file_path
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return None
 
 # async def markdown_to_pdf(markdown_file_path: str, pdf_file_path: str) -> bool:

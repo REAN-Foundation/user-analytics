@@ -1,3 +1,4 @@
+from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks, find_matching_first_chars
 from app.domain_types.enums.event_categories import EventCategory
 from app.domain_types.enums.event_types import EventType
@@ -46,7 +47,7 @@ async def get_daily_active_patients(filters: AnalyticsFilters):
         return result_
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics: user engagement: get_weekly_active_patients")
@@ -97,7 +98,7 @@ async def get_weekly_active_patients(filters: AnalyticsFilters):
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics: user engagement: get_monthly_active_patients")
@@ -132,7 +133,7 @@ async def get_monthly_active_patients(filters: AnalyticsFilters):
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 # Get DAU, WAU, MAU in one query. Not tested yet.
@@ -174,7 +175,7 @@ async def get_patients_active_dau_wau_mau(filters: AnalyticsFilters):
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return None
 
 @trace_span("service: analytics: user engagement: get_patients_average_session_length_in_minutes")
@@ -215,11 +216,11 @@ async def get_patients_average_session_length_in_minutes(filters: AnalyticsFilte
         result = connector.execute_read_query(query)
 
         row = result[0]
-        average_session_length = float(row['avg_session_length_seconds']) / 60
+        average_session_length = float(row['avg_session_length_seconds']) / 60.0 if row['avg_session_length_seconds'] != None else 0.0
         return average_session_length
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics: user engagement: get_patients_login_frequency")
@@ -261,7 +262,7 @@ async def get_patients_login_frequency(filters: AnalyticsFilters):
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 
@@ -409,42 +410,42 @@ async def get_patients_retention_rate_on_specific_days(filters: AnalyticsFilters
                 {
                     "day": 1,
                     "returning_users": row['returning_on_day_1'],
-                    "retention_rate": float(row['retention_1d_rate'])
+                    "retention_rate": float(row['retention_1d_rate']) if row['retention_1d_rate'] != None else 0.0
                 },
                 {
                     "day": 3,
                     "returning_users": row['returning_on_day_3'],
-                    "retention_rate": float(row['retention_3d_rate'])
+                    "retention_rate": float(row['retention_3d_rate']) if row['retention_3d_rate'] != None else 0.0
                 },
                 {
                     "day": 7,
                     "returning_users": row['returning_on_day_7'],
-                    "retention_rate": float(row['retention_7d_rate'])
+                    "retention_rate": float(row['retention_7d_rate']) if row['retention_7d_rate'] != None else 0.0
                 },
                 {
                     "day": 10,
                     "returning_users": row['returning_on_day_10'],
-                    "retention_rate": float(row['retention_10d_rate'])
+                    "retention_rate": float(row['retention_10d_rate']) if row['retention_10d_rate'] != None else 0.0
                 },
                 {
                     "day": 15,
                     "returning_users": row['returning_on_day_15'],
-                    "retention_rate": float(row['retention_15d_rate'])
+                    "retention_rate": float(row['retention_15d_rate']) if row['retention_15d_rate'] != None else 0.0
                 },
                 {
                     "day": 20,
                     "returning_users": row['returning_on_day_20'],
-                    "retention_rate": float(row['retention_20d_rate'])
+                    "retention_rate": float(row['retention_20d_rate']) if row['retention_20d_rate'] != None else 0.0
                 },
                 {
                     "day": 25,
                     "returning_users": row['returning_on_day_25'],
-                    "retention_rate": float(row['retention_25d_rate'])
+                    "retention_rate": float(row['retention_25d_rate']) if row['retention_25d_rate'] != None else 0.0
                 },
                 {
                     "day": 30,
                     "returning_users": row['returning_on_day_30'],
-                    "retention_rate": float(row['retention_30d_rate'])
+                    "retention_rate": float(row['retention_30d_rate']) if row['retention_30d_rate'] != None else 0.0
                 }
             ]
         }
@@ -452,7 +453,7 @@ async def get_patients_retention_rate_on_specific_days(filters: AnalyticsFilters
         return result_
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 # Retention rate in a specific time interval = (returning users in the interval / active users) * 100
@@ -605,42 +606,42 @@ async def get_patients_retention_rate_in_specific_time_interval(filters: Analyti
                 {
                     "interval": "0d-1d",
                     "returning_users": row['returning_before_day_1'],
-                    "retention_rate": float(row['retention_1d_rate'])
+                    "retention_rate": float(row['retention_1d_rate']) if row['retention_1d_rate'] != None else 0.0
                 },
                 {
                     "interval": "1d-3d",
                     "returning_users": row['returning_between_day_1_and_day_3'],
-                    "retention_rate": float(row['retention_3d_rate'])
+                    "retention_rate": float(row['retention_3d_rate']) if row['retention_3d_rate'] != None else 0.0
                 },
                 {
                     "interval": "3d-7d",
                     "returning_users": row['returning_between_day_3_and_day_7'],
-                    "retention_rate": float(row['retention_7d_rate'])
+                    "retention_rate": float(row['retention_7d_rate']) if row['retention_7d_rate'] != None else 0.0
                 },
                 {
                     "interval": "7d-10d",
                     "returning_users": row['returning_between_day_7_and_day_10'],
-                    "retention_rate": float(row['retention_10d_rate'])
+                    "retention_rate": float(row['retention_10d_rate']) if row['retention_10d_rate'] != None else 0.0
                 },
                 {
                     "interval": "10d-15d",
                     "returning_users": row['returning_between_day_10_and_day_15'],
-                    "retention_rate": float(row['retention_15d_rate'])
+                    "retention_rate": float(row['retention_15d_rate']) if row['retention_15d_rate'] != None else 0.0
                 },
                 {
                     "interval": "15d-20d",
                     "returning_users": row['returning_between_day_15_and_day_20'],
-                    "retention_rate": float(row['retention_20d_rate'])
+                    "retention_rate": float(row['retention_20d_rate']) if row['retention_20d_rate'] != None else 0.0
                 },
                 {
                     "interval": "20d-25d",
                     "returning_users": row['returning_between_day_20_and_day_25'],
-                    "retention_rate": float(row['retention_25d_rate'])
+                    "retention_rate": float(row['retention_25d_rate']) if row['retention_25d_rate'] != None else 0.0
                 },
                 {
                     "interval": "25d-30d",
                     "returning_users": row['returning_between_day_25_and_day_30'],
-                    "retention_rate": float(row['retention_30d_rate'])
+                    "retention_rate": float(row['retention_30d_rate']) if row['retention_30d_rate'] != None else 0.0
                 }
             ]
         }
@@ -648,7 +649,7 @@ async def get_patients_retention_rate_in_specific_time_interval(filters: Analyti
         return result_
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics: user engagement: get_patient_stickiness_dau_mau")
@@ -707,15 +708,15 @@ async def get_patient_stickiness_dau_mau(filters: AnalyticsFilters):
         result_ = []
         for row in result:
             result_.append({
-                "month": row['month'],
-                "avg_dau": float(row['avg_dau']),
-                "mau": row['mau'],
-                "stickiness": float(row['stickiness'])
+                "month"     : row['month'],
+                "avg_dau"   : float(row['avg_dau']) if row['avg_dau'] != None else 0.0,
+                "mau"       : row['mau'],
+                "stickiness": float(row['stickiness']) if row['stickiness'] != None else 0.0
             })
         return result_
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 # Please note that we are treating the EventCategory as the feature in this case.
@@ -775,7 +776,7 @@ async def get_patients_most_commonly_used_features(filters: AnalyticsFilters) ->
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics: user engagement: get_patients_most_commonly_visited_screens")
@@ -829,5 +830,5 @@ async def get_patients_most_commonly_visited_screens(filters: AnalyticsFilters) 
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
