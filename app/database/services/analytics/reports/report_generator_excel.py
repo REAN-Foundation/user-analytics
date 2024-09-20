@@ -18,7 +18,8 @@ from app.domain_types.schemas.analytics import (
     GenericEngagementMetrics
 )
 from datetime import datetime
-from app.modules.storage.provider.awa_s3_storage_service import AwsS3StorageService
+
+from app.modules.storage.storage_service import StorageService
 
 #########################################################################################
 
@@ -39,7 +40,7 @@ async def generate_report_excel(
              await add_feature_engagement_data(metrics.FeatureMetrics, writer)
 
             excel_buffer.seek(0)
-            storage = AwsS3StorageService()
+            storage = StorageService()
             file_name = f"analytics_report_{analysis_code}.xlsx"
             await storage.upload_excel_or_pdf(excel_buffer, file_name)
 
