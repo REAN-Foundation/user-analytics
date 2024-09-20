@@ -87,20 +87,16 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
         })
         
         start_row = 1
-        start_col = 1
-    
+        start_col = 1   
+        title = "Basic Analytics Statistics"
+        description = "This section provides an overview of the basic analytics related to the tenant, including the total number of users, patient statistics, and registration/deregistration history."
+
         df_stats['Value'] = df_stats['Value'].fillna("Unspecified")
         sheet_name = 'Basic Statistics'
         df_stats.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=5, startcol=1)
         workbook = writer.book
         worksheet = writer.sheets[sheet_name]
-        
-        title = "Basic Analytics Statistics"
-        description = "This section provides an overview of the basic analytics related to the tenant, including the total number of users, patient statistics, and registration/deregistration history."
-
-        # start_row = 1
-        # start_col = 1
-        
+     
         add_title_and_description(
             worksheet = worksheet,
             title = title,
@@ -109,13 +105,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             start_col = start_col,
             workbook = writer.book,
         )
-        title_format = workbook.add_format({
-            'bold': True, 
-            'font_size': 14, 
-            'align': 'left', 
-            'valign': 'vcenter'
-        })
-
+   
         field_bold_format = workbook.add_format({
             'bold': True, 
             'align': 'left', 
@@ -125,10 +115,6 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             'align': 'left',
         })
 
-        # worksheet.merge_range('B1:C1', 'Basic Analytics Statistics', title_format)
-        # worksheet.write('B2', '')
-        # worksheet.write('B3', 'This section provides an overview of the basic analytics related to the tenant, including the total number of users, patient statistics, and registration/deregistration history.',value_format)
-        
         for row_num in range(len(df_stats)):
             worksheet.write(row_num + 5, 1, df_stats.at[row_num, 'Property'], field_bold_format)
             worksheet.write(row_num + 5, 2, df_stats.at[row_num, 'Value'], value_format)
@@ -194,7 +180,8 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             worksheet.insert_chart('H21', patient_deregistration_chart)
             worksheet.set_column('D:D', 20,value_format) 
             worksheet.set_column('B:B', 20, value_format) 
-            worksheet.set_column('C:C', 20, value_format)   
+            worksheet.set_column('C:C', 20, value_format)  
+             
     except Exception as e:
         print(f"An error occurred: {e}")
         return False
@@ -558,7 +545,7 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 value_col = start_col + 2
             )
             worksheet.insert_chart(current_row + 2, graph_pos, retention_rate_on_specific_days_chart)
-            current_row = current_row + len(df_login_freq) + 6
+            current_row = current_row + len(retention_days_df_) + 12
 
         if generic_engagement_metrics.RetentionRateInSpecificIntervals:
             retention_intervals = generic_engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']

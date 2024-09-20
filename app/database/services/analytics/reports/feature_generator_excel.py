@@ -106,8 +106,7 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                     value_col = start_col + 2
                 )
                 worksheet.insert_chart(current_row + 2, graph_pos, retention_days_chart)
-                current_row = current_row + len(retention_days_df) + 6
-                
+                current_row = current_row + len(retention_days_df_) + 12
 
             if feature_feature_engagement_metrics.RetentionRateInSpecificIntervals:
                 retention_intervals = feature_feature_engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']
@@ -134,7 +133,7 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                     value_col = start_col + 2
                 )
                 worksheet.insert_chart(current_row + 2, graph_pos, retention_intervals_chart)
-                current_row = current_row + len(retention_intervals_df) + 6
+                current_row = current_row + len(retention_intervals_df_) + 12
 
             if feature_feature_engagement_metrics.DropOffPoints:
                 drop_off_points_df = pd.DataFrame(feature_feature_engagement_metrics.DropOffPoints)
