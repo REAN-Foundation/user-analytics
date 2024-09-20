@@ -16,13 +16,8 @@ from app.domain_types.schemas.analytics import (
     FeatureEngagementMetrics,
     GenericEngagementMetrics
 )
-from app.modules.storage.provider.awa_s3_storage_service import S3Storage
+from app.modules.storage.provider.awa_s3_storage_service import AwsS3StorageService
 from app.telemetry.tracing import trace_span
-
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-region_name = os.getenv('AWS_REGION')
-bucket_name = os.getenv('AWS_BUCKET')
 
 ###############################################################################
 
@@ -40,21 +35,14 @@ async def calculate_feature_engagement_metrics_(feature: str, filters: Analytics
 
 ###############################################################################
 
-# @trace_span("handler: download_metrics")
-# def download_metrics_(analysis_code:str, file_format_lower: str):
-#     try:
-#         pass
-#     except Exception as e:
-#         print_exception(e)
-
 @trace_span("handler: download_metrics")
 async def download_metrics_(analysis_code:str, file_format_lower: str):
     try:
         if file_format_lower == 'excel':
             file_format_lower = 'xlsx'
-        s3_file_name = f"user_engagement_report_{analysis_code}.{file_format_lower}"
-        storage = S3Storage(aws_access_key_id, aws_secret_access_key, region_name)
-        content =  await storage.download_file_as_stream(bucket_name, s3_file_name)
+        storage_key = f"analytics_report_{analysis_code}.{file_format_lower}"
+        storage_service = AwsS3StorageService()
+        content =  await storage_service.download_file_as_stream(storage_key)
         if content is None:
             raise Exception(message='Unable to download report!')
         return content

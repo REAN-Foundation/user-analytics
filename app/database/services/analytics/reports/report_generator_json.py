@@ -3,38 +3,21 @@ from datetime import datetime
 import json
 import os
 from app.common.utils import print_exception
-from app.database.services.analytics.common import get_report_folder_path
-from app.domain_types.schemas.analytics import GenericEngagementMetrics
-from app.modules.storage.provider.awa_s3_storage_service import S3Storage
+from app.database.services.analytics.common import get_report_folder_temp_path
+from app.domain_types.schemas.analytics import EngagementMetrics
+from app.modules.storage.provider.awa_s3_storage_service import AwsS3StorageService
 
 ###############################################################################
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-region_name = os.getenv('AWS_REGION')
-bucket_name = os.getenv('AWS_BUCKET')
-###############################################################################
-
-# async def generate_user_engagement_report_json(
-#         analysis_code: str, user_engagement_metrics: GenericEngagementMetrics) -> str:
-#     try:
-#         reports_path = get_report_folder_path()
-#         json_file_path = os.path.join(reports_path, f"user_engagement_report_{analysis_code}.json")
-#         with open(json_file_path, "w") as json_file:
-#             json.dump(user_engagement_metrics.model_dump(mode='json'), json_file, indent=4)
-#         return json_file_path
-#     except Exception as e:
-#         print_exception(e)
-#         return ""
 
 async def generate_report_json(
-        analysis_code: str, user_engagement_metrics: GenericEngagementMetrics) -> str:
+        analysis_code: str,
+        user_engagement_metrics: EngagementMetrics) -> str:
     try:
-        storage = S3Storage(aws_access_key_id, aws_secret_access_key, region_name)
+        storage = AwsS3StorageService()
         json_content = json.dumps(user_engagement_metrics.model_dump(mode='json'), indent=4)
-        file_name = f"user_engagement_report_{analysis_code}.json"
-        await storage.upload_object(json_content, bucket_name, file_name)
-        s3_file_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
-        return s3_file_url
+        file_name = f"analytics_report_{analysis_code}.json"
+        await storage.upload_object(json_content, file_name)
+        return file_name
     except Exception as e:
         print_exception(e)
         return ""

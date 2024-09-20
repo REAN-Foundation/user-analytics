@@ -205,6 +205,7 @@ async def get_patients_average_session_length_in_minutes(filters: AnalyticsFilte
                         WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         __CHECKS__
+                    GROUP BY user.id
                 ) AS session_durations;
             """
 

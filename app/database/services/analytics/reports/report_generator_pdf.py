@@ -1,31 +1,21 @@
-from asyncio import subprocess
-from datetime import datetime
 import io
 import pypandoc
-import json
 import os
 from app.common.utils import print_exception
-from app.database.services.analytics.common import get_report_folder_path
+
+from app.database.services.analytics.common import get_analysis_temp_path
 from app.domain_types.schemas.analytics import EngagementMetrics
 from app.database.services.analytics.reports.report_generator_images import generate_report_images
 from app.database.services.analytics.reports.report_generator_markdown import generate_report_markdown
-from app.modules.storage.provider.awa_s3_storage_service import S3Storage
+from app.modules.storage.provider.awa_s3_storage_service import AwsS3StorageService
 
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-region_name = os.getenv('AWS_REGION')
-bucket_name = os.getenv('AWS_BUCKET')
 ###############################################################################
 
 async def generate_report_pdf(
         analysis_code: str,
         metrics: EngagementMetrics) -> str | None:
     try:
-        reports_path = get_report_folder_path()
-        report_folder_path = os.path.join(reports_path, f"report_{analysis_code}")
-        pdf_file_path = os.path.join(report_folder_path, f"report_{analysis_code}.pdf")
-        if not os.path.exists(report_folder_path):
-            os.makedirs(report_folder_path, exist_ok=True)
+        report_folder_path = get_analysis_temp_path(analysis_code)
 
         images_generated = generate_report_images(report_folder_path, metrics)
         if not images_generated:
@@ -36,6 +26,7 @@ async def generate_report_pdf(
         if not markdown_generated:
             return None
 
+        pdf_file_path = os.path.join(report_folder_path, f"report_{analysis_code}.pdf")
         pdf_generated = await markdown_to_pdf(markdown_file_path, pdf_file_path, analysis_code)
         if not pdf_generated:
             return None
@@ -45,6 +36,7 @@ async def generate_report_pdf(
     except Exception as e:
         print_exception(e)
         return None
+
 
 # async def markdown_to_pdf(markdown_file_path: str, pdf_file_path: str) -> bool:
 #     try:
@@ -81,13 +73,10 @@ async def markdown_to_pdf(markdown_file_path: str, pdf_file_path: str, analysis_
         )
         pdf_buffer.seek(0)
         # analysis_code = '28'
-        storage = S3Storage(aws_access_key_id, aws_secret_access_key, region_name)
-        file_name = f"user_engagement_report_{analysis_code}.pdf"
-        await storage.upload_excel_or_pdf(pdf_buffer, bucket_name, file_name)
-        s3_file_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
+        storage = AwsS3StorageService()
+        file_name = f"analytics_report_{analysis_code}.pdf"
+        await storage.upload_excel_or_pdf(pdf_buffer, file_name)
         pdf_buffer.close()
-
-        print(f"PDF uploaded to S3 at {s3_file_url}")
         return True
     except Exception as e:
         print(f"Error converting Markdown to PDF and uploading to S3: {e}")
