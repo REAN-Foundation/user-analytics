@@ -389,7 +389,7 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
 
 async def add_active_users_data(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
     try: 
-        start_row = 3
+        start_row = 1
         col_daily = 1 
         col_weekly = 4 
         col_monthly = 8
@@ -399,7 +399,20 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
             worksheet = writer.sheets[sheet_name]
-      
+            
+        title = "Active users"
+        description = "Total number of unique users who interact with the platform on a given duration."
+        
+        add_title_and_description(
+            worksheet = worksheet,
+            title = title,
+            description = description,
+            start_row = start_row,
+            start_col = col_daily,
+            workbook = writer.book,
+        )
+        
+        start_row += 6
         if generic_engagement_metrics.DailyActiveUsers:
             daily_active_users_df = pd.DataFrame(generic_engagement_metrics.DailyActiveUsers)
             daily_active_users_df = reindex_dataframe_to_all_missing_dates(
@@ -489,16 +502,29 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
 
 async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagementMetrics, writer) -> bool:
     try:   
-        start_row = 3
+        start_row = 1
         start_col = 1
         graph_pos = 7
-        current_row = start_row
+        current_row = start_row + 6
         sheet_name = 'Generic Engagement'
         if sheet_name not in writer.sheets:
             worksheet = writer.book.add_worksheet(sheet_name)
         else:
             worksheet = writer.sheets[sheet_name]
-
+            
+        title = "Generic Engagement Metrics"
+        description = "This section captures key metrics that provide insight into how users interact with the system, including daily activity, login frequency and retention."
+        
+        add_title_and_description(
+            worksheet = worksheet,
+            title = title,
+            description = description,
+            start_row = start_row,
+            start_col = start_col,
+            workbook = writer.book,
+        )
+        
+        start_row = start_row + 4
         if generic_engagement_metrics.LoginFrequency:
             df_login_freq = pd.DataFrame(generic_engagement_metrics.LoginFrequency)  
             df_login_freq = write_data_to_excel(
