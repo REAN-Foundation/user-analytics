@@ -154,34 +154,35 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 description = 'Trends of how many users registered or deregistered from the system on a given day, in a given week or a month.'
             )
             
-            reg_dereg_chart = workbook.add_chart({'type': 'column'})
-            reg_dereg_chart.add_series({
-                'name': 'Registration',
-                'categories': [sheet_name, startrow_combined_data + 3, start_col, startrow_combined_data + len(df_combined), start_col],
-                'values': [sheet_name, startrow_combined_data + 3, start_col + 1, startrow_combined_data + len(df_combined), start_col + 1],
-            })
-            reg_dereg_chart.add_series({
-                'name': 'Deregistration',
-                'categories': [sheet_name, startrow_combined_data + 3, start_col, startrow_combined_data + len(df_combined), start_col],
-                'values': [sheet_name, startrow_combined_data + 3, start_col + 2, startrow_combined_data + len(df_combined), start_col + 2],
-            })
-            reg_dereg_chart.set_x_axis({
-                'major_gridlines': {
-                    'visible': True,
-                    'line': {'color': '#CCCCCC', 'dash_type': 'dot', 'transparency': 0.8}
-                }
-            })
-            reg_dereg_chart.set_y_axis({
-                'major_gridlines': {
-                    'visible': True,
-                    'line': {'color': '#CCCCCC', 'dash_type': 'dot', 'transparency': 0.8}
-                }
-            })
-            reg_dereg_chart.set_title({'name': 'Patient Registration & Deregistration'})
-            worksheet.insert_chart('H21', reg_dereg_chart)
-            worksheet.set_column('D:D', 20,value_format) 
-            worksheet.set_column('B:B', 20, value_format) 
-            worksheet.set_column('C:C', 20, value_format)  
+            if not df_combined.empty:
+                reg_dereg_chart = workbook.add_chart({'type': 'column'})
+                reg_dereg_chart.add_series({
+                    'name': 'Registration',
+                    'categories': [sheet_name, startrow_combined_data + 3, start_col, startrow_combined_data + len(df_combined), start_col],
+                    'values': [sheet_name, startrow_combined_data + 3, start_col + 1, startrow_combined_data + len(df_combined), start_col + 1],
+                })
+                reg_dereg_chart.add_series({
+                    'name': 'Deregistration',
+                    'categories': [sheet_name, startrow_combined_data + 3, start_col, startrow_combined_data + len(df_combined), start_col],
+                    'values': [sheet_name, startrow_combined_data + 3, start_col + 2, startrow_combined_data + len(df_combined), start_col + 2],
+                })
+                reg_dereg_chart.set_x_axis({
+                    'major_gridlines': {
+                        'visible': True,
+                        'line': {'color': '#CCCCCC', 'dash_type': 'dot', 'transparency': 0.8}
+                    }
+                })
+                reg_dereg_chart.set_y_axis({
+                    'major_gridlines': {
+                        'visible': True,
+                        'line': {'color': '#CCCCCC', 'dash_type': 'dot', 'transparency': 0.8}
+                    }
+                })
+                reg_dereg_chart.set_title({'name': 'Patient Registration & Deregistration'})
+                worksheet.insert_chart('H21', reg_dereg_chart)
+                worksheet.set_column('D:D', 20,value_format) 
+                worksheet.set_column('B:B', 20, value_format) 
+                worksheet.set_column('C:C', 20, value_format)  
              
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -226,6 +227,7 @@ async def add_patient_demographics_data(basic_analytics: BasicAnalyticsStatistic
                 title = 'Age Distribution',
                 rename_columns = {'age_group': 'Age Group', 'count': 'Count'}
             )
+            
             chart_age = create_chart(
                 workbook = writer.book,
                 chart_type = 'pie',
@@ -429,17 +431,19 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
                 title = 'Daily Active Users',
                 rename_columns = {'activity_date': 'Activity Date', 'daily_active_users': 'Daily Active Users'}
             )
-            daily_active_users_chart = create_chart(
-                workbook = writer.book,
-                chart_type = 'column',
-                series_name = 'Daily Active Users',
-                sheet_name = sheet_name,
-                start_row = start_row,
-                start_col = col_daily,
-                df_len = len(daily_active_users_df_),
-                value_col = col_daily + 1
-            )
-            worksheet.insert_chart(start_row , col_monthly + 3, daily_active_users_chart)     
+            
+            if not daily_active_users_df.empty:
+                daily_active_users_chart = create_chart(
+                    workbook = writer.book,
+                    chart_type = 'column',
+                    series_name = 'Daily Active Users',
+                    sheet_name = sheet_name,
+                    start_row = start_row,
+                    start_col = col_daily,
+                    df_len = len(daily_active_users_df_),
+                    value_col = col_daily + 1
+                )
+                worksheet.insert_chart(start_row , col_monthly + 3, daily_active_users_chart)     
 
         if generic_engagement_metrics.WeeklyActiveUsers:
             weekly_active_users_df = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
@@ -454,17 +458,18 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
                 rename_columns = {'week_start_date': 'Week Start Date', 'week_end_date': 'Week End Date', 'weekly_active_users': 'Weekly Active Users'}
             ) 
             
-            weekly_active_users_chart = create_chart(
-            workbook = writer.book,
-            chart_type = 'column',
-            series_name = 'Weekly Active Users',
-            sheet_name = sheet_name,
-            start_row = start_row,
-            start_col = col_weekly, 
-            df_len = len(weekly_active_users_df_), 
-            value_col = col_weekly + 2,
-        )
-        worksheet.insert_chart(start_row + 16, col_monthly + 3, weekly_active_users_chart)
+            if not weekly_active_users_df.empty:
+                weekly_active_users_chart = create_chart(
+                workbook = writer.book,
+                chart_type = 'column',
+                series_name = 'Weekly Active Users',
+                sheet_name = sheet_name,
+                start_row = start_row,
+                start_col = col_weekly, 
+                df_len = len(weekly_active_users_df_), 
+                value_col = col_weekly + 2,
+            )
+            worksheet.insert_chart(start_row + 16, col_monthly + 3, weekly_active_users_chart)
 
         if generic_engagement_metrics.MonthlyActiveUsers:
             monthly_active_users_df = pd.DataFrame(generic_engagement_metrics.MonthlyActiveUsers)
@@ -482,16 +487,18 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
                 title = 'Monthly Active Users',
                 rename_columns = {'activity_month': 'Activity Month', 'monthly_active_users': 'Monthly Active Users'}
             )
-            monthly_active_users_chart = create_chart(
-                workbook = writer.book,
-                chart_type = 'column',
-                series_name = 'Monthly Active Users',
-                sheet_name = sheet_name,
-                start_row = start_row,
-                start_col = col_monthly,
-                df_len = len(monthly_active_users_df_),
-                value_col = col_monthly + 1
-            )
+            
+            if not monthly_active_users_reindex.empty:
+                monthly_active_users_chart = create_chart(
+                    workbook = writer.book,
+                    chart_type = 'column',
+                    series_name = 'Monthly Active Users',
+                    sheet_name = sheet_name,
+                    start_row = start_row,
+                    start_col = col_monthly,
+                    df_len = len(monthly_active_users_df_),
+                    value_col = col_monthly + 1
+                )
             worksheet.insert_chart(start_row + 32, col_monthly + 3, monthly_active_users_chart)
         
     except Exception as e:
@@ -536,16 +543,17 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 rename_columns = {'month': 'Month', 'login_count': 'Login Count'},
                 description = 'Average number of times users log into the system per day, week, or month.'
             )
-            chart_login_freq = create_chart(
-                workbook = writer.book,
-                chart_type = 'column',
-                series_name = 'Login Frequency',
-                sheet_name = sheet_name,
-                start_row = current_row + 2,
-                start_col = start_col,
-                df_len = len(df_login_freq),
-                value_col = start_col + 1)
-            worksheet.insert_chart(current_row + 2, graph_pos, chart_login_freq)
+            if not df_login_freq.empty:
+                chart_login_freq = create_chart(
+                    workbook = writer.book,
+                    chart_type = 'column',
+                    series_name = 'Login Frequency',
+                    sheet_name = sheet_name,
+                    start_row = current_row + 2,
+                    start_col = start_col,
+                    df_len = len(df_login_freq),
+                    value_col = start_col + 1)
+                worksheet.insert_chart(current_row + 2, graph_pos, chart_login_freq)
             current_row = current_row + len(df_login_freq) + 6
     
         if generic_engagement_metrics.RetentionRateOnSpecificDays:
@@ -561,16 +569,17 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 rename_columns = {'day': 'Day', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'},
                 description = 'The percentage of users who return to the app after their first use at specific intervals (day 1, day 7, day 30). Retention rates measure user loyalty and the ability of the platform to keep users engaged over time.'
             )
-            retention_rate_on_specific_days_chart = create_chart(
-                workbook = writer.book,
-                chart_type = 'column',
-                series_name = 'Retention Rate on Specific Days',
-                sheet_name = sheet_name,
-                start_row = current_row + 2,
-                start_col = start_col,
-                df_len = len(retention_days_df_),
-                value_col = start_col + 2
-            )
+            if not retention_days_df.empty:
+                retention_rate_on_specific_days_chart = create_chart(
+                    workbook = writer.book,
+                    chart_type = 'column',
+                    series_name = 'Retention Rate on Specific Days',
+                    sheet_name = sheet_name,
+                    start_row = current_row + 2,
+                    start_col = start_col,
+                    df_len = len(retention_days_df_),
+                    value_col = start_col + 2
+                )
             worksheet.insert_chart(current_row + 2, graph_pos, retention_rate_on_specific_days_chart)
             current_row = current_row + len(retention_days_df_) + 12
 
@@ -587,16 +596,17 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 rename_columns = {'interval': 'Interval', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'},
                 description = 'The percentage of users who return to the app after their first use at specific intervals (0-1 days, 1-3 days, 3-7 days, etc). This is just another way to look at the retention on specific days.'
             )
-            retention_intervals_chart = create_chart(
-                workbook=writer.book,
-                chart_type = 'column',
-                series_name = 'Retention Rate in Specific Intervals',
-                sheet_name = sheet_name,
-                start_row = current_row + 2,
-                start_col = start_col,
-                df_len = len(retention_intervals_df_),
-                value_col = start_col + 2
-            )
+            if not retention_intervals_df.empty:
+                retention_intervals_chart = create_chart(
+                    workbook=writer.book,
+                    chart_type = 'column',
+                    series_name = 'Retention Rate in Specific Intervals',
+                    sheet_name = sheet_name,
+                    start_row = current_row + 2,
+                    start_col = start_col,
+                    df_len = len(retention_intervals_df_),
+                    value_col = start_col + 2
+                )
             worksheet.insert_chart(current_row + 2, graph_pos, retention_intervals_chart)
     except Exception as e:
         print(f"An error occurred: {e}")

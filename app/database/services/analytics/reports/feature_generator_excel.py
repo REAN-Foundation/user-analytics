@@ -52,18 +52,20 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                 rename_columns = {'month': 'Month', 'access_frequency': 'Access Frequency'},
                 description = 'The number of times users access a particular feature over time. This metric helps identify the popularity and utility of features among users.'
             )
-            access_frequency_chart = create_chart(
-                workbook = writer.book, 
-                chart_type = 'column', 
-                series_name = 'Access Frequency', 
-                sheet_name = sheet_name, 
-                start_row = current_row + 2,
-                start_col = start_col, 
-                df_len = len(access_frequency_df_), 
-                value_col = start_col + 1)
-            worksheet.insert_chart(current_row + 2, graph_pos, access_frequency_chart)
-            current_row = current_row + len(access_frequency_df_) + 6
             
+            if not access_frequency_reindex.empty:
+                access_frequency_chart = create_chart(
+                    workbook = writer.book, 
+                    chart_type = 'column', 
+                    series_name = 'Access Frequency', 
+                    sheet_name = sheet_name, 
+                    start_row = current_row + 2,
+                    start_col = start_col, 
+                    df_len = len(access_frequency_df_), 
+                    value_col = start_col + 1)
+                worksheet.insert_chart(current_row + 2, graph_pos, access_frequency_chart)
+                current_row = current_row + len(access_frequency_df_) + 6
+                
         if feature_feature_engagement_metrics.EngagementRate:
                 engagement_rate_df= pd.DataFrame(feature_feature_engagement_metrics.EngagementRate)
                 engagement_rate_df['engagement_rate'] = pd.to_numeric(engagement_rate_df['engagement_rate'], errors='coerce')
@@ -81,19 +83,20 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                     title = 'Engagement Rate',
                     rename_columns = {'month': 'Month','feature':'Feature', 'engagement_rate': 'Engagement Rate'},
                     description = 'This is the ratio of number of unique users engaging with each feature per month to the total number of active users per month.'
-                )     
-                engagement_rate_chart = create_chart(
-                    workbook = writer.book,
-                    chart_type = 'column',
-                    series_name = 'Engagement Rate',
-                    sheet_name = sheet_name,
-                    start_row = current_row + 2,
-                    start_col = start_col,
-                    df_len = len(engagement_rate_df),
-                    value_col = start_col + 2
-                )
-                worksheet.insert_chart(current_row + 2, graph_pos, engagement_rate_chart)
-                current_row = current_row + len(engagement_rate_df) + 6
+                ) 
+                if not engagement_rate_df.empty:
+                    engagement_rate_chart = create_chart(
+                        workbook = writer.book,
+                        chart_type = 'column',
+                        series_name = 'Engagement Rate',
+                        sheet_name = sheet_name,
+                        start_row = current_row + 2,
+                        start_col = start_col,
+                        df_len = len(engagement_rate_df),
+                        value_col = start_col + 2
+                    )
+                    worksheet.insert_chart(current_row + 2, graph_pos, engagement_rate_chart)
+                    current_row = current_row + len(engagement_rate_df) + 6
 
         if feature_feature_engagement_metrics.RetentionRateOnSpecificDays:
             retention_specific_days = feature_feature_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
@@ -108,16 +111,17 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                 rename_columns = {'day': 'Day', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'},
                 description = 'The percentage of users who return to a feature after their first use at specific intervals (day 1, day 7, day 30). Retention rates measure user loyalty and the ability of the feature to keep users engaged over time.'
             )
-            retention_days_chart = create_chart(
-                workbook = writer.book,
-                chart_type = 'column',
-                series_name = 'Retention Rate on Specific Days', 
-                sheet_name = sheet_name,
-                start_row = current_row + 2,
-                start_col = start_col,
-                df_len = len(retention_days_df_),
-                value_col = start_col + 2
-            )
+            if not retention_days_df.empty:
+                retention_days_chart = create_chart(
+                    workbook = writer.book,
+                    chart_type = 'column',
+                    series_name = 'Retention Rate on Specific Days', 
+                    sheet_name = sheet_name,
+                    start_row = current_row + 2,
+                    start_col = start_col,
+                    df_len = len(retention_days_df_),
+                    value_col = start_col + 2
+                )
             worksheet.insert_chart(current_row + 2, graph_pos, retention_days_chart)
             current_row = current_row + len(retention_days_df_) + 12
 
@@ -135,16 +139,17 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                 rename_columns = {'interval': 'Interval', 'returning_users': 'Returning Users', 'retention_rate': 'Retention Rate'},
                 description = 'The percentage of users who return to a feature after their first use at specific intervals (0-1 days, 1-3 days, 3-7 days, etc). This is just another way to look at the retention on specific days.'
             )
-            retention_intervals_chart = create_chart(
-            workbook = writer.book,
-                chart_type = 'column',
-                series_name = 'Retention Rate in Specific Intervals',
-                sheet_name = sheet_name,
-                start_row = current_row + 2,
-                start_col = start_col,
-                df_len = len(retention_intervals_df_),
-                value_col = start_col + 2
-            )
+            if not retention_intervals_df.empty:
+                retention_intervals_chart = create_chart(
+                workbook = writer.book,
+                    chart_type = 'column',
+                    series_name = 'Retention Rate in Specific Intervals',
+                    sheet_name = sheet_name,
+                    start_row = current_row + 2,
+                    start_col = start_col,
+                    df_len = len(retention_intervals_df_),
+                    value_col = start_col + 2
+                )
             worksheet.insert_chart(current_row + 2, graph_pos, retention_intervals_chart)
             current_row = current_row + len(retention_intervals_df_) + 12
 
