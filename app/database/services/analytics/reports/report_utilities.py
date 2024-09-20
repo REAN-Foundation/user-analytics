@@ -115,7 +115,8 @@ def write_data_to_excel(
     start_col: int, 
     writer: pd.ExcelWriter, 
     title: str, 
-    rename_columns: dict[str, str] = None
+    rename_columns: dict[str, str] = None,
+    description: Optional[str] = None
 ) -> pd.DataFrame:
     title_format = writer.book.add_format({'bold': True, 'font_size': 14, 'align': 'left'})
     data_format = writer.book.add_format({'align': 'left'})
@@ -127,6 +128,12 @@ def write_data_to_excel(
     if rename_columns:
         data_frame.rename(columns=rename_columns, inplace=True)
 
+    if description:
+        start_row += 1 
+        worksheet.write(start_row - 1, start_col, '')
+        worksheet.write(start_row - 1, start_col, description)
+        start_row += 1 
+        
     data_frame.to_excel(writer, sheet_name=sheet_name, index=False, startrow=start_row, startcol=start_col)
     
     for i, col in enumerate(data_frame.columns):
@@ -245,7 +252,8 @@ def write_grouped_data_to_excel(
     group_by_column: str, 
     feature_column: str, 
     value_column: str, 
-    rename_columns: Optional[Dict[str, str]] = None
+    rename_columns: Optional[Dict[str, str]] = None,
+    description: Optional[str] = None
 ) -> pd.DataFrame:
  
     title_format = writer.book.add_format({'bold': True, 'font_size': 14})
@@ -256,6 +264,12 @@ def write_grouped_data_to_excel(
     if rename_columns:
         data_frame = data_frame.rename(columns=rename_columns)
 
+    if description:
+        start_row += 1 
+        worksheet.write(start_row - 1, start_col, '')
+        worksheet.write(start_row - 1, start_col, description)
+        start_row += 2
+        
     grouped_df = data_frame.groupby(group_by_column)
     worksheet.write(start_row - 1, start_col, group_by_column, header_format)
     worksheet.write(start_row - 1, start_col + 1, feature_column, header_format)
@@ -275,3 +289,28 @@ def write_grouped_data_to_excel(
         worksheet.set_column(start_col + i, start_col + i, max(len(col), 10))
 
     return data_frame
+
+def add_title_and_description(
+    worksheet, 
+    title: str, 
+    description: str, 
+    start_row: int, 
+    start_col: int, 
+    workbook, 
+):
+    title_format_options = {
+            'bold': True, 
+            'font_size': 16, 
+            'align': 'left', 
+            'valign': 'vcenter'
+        }
+    description_format_options = {
+            'align': 'left', 
+        }
+    
+    title_format = workbook.add_format(title_format_options)
+    description_format = workbook.add_format(description_format_options)
+  
+    worksheet.write(start_row, start_col, title, title_format)
+    worksheet.write(start_row + 2, start_col, description, description_format)
+  
