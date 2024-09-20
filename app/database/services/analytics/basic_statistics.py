@@ -84,6 +84,8 @@ async def get_current_active_patients(filters: AnalyticsFilters) -> int:
                 COUNT(*) as user_count
             FROM users as user
             WHERE
+                RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                AND
                 DeletedAt IS NULL
                 __CHECKS__
             """
