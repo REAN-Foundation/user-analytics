@@ -88,7 +88,7 @@ def get_storage_key_path(analysis_code: str) -> str:
     today = datetime.today()
     date_timestamp = today.strftime("%Y%m%d")
     child_folder = f"reports_{analysis_code}"
-    storage_key_path = f"{REPORTS_DIR}/{date_timestamp}/{child_folder}")
+    storage_key_path = f"{REPORTS_DIR}/{date_timestamp}/{child_folder}"
     return storage_key_path
 
 ###############################################################################
