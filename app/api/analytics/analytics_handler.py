@@ -8,6 +8,7 @@ from app.database.services.analytics.analysis_service import (
     get_analysis_by_code,
     get_analysis_code
 )
+from app.database.services.analytics.common import get_storage_key_path
 from app.domain_types.miscellaneous.exceptions import HTTPError
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
@@ -40,7 +41,9 @@ async def download_metrics_(analysis_code:str, file_format_lower: str):
     try:
         if file_format_lower == 'excel':
             file_format_lower = 'xlsx'
-        storage_key = f"analytics_report_{analysis_code}.{file_format_lower}"
+        file_name = f"analytics_report_{analysis_code}.{file_format_lower}"
+        storage_location = get_storage_key_path(analysis_code)
+        storage_key = f"{storage_location}/{file_name}"
         storage_service = StorageService()
         content =  await storage_service.download_file_as_stream(storage_key)
         if content is None:

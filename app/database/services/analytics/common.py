@@ -87,7 +87,8 @@ def get_current_analysis_temp_path(analysis_code: str) -> str:
 def get_storage_key_path(analysis_code: str) -> str:
     today = datetime.today()
     date_timestamp = today.strftime("%Y%m%d")
-    storage_key_path = os.path.join(REPORTS_DIR, date_timestamp, f"reports_{analysis_code}")
+    child_folder = f"reports_{analysis_code}"
+    storage_key_path = f"{REPORTS_DIR}/{date_timestamp}/{child_folder}")
     return storage_key_path
 
 ###############################################################################
