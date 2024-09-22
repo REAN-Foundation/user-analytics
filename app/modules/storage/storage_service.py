@@ -1,6 +1,7 @@
 import io
 from typing import BinaryIO
 from app.modules.storage.providers.awa_s3_storage_service import AwsS3StorageService
+from app.modules.storage.providers.azure_blob_storage_service import AzureBlobStorageService
 from app.modules.storage.providers.local_storage_service import LocalStorageService
 
 ###############################################################################
@@ -11,6 +12,8 @@ class StorageService:
         self.provider = provider
         if self.provider == 'aws':
             self.storage = AwsS3StorageService()
+        elif self.provider == 'azure':
+            self.storage = AzureBlobStorageService()
         else:
             self.storage = LocalStorageService()
 
