@@ -2,7 +2,7 @@ import io
 import os
 import pandas as pd
 from app.common.utils import print_exception
-from app.database.services.analytics.common import get_report_folder_temp_path
+from app.database.services.analytics.common import get_current_report_folder_temp_path, get_storage_key_path
 from app.database.services.analytics.reports.feature_generator_excel import feature_engagement
 from app.database.services.analytics.reports.report_utilities import(
     create_chart,
@@ -17,7 +17,6 @@ from app.domain_types.schemas.analytics import (
     FeatureEngagementMetrics,
     GenericEngagementMetrics
 )
-from datetime import datetime
 
 from app.modules.storage.storage_service import StorageService
 
@@ -27,22 +26,23 @@ async def generate_report_excel(
         analysis_code: str,
         metrics: EngagementMetrics) -> str | None:
     try:
-        reports_path = get_report_folder_temp_path()
+        reports_path = get_current_report_folder_temp_path()
         excel_file_path = os.path.join(reports_path, f"report_{analysis_code}.xlsx")
 
         with io.BytesIO() as excel_buffer:
             with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-             await add_basic_analytics_statistics(metrics.BasicStatistics, writer)
-             await add_patient_demographics_data(metrics.BasicStatistics, writer)
-             await add_active_users_data(metrics.GenericMetrics, writer)
-             await add_generic_engagement_data(metrics.GenericMetrics, writer)
-             await add_most_visited_feature(metrics.GenericMetrics, writer)
-             await add_feature_engagement_data(metrics.FeatureMetrics, writer)
+                await add_basic_analytics_statistics(metrics.BasicStatistics, writer)
+                await add_patient_demographics_data(metrics.BasicStatistics, writer)
+                await add_active_users_data(metrics.GenericMetrics, writer)
+                await add_generic_engagement_data(metrics.GenericMetrics, writer)
+                await add_most_visited_feature(metrics.GenericMetrics, writer)
+                await add_feature_engagement_data(metrics.FeatureMetrics, writer)
 
             excel_buffer.seek(0)
             storage = StorageService()
             file_name = f"analytics_report_{analysis_code}.xlsx"
-            await storage.upload_excel_or_pdf(excel_buffer, file_name)
+            storage_location = get_storage_key_path(analysis_code)
+            await storage.upload_file_as_object(storage_location, excel_buffer, file_name)
 
     except Exception as e:
         print_exception(e)

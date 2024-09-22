@@ -16,7 +16,7 @@ from app.domain_types.schemas.analytics import (
     FeatureEngagementMetrics,
     GenericEngagementMetrics
 )
-from app.modules.storage.provider.awa_s3_storage_service import AwsS3StorageService
+from app.modules.storage.storage_service import StorageService
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
@@ -41,7 +41,7 @@ async def download_metrics_(analysis_code:str, file_format_lower: str):
         if file_format_lower == 'excel':
             file_format_lower = 'xlsx'
         storage_key = f"analytics_report_{analysis_code}.{file_format_lower}"
-        storage_service = AwsS3StorageService()
+        storage_service = StorageService()
         content =  await storage_service.download_file_as_stream(storage_key)
         if content is None:
             raise Exception(message='Unable to download report!')

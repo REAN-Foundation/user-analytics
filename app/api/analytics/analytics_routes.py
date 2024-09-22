@@ -119,11 +119,3 @@ async def download_user_engagement_metrics(analysis_code: str, file_format: str)
     return StreamingResponse(stream, media_type="application/octet-stream")
 
 ###############################################################################
-
-# This end point is only for testing the excel report generation code
-# @router.get("/excel-test-report",
-#             status_code=status.HTTP_200_OK)
-# async def get_excel_data():
-#     await generate_report_excel()
-#     message = "Excel sheet created successfully."
-#     return message

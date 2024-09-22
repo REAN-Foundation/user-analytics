@@ -1,5 +1,9 @@
+from io import BytesIO
 import os
-from typing import AsyncIterable
+import shutil
+from typing import AsyncIterable, BinaryIO
+
+from app.common.utils import print_exception
 
 ###############################################################################
 
@@ -12,85 +16,92 @@ class LocalStorageService:
     def __init__(self):
         pass
 
-    async def upload_local_file(self, file_path: str):
+    async def upload_local_file(self, storage_location: str, local_file_path: str):
         try:
-            file_name = os.path.basename(file_path)
-            local_file_path = os.path.join(local_storage_path, file_name)
-            os.rename(file_path, local_file_path)
-            print(f"File {file_path} uploaded to {local_file_path}")
+            if not os.path.exists(local_file_path):
+                print(f"File '{local_file_path}' does not exist")
+                return False
+
+            file_name = os.path.basename(local_file_path)
+            storage_path = f"{local_storage_path}/{storage_location}"
+            os.makedirs(os.path.dirname(storage_path), exist_ok=True)
+            destination_path = f"{storage_path}/{file_name}"
+
+            shutil.copy(local_file_path, destination_path)
+
+            print(f"File '{local_file_path}' uploaded to '{storage_path}'")
             return True
-        except FileNotFoundError:
-            print("The file was not found")
+        except Exception as e:
+            print_exception(e)
             return False
+
+    async def upload_file_as_stream(self, storage_location: str, stream: BinaryIO, file_name: str):
+        try:
+            storage_path = f"{local_storage_path}/{storage_location}"
+            os.makedirs(os.path.dirname(storage_path), exist_ok=True)
+            destination_path = f"{storage_path}/{file_name}"
+            stream.seek(0)
+            with open(destination_path, 'wb') as f:
+                shutil.copyfileobj(stream, f)
+            print(f"File uploaded successfully to {destination_path}")
+            return True
         except Exception as e:
             print(f"Error in uploading file: {e}")
             return False
 
-    async def upload_file_as_stream_multipart(self, stream: AsyncIterable[bytes], file_name: str):
+    async def upload_file_as_object(self, storage_location: str, content, file_name: str):
         try:
-            local_file_path = os.path.join(local_storage_path, file_name)
-            async with open(local_file_path, 'wb') as file:
-                async for chunk in stream:
-                    file.write(chunk)
-            print(f"File uploaded to {local_file_path}")
+            storage_path = f"{local_storage_path}/{storage_location}"
+            os.makedirs(os.path.dirname(storage_path), exist_ok=True)
+            destination_path = f"{storage_path}/{file_name}"
+            with open(destination_path, 'wb') as f:
+                f.write(content)
+            print(f"File uploaded to {destination_path}")
             return True
         except Exception as e:
-            print(f"Error in uploading file: {e}")
-            return False
-
-    async def upload_file_as_object(self, content, file_name: str):
-        try:
-            local_file_path = os.path.join(local_storage_path, file_name)
-            with open(local_file_path, 'wb') as file:
-                file.write(content)
-            print(f"File uploaded to {local_file_path}")
-            return True
-        except Exception as e:
-            print(f"Error in uploading file: {e}")
+            print_exception(e)
             return False
 
     async def download_file_locally(self, storage_key: str, local_file_path: str):
         try:
-            local_file_path = os.path.join(local_storage_path, local_file_path)
-            with open(local_file_path, 'rb') as file:
-                content = file.read()
-            return content
-        except FileNotFoundError:
-            print("The file was not found")
-            return None
-        except Exception as e:
-            print(f"Error in downloading file: {e}")
-            return None
+            storage_path = f"{local_storage_path}/{storage_key}"
+            if not os.path.exists(storage_path):
+                print(f"File with storage key '{storage_key}' does not exist")
+                return False
 
-    async def download_file_as_stream_multipart(self, storage_key: str):
-        try:
-            local_file_path = os.path.join(local_storage_path, storage_key)
-            async def stream_file() -> AsyncIterable[bytes]:
-                with open(local_file_path, 'rb') as file:
-                    while True:
-                        chunk = file.read(1024)  # Read in chunks of 1024 bytes
-                        if not chunk:
-                            break
-                        yield chunk
-            file_content = stream_file()
-            print(f"File {storage_key} downloaded as stream")
-            return file_content
-        except FileNotFoundError:
-            print("The file was not found")
-            return None
-        except Exception as e:
-            print(f"Error in downloading file: {e}")
-            return None
+            os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+            shutil.copy(storage_path, local_file_path)
 
-    async def download_file_as_object(self, content, file_name: str):
-        try:
-            local_file_path = os.path.join(local_storage_path, file_name)
-            with open(local_file_path, 'wb') as file:
-                file.write(content)
-            print(f"File downloaded to {local_file_path}")
+            print(f"File downloaded from {storage_path} to {local_file_path}")
             return True
         except Exception as e:
-            print(f"Error in downloading file: {e}")
+            print_exception(e)
             return False
 
-###############################################################################
+    async def download_file_as_stream(self, storage_key: str):
+        try:
+            storage_path = f"{local_storage_path}/{storage_key}"
+            if not os.path.exists(storage_path):
+                print(f"File with storage key '{storage_key}' does not exist")
+                return None
+
+            return open(storage_path, 'rb')
+        except Exception as e:
+            print_exception(e)
+            return None
+
+    async def download_file_as_object(self, storage_key: str) -> BytesIO:
+        try:
+            storage_path = f"{local_storage_path}/{storage_key}"
+            if not os.path.exists(storage_path):
+                print(f"File with storage key '{storage_key}' does not exist")
+                return None
+            buffer = BytesIO()
+            with open(storage_path, 'rb') as f:
+                buffer.write(f.read())
+            buffer.seek(0)
+            print(f"File {storage_key} downloaded from {storage_path} as object")
+            return buffer
+        except Exception as e:
+            print_exception(e)
+            return None

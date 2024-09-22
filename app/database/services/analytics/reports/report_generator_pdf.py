@@ -3,11 +3,11 @@ import pypandoc
 import os
 from app.common.utils import print_exception
 
-from app.database.services.analytics.common import get_analysis_temp_path
+from app.database.services.analytics.common import get_current_analysis_temp_path, get_storage_key_path
 from app.domain_types.schemas.analytics import EngagementMetrics
 from app.database.services.analytics.reports.report_generator_images import generate_report_images
 from app.database.services.analytics.reports.report_generator_markdown import generate_report_markdown
-from app.modules.storage.provider.awa_s3_storage_service import AwsS3StorageService
+from app.modules.storage.storage_service import StorageService
 
 ###############################################################################
 
@@ -15,7 +15,7 @@ async def generate_report_pdf(
         analysis_code: str,
         metrics: EngagementMetrics) -> str | None:
     try:
-        report_folder_path = get_analysis_temp_path(analysis_code)
+        report_folder_path = get_current_analysis_temp_path(analysis_code)
 
         images_generated = generate_report_images(report_folder_path, metrics)
         if not images_generated:
@@ -72,10 +72,10 @@ async def markdown_to_pdf(markdown_file_path: str, pdf_file_path: str, analysis_
             extra_args=['--pdf-engine=xelatex']
         )
         pdf_buffer.seek(0)
-        # analysis_code = '28'
-        storage = AwsS3StorageService()
+        storage = StorageService()
         file_name = f"analytics_report_{analysis_code}.pdf"
-        await storage.upload_excel_or_pdf(pdf_buffer, file_name)
+        storage_location = get_storage_key_path(analysis_code)
+        await storage.upload_file_as_object(storage_location, pdf_buffer, file_name)
         pdf_buffer.close()
         return True
     except Exception as e:

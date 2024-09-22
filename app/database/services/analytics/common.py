@@ -61,7 +61,14 @@ def get_analytics_template_path() -> str:
     template_path = os.path.join(cwd, 'docs', 'analytics', 'templates')
     return template_path
 
-def get_report_folder_temp_path() -> str:
+def get_report_folder_path() -> str:
+    cwd = os.getcwd()
+    reports_path = os.path.join(cwd, 'tmp', REPORTS_DIR)
+    if not os.path.exists(reports_path):
+        os.makedirs(reports_path, exist_ok=True)
+    return reports_path
+
+def get_current_report_folder_temp_path() -> str:
     cwd = os.getcwd()
     today = datetime.today()
     date_timestamp = today.strftime("%Y%m%d")
@@ -70,8 +77,8 @@ def get_report_folder_temp_path() -> str:
         os.makedirs(reports_path, exist_ok=True)
     return reports_path
 
-def get_analysis_temp_path(analysis_code: str) -> str:
-    reports_path = get_report_folder_temp_path()
+def get_current_analysis_temp_path(analysis_code: str) -> str:
+    reports_path = get_current_report_folder_temp_path()
     report_folder_path = os.path.join(reports_path, f"reports_{analysis_code}")
     if not os.path.exists(report_folder_path):
         os.makedirs(report_folder_path, exist_ok=True)

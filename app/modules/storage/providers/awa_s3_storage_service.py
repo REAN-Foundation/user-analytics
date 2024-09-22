@@ -1,7 +1,8 @@
+import io
 import os
-from typing import AsyncIterable
+from typing import AsyncIterable, BinaryIO
 import boto3
-from botocore.exceptions import NoCredentialsError
+from app.common.utils import print_exception
 
 ###############################################################################
 
@@ -22,140 +23,82 @@ class AwsS3StorageService:
             region_name=region_name
         )
 
-    async def upload_local_file(self, file_path: str):
+    async def upload_local_file(self, storage_location: str, local_file_path: str):
         try:
-            file_name = os.path.basename(file_path)
-            self.s3_client.upload_file(file_path, bucket_name, file_name)
-            print(f"File {file_path} uploaded to {bucket_name}/{file_name}")
+            file_name = os.path.basename(local_file_path)
+            storage_key = f"{storage_location}/{file_name}"
+            self.s3_client.upload_file(local_file_path, bucket_name, storage_key)
+            print(f"File '{local_file_path}' uploaded to '{bucket_name}/{storage_key}'")
             return True
-        except FileNotFoundError:
-            print("The file was not found")
-            return False
-        except NoCredentialsError:
-            print("Credentials not available")
-            return False
         except Exception as e:
-            print(f"Error in uploading file: {e}")
+            print_exception(e)
             return False
 
-    async def upload_file_as_stream_multipart(self, stream: AsyncIterable[bytes], file_name: str):
+    async def upload_file_as_stream(self, storage_location: str, stream: BinaryIO, file_name: str):
         try:
-            self.s3_client.upload_fileobj(stream, bucket_name, file_name)
-            print(f"File uploaded to {bucket_name}/{file_name}")
+            storage_key = f"{storage_location}/{file_name}"
+            assert hasattr(stream, 'read') and hasattr(stream, 'seek'), "Stream must be a file-like object with read and seek methods"
+            stream.seek(0)
+            self.s3_client.upload_fileobj(stream, bucket_name, storage_key)
+            print(f"File uploaded successfully to {bucket_name}/{file_name}")
             return True
         except Exception as e:
             print(f"Error in uploading file: {e}")
             return False
 
-    async def upload_file_as_object(self, content, file_name: str):
+    async def upload_file_as_object(self, storage_location: str, content, file_name: str):
         try:
-            self.s3_client.put_object(Body=content, Bucket=bucket_name, Key=file_name)
+            storage_key = f"{storage_location}/{file_name}"
+            self.s3_client.put_object(Body=content, Bucket=bucket_name, Key=storage_key)
             print(f"File uploaded to {bucket_name}/{file_name}")
             return True
         except Exception as e:
-            print(f"Error in uploading file: {e}")
+            print_exception(e)
             return False
 
     async def download_file_locally(self, storage_key: str, local_file_path: str):
         try:
+            # Make sure the file path directory exists
+            os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
             self.s3_client.download_file(bucket_name, storage_key, local_file_path)
-            print(f"File downloaded from {bucket_name} to {local_file_path}")
+            print(f"File downloaded from {bucket_name}/{storage_key} to {local_file_path}")
             return True
-        except FileNotFoundError:
-            print("The file was not found")
-            return False
         except Exception as e:
-            print(f"Error in downloading file: {e}")
+            print_exception(e)
             return False
 
-    async def download_file_as_stream_multipart(self, storage_key: str):
+    async def download_file_as_stream(self, storage_key: str):
         try:
             response = self.s3_client.get_object(Bucket=bucket_name, Key=storage_key)
-            if 'Body' not in response or response['Body'] is None:
-                raise ValueError("Failed to retrieve file body from S3")
-            async def stream_file() -> AsyncIterable[bytes]:
-                while True:
-                    chunk = response['Body'].read(1024)  # Read in chunks of 1024 bytes
-                    if not chunk:
-                        break
-                    yield chunk
-            file_content = stream_file()
+            stream = response['Body'] # This is a StreamingBody object
+
+            # Or altenative implementation
+
+            # if 'Body' not in response or response['Body'] is None:
+            #     raise ValueError("Failed to retrieve file body from S3")
+            # async def stream_file() -> AsyncIterable[bytes]:
+            #     while True:
+            #         chunk = response['Body'].read(1024)  # Read in chunks of 1024 bytes
+            #         if not chunk:
+            #             break
+            #         yield chunk
+            # stream = stream_file()
+
             print(f"File {storage_key} downloaded from {bucket_name} as stream")
-            return file_content
-        except NoCredentialsError:
-            print("Credentials not available")
-            return None
+            return stream
         except Exception as e:
-            print(f"Error in downloading file: {e}")
+            print_exception(e)
             return None
 
-    async def download_file_as_object(self, content, file_name: str):
+    async def download_file_as_object(self, storage_key: str) -> io.BytesIO:
         try:
-            response = self.s3_client.get_object(Bucket=bucket_name, Key=file_name)
-            content = response['Body'].read()
-            print(f"File {file_name} downloaded from {bucket_name}")
-            return content
-        except FileNotFoundError:
-            print("The file was not found")
-            return None
+            buffer = io.BytesIO()
+            self.s3_client.download_fileobj(Bucket=bucket_name, Key=storage_key, Fileobj=buffer)
+            buffer.seek(0)
+            print(f"File {storage_key} downloaded from {bucket_name} as object")
+            return buffer
         except Exception as e:
-            print(f"Error in downloading file: {e}")
+            print_exception(e)
             return None
 
 ###############################################################################
-
-    # async def upload_file(self, file_path, s3_file_name=None):
-    #     if s3_file_name is None:
-    #         s3_file_name = file_path
-    #     try:
-    #         self.s3_client.upload_file(file_path, bucket_name, s3_file_name)
-    #         print(f"File {file_path} uploaded to {bucket_name}/{s3_file_name}")
-    #         return True
-    #     except FileNotFoundError:
-    #         print("The file was not found")
-    #         return False
-    #     except NoCredentialsError:
-    #         print("Credentials not available")
-    #         return False
-    #     except Exception as e:
-    #         print(f"Error in uploading reprt: {e}")
-    #         return False
-
-    # async def upload_object(self, content, bucket_name, s3_file_name=None):
-    #     try:
-    #         self.s3_client.put_object(Body=content, Bucket=bucket_name, Key=s3_file_name)
-    #         print(f"File {s3_file_name} uploaded to {bucket_name}/{s3_file_name}")
-    #         return True
-    #     except Exception as e:
-    #         print(f"Error in uploading reprt: {e}")
-
-    # async def upload_excel_or_pdf(self, content, file_name=None):
-    #     try:
-    #         self.s3_client.upload_fileobj(content, bucket_name, file_name)
-    #         print(f"File {file_name} uploaded to {bucket_name}/{file_name}")
-    #         # s3_file_url = f"https://{bucket_name}.s3.amazonaws.com/{file_name}"
-    #         return True
-    #     except Exception as e:
-    #         print(f"Error in uploading reprt: {e}")
-
-    # async def download_file_as_stream(self, storage_key):
-    #     try:
-    #         response = self.s3_client.get_object(Bucket=bucket_name, Key=storage_key)
-    #         if 'Body' not in response or response['Body'] is None:
-    #             raise ValueError("Failed to retrieve file body from S3")
-    #         async def stream_file() -> AsyncIterable[bytes]:
-    #             while True:
-    #                 chunk = response['Body'].read(1024)  # Read in chunks of 1024 bytes
-    #                 if not chunk:
-    #                     break
-    #                 yield chunk
-    #         file_content = stream_file()
-    #         print(f"File {storage_key} downloaded from {bucket_name} as stream")
-    #         return file_content
-    #     except NoCredentialsError:
-    #         print("Credentials not available")
-    #         return None
-    #     except Exception as e:
-    #         print(f"Error in downloading file: {e}")
-    #         return None
-

@@ -8,7 +8,7 @@ import seaborn as sns
 import json
 from tabulate import tabulate
 
-from app.database.services.analytics.common import get_report_folder_temp_path
+from app.database.services.analytics.common import get_current_report_folder_temp_path
 
 ###############################################################################
 
