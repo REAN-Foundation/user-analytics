@@ -85,83 +85,43 @@ Demographics provide an understanding of the user base by categorizing them into
 
 {{gender_distribution_chart}}
 
-| Gender | Count | Percentage |
-|--------|-------|------------|
-| Male   | 2500  | 50%        |
-| Female | 2500  | 50%        |
-| Other  | 0     | 0%         |
-| Unknown| 0     | 0%         |
+{{gender_distribution_table}}
 
 **Location Distribution**
+
 {{location_distribution_chart}}
 
-| Location | Count | Percentage |
-|----------|-------|------------|
-| USA      | 4000  | 80%        |
-| Canada   | 500   | 10%        |
-| UK       | 300   | 6%         |
-| India    | 200   | 4%         |
-| Other    | 0     | 0%         |
+{{location_distribution_table}}
 
 **Ethnicity Distribution**
 
 {{ethnicity_distribution_chart}}
 
-| Ethnicity | Count | Percentage |
-|-----------|-------|------------|
-| White     | 3000  | 60%        |
-| Black     | 1000  | 20%        |
-| Hispanic  | 500   | 10%        |
-| Asian     | 300   | 6%         |
-| Other     | 200   | 4%         |
-| Unknown   | 0     | 0%         |
+{{ethnicity_distribution_table}}
 
 **Race Distribution**
 
 {{race_distribution_chart}}
 
-| Race      | Count | Percentage |
-|-----------|-------|------------|
-| Caucasian | 3000  | 60%        |
-| African   | 1000  | 20%        |
-| Asian     | 500   | 10%        |
-| Hispanic  | 300   | 6%         |
-| Other     | 200   | 4%         |
-| Unknown   | 0     | 0%         |
+{{race_distribution_table}}
 
 **Health System Distribution**
 
 {{health_system_distribution_chart}}
 
-| Health System | Count | Percentage |
-|---------------|-------|------------|
-| System A      | 2000  | 40%        |
-| System B      | 1500  | 30%        |
-| System C      | 1000  | 20%        |
-| System D      | 500   | 10%        |
-| Unknown       | 0     | 0%         |
+{{health_system_distribution_table}}
 
 **Hospital Affiliation Distribution**
 
 {{hospital_affiliation_distribution_chart}}
 
-| Hospital Affiliation | Count | Percentage |
-|----------------------|-------|------------|
-| Hospital A           | 2000  | 40%        |
-| Hospital B           | 1500  | 30%        |
-| Hospital C           | 1000  | 20%        |
-| Hospital D           | 500   | 10%        |
-| Unknown              | 0     | 0%         |
+{{hospital_affiliation_distribution_table}}
 
 **Caregiver or Stroke Survivor Distribution**
 
 {{caregiver_or_stroke_survivor_distribution_chart}}
 
-| Role                  | Count | Percentage |
-|-----------------------|-------|------------|
-| Caregiver             | 2000  | 40%        |
-| Stroke Survivor       | 1500  | 30%        |
-| Unknown               | 500   | 10%        |
+{{caregiver_or_stroke_survivor_distribution_table}}
 
 ---
 
@@ -177,7 +137,11 @@ This section captures key metrics that provide insight into how users interact w
 DAU(t) = \sum_{i=1}^{n} \text{Active Users on Day } t
 \]
 
-  {{daily_active_users_chart}}. Check table [here](#daily-active-users-table)
+{{daily_active_users_chart}}
+
+{{daily_active_users_table}}
+
+. Check table [here](#daily-active-users-table)
 
 - **Weekly Active Users (WAU)**: Total number of unique users who interact with the platform during a week.
 
@@ -185,7 +149,11 @@ DAU(t) = \sum_{i=1}^{n} \text{Active Users on Day } t
 WAU(t) = \sum_{i=1}^{n} \text{Active Users in Week } t
 \]
 
-{{weekly_active_users_chart}}. Check table [here](#weekly-active-users-table)
+{{weekly_active_users_chart}}
+
+{{weekly_active_users_table}}
+
+ Check table [here](#weekly-active-users-table)
 
 - **Monthly Active Users (MAU)**: Total number of unique users who interact with the platform during a month.
 
@@ -193,7 +161,9 @@ WAU(t) = \sum_{i=1}^{n} \text{Active Users in Week } t
 MAU(t) = \sum_{i=1}^{n} \text{Active Users in Month } t
 \]
 
-{{monthly_active_users_chart}}. Check table [here](#monthly-active-users-table)
+{{monthly_active_users_chart}}
+
+{{monthly_active_users_table}}
 
 
 <!--
@@ -219,6 +189,8 @@ MAU(t) = \sum_{i=1}^{n} \text{Active Users in Month } t
 
 {{retention_rate_On_specific_days_chart}}
 
+{{retention_rate_On_specific_days_table}}
+
 Retention rates help identify how well the platform retains users over time, indicating the effectiveness of engagement strategies and feature enhancements. Retention rates measure user loyalty and the ability of the platform to keep users engaged over time.
 
 
@@ -229,6 +201,10 @@ Retention rates help identify how well the platform retains users over time, ind
 \[
 \text{Retention Rate during interval } = \frac{\text{Number of Users returning during interval } }{\text{Number of Users on Day 0}} \times 100
 \]
+
+{{retention_rate_in_specific_intervals_chart}}
+
+{{retention_rate_in_specific_intervals_table}}
 
 ---
 
@@ -244,12 +220,7 @@ This metric shows how often users are logging into the platform, which is an ind
 
 {{login_frequency_monthly_chart}}
 
-| Month      | Login Frequency |
-|------------|-----------------|
-| 2023-Jan   | 2               |
-| 2023-Feb   | 3               |
-| 2023-Mar   | 2               |
-| 2023-Apr   | 2               |
+{{login_frequency_monthly_table}}
 
 
 ### Average Session Duration
@@ -264,24 +235,14 @@ This metric shows how often users are logging into the platform, which is an ind
 
   The most frequently visited screens or features within the platform, indicating where the user spent most of their time.
 
-  | Sequence | Screen Name          | Count | Percentage |
-  |----------|----------------------|-------|------------|
-  | 1        | Dashboard            | 2000  | 40%        |
-  | 2        | Profile              | 1500  | 30%        |
-  | 3        | Appointment Scheduling | 1000 | 20%        |
-  | 4        | Medication Reminders | 500   | 10%        |
+  {{most_commonly_visited_screens_table}}
+  
 
 ### Most Commonly Used Features
 
   The most frequently used features within the platform, indicating user preferences and popular functionalities.
 
-  | Sequence | Feature Name         | Count | Percentage |
-  |----------|----------------------|-------|------------|
-  | 1        | Appointments  | 2000 | 40%        |
-  | 2        | Medication Reminders | 1500  | 30%        |
-  | 3        | Telehealth Consultation | 1000 | 20%        |
-  | 4        | Health Tracker       | 500   | 10%        |
-
+  {{most_commonly_used_features_table}}
 
 ---
 
