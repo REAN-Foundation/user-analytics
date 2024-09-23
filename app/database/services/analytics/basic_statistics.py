@@ -1,3 +1,4 @@
+from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
@@ -33,7 +34,7 @@ async def get_all_registered_users(filters: AnalyticsFilters) -> int:
         return total_users
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics_basics: get_all_registered_patients")
@@ -65,7 +66,7 @@ async def get_all_registered_patients(filters: AnalyticsFilters) -> int:
         return total_patients
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 
@@ -101,7 +102,7 @@ async def get_current_active_patients(filters: AnalyticsFilters) -> int:
         return active_patients
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics_basics: get_patient_registration_history")
@@ -137,7 +138,7 @@ async def get_patient_registration_hisory_by_months(filters: AnalyticsFilters) -
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_deregistration_history")
@@ -173,7 +174,7 @@ async def get_patient_deregistration_history_by_months(filters: AnalyticsFilters
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_age_demographics")
@@ -219,7 +220,7 @@ async def get_patient_age_demographics(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_gender_demographics")
@@ -257,7 +258,7 @@ async def get_patient_gender_demographics(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_ethnicity_demographics")
@@ -293,7 +294,7 @@ async def get_patient_ethnicity_demographics(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_race_demographics")
@@ -330,7 +331,7 @@ async def get_patient_race_demographics(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_healthsystem_distribution")
@@ -367,7 +368,7 @@ async def get_patient_healthsystem_distribution(filters: AnalyticsFilters) -> li
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_hospital_distribution")
@@ -404,7 +405,7 @@ async def get_patient_hospital_distribution(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_survivor_or_caregiver_distribution")
@@ -443,5 +444,5 @@ async def get_patient_survivor_or_caregiver_distribution(filters: AnalyticsFilte
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []

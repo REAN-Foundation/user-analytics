@@ -5,6 +5,7 @@ from app.domain_types.miscellaneous.exceptions import add_exception_handlers
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 from app.startup.client_auth_middleware import ClientAuthMiddleware
 from app.startup.router import router
+from app.startup.scheduler.job_scheduler import JobScheduler
 
 #################################################################
 
@@ -27,6 +28,8 @@ def start():
 
     server.add_middleware(ClientAuthMiddleware)
     server.include_router(router)
+
+    JobScheduler.start_scheduler()
 
     return server
 

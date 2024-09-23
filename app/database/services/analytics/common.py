@@ -56,7 +56,19 @@ def get_role_id(role_name: str = "Patient") -> int|None:
         role_id = role["id"]
     return role_id
 
-def get_report_folder_path():
+def get_analytics_template_path() -> str:
+    cwd = os.getcwd()
+    template_path = os.path.join(cwd, 'docs', 'analytics', 'templates')
+    return template_path
+
+def get_report_folder_path() -> str:
+    cwd = os.getcwd()
+    reports_path = os.path.join(cwd, 'tmp', REPORTS_DIR)
+    if not os.path.exists(reports_path):
+        os.makedirs(reports_path, exist_ok=True)
+    return reports_path
+
+def get_current_report_folder_temp_path() -> str:
     cwd = os.getcwd()
     today = datetime.today()
     date_timestamp = today.strftime("%Y%m%d")
@@ -65,10 +77,19 @@ def get_report_folder_path():
         os.makedirs(reports_path, exist_ok=True)
     return reports_path
 
-def get_analytics_template_path():
-    cwd = os.getcwd()
-    template_path = os.path.join(cwd, 'docs', 'analytics', 'templates')
-    return template_path
+def get_current_analysis_temp_path(analysis_code: str) -> str:
+    reports_path = get_current_report_folder_temp_path()
+    report_folder_path = os.path.join(reports_path, f"reports_{analysis_code}")
+    if not os.path.exists(report_folder_path):
+        os.makedirs(report_folder_path, exist_ok=True)
+    return report_folder_path
+
+def get_storage_key_path(analysis_code: str) -> str:
+    today = datetime.today()
+    date_timestamp = today.strftime("%Y%m%d")
+    child_folder = f"reports_{analysis_code}"
+    storage_key_path = f"{REPORTS_DIR}/{date_timestamp}/{child_folder}"
+    return storage_key_path
 
 ###############################################################################
 
