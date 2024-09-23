@@ -59,7 +59,7 @@ from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 
 ###############################################################################
-PAST_DAYS_TO_CONSIDER = 540
+PAST_DAYS_TO_CONSIDER = 900
 ###############################################################################
 
 async def calculate(
