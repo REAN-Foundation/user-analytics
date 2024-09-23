@@ -446,3 +446,78 @@ async def get_patient_survivor_or_caregiver_distribution(filters: AnalyticsFilte
     except Exception as e:
         print_exception(e)
         return []
+
+async def get_users_distribution_by_role(filters: AnalyticsFilters) -> list:
+    try:
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+        query = f"""
+                SELECT 
+                    RoleId,
+                    count(*) AS registration_count
+                FROM 
+                    users
+                WHERE
+                    RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                    __CHECKS__
+                GROUP BY 
+                    RoleId
+                ORDER BY
+                    RoleId ASC
+            """
+
+        checks_str = add_common_checks(tenant_id, None)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+        result = connector.execute_read_query(query)
+
+        return result
+
+    except Exception as e:
+        print(e)
+        return []
+
+async def get_active_users_count_at_end_of_every_month(filters: AnalyticsFilters) -> list:
+    try:
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+        query = f"""
+                SELECT 
+                    DATE_FORMAT(LAST_DAY(RegistrationDate), '%Y-%m-%d') AS month_end, 
+                    COUNT(*) AS active_user_count
+                FROM 
+                    users as user
+                WHERE 
+                    RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                    AND
+                    DeletedAt IS NULL
+                    __CHECKS__
+                GROUP BY 
+                    DATE_FORMAT(RegistrationDate, '%Y-%m')
+                ORDER BY 
+                    month_end
+            """
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+        result = connector.execute_read_query(query)
+
+        return result
+
+    except Exception as e:
+        print(e)
+        return []
+    

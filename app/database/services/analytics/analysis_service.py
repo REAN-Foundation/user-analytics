@@ -9,6 +9,7 @@ from app.database.database_accessor import get_db_session
 from app.database.models.analysis import Analysis
 from app.database.models.tenant import Tenant
 from app.database.services.analytics.basic_statistics import (
+    get_active_users_count_at_end_of_every_month,
     get_all_registered_patients,
     get_all_registered_users,
     get_current_active_patients,
@@ -20,12 +21,14 @@ from app.database.services.analytics.basic_statistics import (
     get_patient_hospital_distribution,
     get_patient_race_demographics,
     get_patient_registration_hisory_by_months,
-    get_patient_survivor_or_caregiver_distribution
+    get_patient_survivor_or_caregiver_distribution,
+    get_users_distribution_by_role
 )
 from app.database.services.analytics.common import get_role_id
 from app.database.services.analytics.generic_engagement import (
     get_daily_active_patients,
     get_monthly_active_patients,
+    get_most_fired_events_by_event_category,
     get_patient_stickiness_dau_mau,
     get_patients_average_session_length_in_minutes,
     get_patients_login_frequency,
@@ -33,7 +36,8 @@ from app.database.services.analytics.generic_engagement import (
     get_patients_most_commonly_visited_screens,
     get_patients_retention_rate_in_specific_time_interval,
     get_patients_retention_rate_on_specific_days,
-    get_weekly_active_patients
+    get_weekly_active_patients,
+    get_most_fired_events
 )
 from app.database.services.analytics.feature_engagement import (
     get_feature_access_frequency,
@@ -128,7 +132,9 @@ async def calculate_basic_stats(filters: AnalyticsFilters | None = None) -> Basi
             get_patient_race_demographics(filters),
             get_patient_healthsystem_distribution(filters),
             get_patient_hospital_distribution(filters),
-            get_patient_survivor_or_caregiver_distribution(filters)
+            get_patient_survivor_or_caregiver_distribution(filters),
+            get_users_distribution_by_role(filters),
+            get_active_users_count_at_end_of_every_month(filters)
         )
 
         total_users                        = results[0]
@@ -143,6 +149,8 @@ async def calculate_basic_stats(filters: AnalyticsFilters | None = None) -> Basi
         healthsystem_distribution          = results[9]
         hospital_distribution              = results[10]
         survivor_or_caregiver_distribution = results[11]
+        users_distribution_by_role         = results[12]
+        active_users_count_at_end_of_every_month = results[13]
 
         demographics = Demographics(
             AgeGroups                       = age_demographics,
@@ -163,6 +171,8 @@ async def calculate_basic_stats(filters: AnalyticsFilters | None = None) -> Basi
             TotalUsers                   = total_users,
             TotalPatients                = total_patients,
             TotalActivePatients          = active_patients,
+            UsersDistributionByRole      = users_distribution_by_role,
+            ActiveUsersCountAtEndOfMonth = active_users_count_at_end_of_every_month,
             PatientRegistrationHistory   = registration_history,
             PatientDeregistrationHistory = deregistration_history,
             PatientDemographics          = demographics,
@@ -187,7 +197,9 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
                 get_patients_retention_rate_in_specific_time_interval(filters),
                 get_patient_stickiness_dau_mau(filters),
                 get_patients_most_commonly_used_features(filters),
-                get_patients_most_commonly_visited_screens(filters)
+                get_patients_most_commonly_visited_screens(filters),
+                get_most_fired_events(filters),
+                get_most_fired_events_by_event_category(filters)
             )
 
         daily_active_users                   = results[0]
@@ -200,6 +212,8 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
         stickiness_ratio                     = results[7]
         most_common_features                 = results[8]
         most_commonly_visited_screens        = results[9]
+        most_fired_events                   = results[10]
+        most_fired_events_by_event_category = results[11]
 
         generic_engagement_metrics = GenericEngagementMetrics(
                 TenantId                         = filters.TenantId,
@@ -215,7 +229,9 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
                 RetentionRateInSpecificIntervals = retention_rate_in_specific_intervals,
                 StickinessRatio                  = stickiness_ratio,
                 MostCommonlyVisitedFeatures      = most_common_features,
-                MostCommonlyVisitedScreens       = most_commonly_visited_screens
+                MostCommonlyVisitedScreens       = most_commonly_visited_screens,
+                MostFiredEvents                  = most_fired_events,
+                MostFiredEventsByEventCategory   = most_fired_events_by_event_category
             )
 
         return generic_engagement_metrics

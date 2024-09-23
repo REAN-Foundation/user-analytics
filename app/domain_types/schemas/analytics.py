@@ -41,6 +41,8 @@ class BasicAnalyticsStatistics(BaseModel):
     TotalUsers                   : int               = Field(description="Total number of users")
     TotalPatients                : int               = Field(description="Total number of patients")
     TotalActivePatients          : int               = Field(description="Total number of active patients")
+    UsersDistributionByRole      : list|None         = Field(description="Users distribution by Id")
+    ActiveUsersCountAtEndOfMonth : list|None         = Field(description="Active users count at end of month") 
     # TotalDeletedPatients         : int               = Field(description="Total number of inactive patients")
     PatientRegistrationHistory   : list|None         = Field(description="User registration history")
     PatientDeregistrationHistory : list|None         = Field(description="User deregistration history")
@@ -61,6 +63,8 @@ class GenericEngagementMetrics(BaseModel):
       RetentionRateInSpecificIntervals: list|dict|None = Field(description="Percentage of users who return to the app after their first use (day 1, day 7, day 30).")
       MostCommonlyVisitedFeatures     : list|dict|None = Field(description="Most common events performed by users")
       MostCommonlyVisitedScreens      : list|dict|None = Field(description="Most common screens visited by users")
+      MostFiredEvents                 : list|dict|None = Field(description="Most frequently fired events")
+      MostFiredEventsByEventCategory  : list|dict|None = Field(description="Most frequently fired events by event category")
 
 class FeatureEngagementMetrics(BaseModel):
     Feature                          : str            = Field(description="Name of the feature")
