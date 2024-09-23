@@ -155,13 +155,13 @@ def create_chart(
     df_len: int, 
     value_col: int, 
     x_axis: str = '', 
-    y_axis: str = ''
+    y_axis: str = '',
 ):
     chart = workbook.add_chart({'type': chart_type})
     chart.add_series({
         'name': series_name,
         'categories': [sheet_name, start_row + 1, start_col, start_row + df_len, start_col],
-        'values': [sheet_name, start_row + 1, value_col, start_row + df_len, value_col],
+        'values': [sheet_name, start_row + 1, value_col, start_row + df_len, value_col]
     })
     chart.set_title({'name': f'{series_name}'})
     
@@ -313,4 +313,14 @@ def add_title_and_description(
   
     worksheet.write(start_row, start_col, title, title_format)
     worksheet.write(start_row + 2, start_col, description, description_format)
+    
+    
+def add_table_to_markdown(
+data_frame: pd.DataFrame, 
+rename_columns: Dict[str, str] = None
+) -> str:
+    if rename_columns:
+        data_frame.rename(columns=rename_columns, inplace=True)
+
+    return data_frame.to_markdown(index=False)
   

@@ -1,7 +1,11 @@
 
 import os
+from typing import List
+
+import pandas as pd
 
 from app.database.services.analytics.common import get_analytics_template_path
+from app.database.services.analytics.reports.report_utilities import add_table_to_markdown
 from app.domain_types.schemas.analytics import (
     EngagementMetrics
 )
@@ -48,7 +52,6 @@ async def generate_report_markdown(
     gender_distribution_table_str = generate_gender_distribution_table(metrics)
     template_str = template_str.replace("{{gender_distribution_table}}", gender_distribution_table_str)
 
-
     # Save the report
     with open(markdown_file_path, "w") as file:
         file.write(template_str)
@@ -59,26 +62,54 @@ async def generate_report_markdown(
 
 def generate_report_details_table(metrics: EngagementMetrics) -> str:
 
-    tenant_id = metrics.TenantId if metrics.TenantId is not None else "Unspecified"
+    tenant_code = metrics.TenantId if metrics.TenantId is not None else "Unspecified"
     tenant_name = metrics.TenantName if metrics.TenantName is not None else "Unspecified"
-    start_date = metrics.StartDate if metrics.StartDate is not None else "Unspecified"
-    end_date = metrics.EndDate if metrics.EndDate is not None else "Unspecified"
+    start_date = metrics.StartDate.strftime('%Y-%m-%d') if metrics.StartDate is not None else "Unspecified"
+    end_date = metrics.EndDate.strftime('%Y-%m-%d') if metrics.EndDate is not None else "Unspecified"
+    report_details_table =  f"""
+| Filter       | Value                     | Description                                  |
+|--------------|---------------------------|----------------------------------------------|
+| Tenant Code  | {tenant_code} | Unique identifier for the tenant.            |
+| Tenant Name  | {tenant_name} | Name of the tenant/organization              |
+| Start Date   | {start_date} | Start date of the analysis period.           |
+| End Date     | {end_date} | End date of the analysis period.             |
+"""
 
-    return f""" """
+    return report_details_table
 
 def generate_basic_statistics_overview_table(metrics: EngagementMetrics) -> str:
-
+    
+    metrics = metrics.BasicStatistics
     total_users = metrics.TotalUsers if metrics.TotalUsers is not None else "Unspecified"
-    total_active_users = metrics.TotalActiveUsers if metrics.TotalActiveUsers is not None else "Unspecified"
-    total_inactive_users = metrics.TotalInactiveUsers if metrics.TotalInactiveUsers is not None else "Unspecified"
-
-    return f""" """
+    total_patients = metrics.TotalPatients if metrics.TotalPatients is not None else "Unspecified"
+    total_active_patients = metrics.TotalActivePatients if metrics.TotalActivePatients is not None else "Unspecified"
+    
+    basic_statistics_table = f"""
+| Name                  | Values | Description                                  |
+|-----------------------|--------|----------------------------------------------|
+| Total Users           | {total_users} | Overall count of users associated with the tenant. |
+| Total Patients        | {total_patients} | Total number of patients registered within the system. |
+| Total Active Patients | {total_active_patients} | Total number of active (Not-deleted) patients.|
+"""
+    
+    return basic_statistics_table
 
 def generate_age_distribution_table(metrics: EngagementMetrics) -> str:
-
-    return f""" """
+    age_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.AgeGroups)
+    age_distribution_table = add_table_to_markdown(
+        data_frame = age_distribution_df, 
+        rename_columns = {'age_group': 'Age Group', 'count': 'Count'}
+    )
+    return age_distribution_table          
+   
 
 def generate_gender_distribution_table(metrics: EngagementMetrics) -> str:
+    gender_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.GenderGroups)
+    gender_distribution_table = add_table_to_markdown(
+        data_frame = gender_distribution_df,
+        rename_columns = {'gender': 'Gender', 'count': 'Count'}
+    )
+    return gender_distribution_table   
 
-    return f""" """
+
 

@@ -48,7 +48,6 @@ This report provides an analysis of general usage statistics, system-wide and fe
 
 The analysis is performed considering the following contraints.
 
-
 {{report_details_table}}
 
 ---
@@ -61,9 +60,8 @@ This section provides an overview of the basic analytics related to the tenant, 
 
 {{basic_statistics_overview_table}}
 
-  **Registration / Deregistration History**
-  Trends of how many users registered or deregistered from the system on a given day, in a given week or a month.
-
+**Registration / Deregistration History**
+Trends of how many users registered or deregistered from the system on a given day, in a given week or a month.
 
 **Registration and Deregistration History**
 
