@@ -2,28 +2,36 @@ from enum import Enum
 
 # These are commonly encountered event types.
 # But do not set this enum to database. Keep it as string.
+# Event types can broadly be termed as actions - user, system, device, etc.
 
 class EventType(str, Enum):
 
-    # User events
-    UserSignup = "user-sign-up"
-    UserLogin = "user-login"
-    UserLogout = "user-logout"
+    # User account events
+    UserCreate = "user-create"
+    UserUpdate = "user-update"
+    UserDelete = "user-delete"
+
     UserPasswordChange = "user-password-change"
     UserPasswordReset = "user-password-reset"
+    UserSendPasswordResetCode = "user-send-password-reset-code"
     UserEmailChange = "user-email-change"
     UserPhoneChange = "user-phone-change"
     UserMetadataUpdate = "user-metadata-update"
-    UserDelete = "user-delete"
+
+    # User login session events
+
+    UserLoginWithPassword = "user-login-with-password"
+    UserLoginWithOtp = "user-login-with-otp"
+    UserGenerateOtp = "user-generate-otp"
+    UserLogout = "user-logout"
 
     # User profile events
-    UserProfileUpdate = "user-profile-update"
     PatientHealthProfileUpdate = "patient-health-profile-update"
 
     # Screen visit events
-    ScreenVisit = "screen-visit"
     ScreenEntry = "screen-entry"
     ScreenExit = "screen-exit"
+    ScreenButtonClick = "screen-button-click"
 
     # Medication events
     MedicationCreate = "medication-create"
@@ -52,22 +60,36 @@ class EventType(str, Enum):
     SymptomDelete = "symptom-delete"
 
     # Biometrics / Vitals events
-    VitalAddPulse = "vital-add-pulse"
-    VitalAddTemperature = "vital-add-temperature"
-    VitalAddBloodPressure = "vital-add-blood-pressure"
-    VitalAddBloodSugar = "vital-add-blood-sugar"
-    VitalAddWeight = "vital-add-weight"
-    VitalAddHeight = "vital-add-height"
-    VitalAddOxygenSaturation = "vital-add-oxygen-saturation"
-    VitalAddRespiratoryRate = "vital-add-respiratory-rate"
+    VitalsAdd = "vitals-add",
+    VitalsUpdate = "vitals-update",
+    VitalsDelete = "vitals-delete",
 
-    VitalAlertTriggered = "vital-alert-triggered"
-    VitalAlertResolved = "vital-alert-resolved"
+    # VitalAddPulse = "vital-add-pulse"
+    # VitalDeletePulse = "vital-delete-pulse"
+    # VitalAddTemperature = "vital-add-temperature"
+    # VitalDeleteTemperature = "vital-delete-temperature"
+    # VitalAddBloodPressure = "vital-add-blood-pressure"
+    # VitalDeleteBloodPressure = "vital-delete-blood-pressure"
+    # VitalAddBloodSugar = "vital-add-blood-sugar"
+    # VitalDeleteBloodSugar = "vital-delete-blood-sugar"
+    # VitalAddWeight = "vital-add-weight"
+    # VitalDeleteWeight = "vital-delete-weight"
+    # VitalAddHeight = "vital-add-height"
+    # VitalDeleteHeight = "vital-delete-height"
+    # VitalAddOxygenSaturation = "vital-add-oxygen-saturation"
+    # VitalDeleteOxygenSaturation = "vital-delete-oxygen-saturation"
+    # VitalAddRespiratoryRate = "vital-add-respiratory-rate"
+    # VitalAddCholesterol = "vital-add-cholesterol"
+    # VitalDeleteCholesterol = "vital-delete-cholesterol"
 
-    VitalSearch = "vital-search"
+    VitalsAlertTriggered = "vitals-alert-triggered"
+    VitalsAlertResolved = "vitals-alert-resolved"
+
+    VitalsSearch = "vitals-search"
 
     # Lab test events
     LabRecordAdd = "lab-record-add"
+    LabRecordDelete = "lab-record-delete"
     LabRecordSearch = "lab-record-search"
     LabOrderCreate = "lab-order-create"
     LabOrderUpdate = "lab-order-update"
@@ -118,19 +140,14 @@ class EventType(str, Enum):
     CareplanStart = "careplan-start"
     CareplanStop = "careplan-stop"
     CareplanComplete = "careplan-complete"
-    #Careplan tasks
-    CareplanTaskStart = "careplan-task-start"
-    CareplanTaskComplete = "careplan-task-complete"
-    CareplanTaskCancel = "careplan-task-cancel"
-    CareplanTaskFail = "careplan-task-fail"
-    CareplanTaskReschedule = "careplan-task-reschedule"
 
     # User task events
-    TaskStart = "task-start"
-    TaskComplete = "task-complete"
-    TaskCancel = "task-cancel"
-    TaskFail = "task-fail"
-    TaskReschedule = "task-reschedule"
+    UserTaskStart = "user-task-start"
+    UserTaskComplete = "user-task-complete"
+    UserTaskCancel = "user-task-cancel"
+    UserTaskFail = "user-task-fail"
+    UserTaskReschedule = "user-task-reschedule"
+    UserTaskUpdate = "user-task-update"
 
     # User goal events
     GoalCreate = "goal-create"
@@ -234,33 +251,17 @@ class EventType(str, Enum):
     FeedbackResponse = "feedback-response"
 
     # Assessment events
-    AssessmentTemplateCreate = "assessment-template-create"
-    AssessmentTemplateUpdate = "assessment-template-update"
-    AssessmentTemplateDelete = "assessment-template-delete"
     AssessmentCreate = "assessment-create"
     AssessmentStart = "assessment-start"
     AssessmentComplete = "assessment-complete"
     AssessmentCancel = "assessment-cancel"
-    AssessmentQuestionAnswered = "assessment-question-answered"
-
-    # Daily assessments
-    DailyAssessmentCreate = "daily-assessment-create"
-    DailyAssessmentStart = "daily-assessment-start"
-    DailyAssessmentComplete = "daily-assessment-complete"
-    DailyAssessmentCancel = "daily-assessment-cancel"
-    DailyAssessmentQuestionAnswered = "daily-assessment-question-answered"
-
-    # Energy level assessment events
-    EnergyLevelQuestionAnswered = "energy-level-question-answered"
-
-    # Form events
-    FormAnsweringStart = "form-answering-start"
-    FormAnsweringCancel = "form-answering-cancel"
-    FormQuestionAnswered = "form-question-answered"
-    FormPresented = "form-presented"
-    FormSubmitted = "form-submitted"
-    FormDraftSaved = "form-draft-saved"
-    FormDraftDeleted = "form-draft-deleted"
+    AssessmentDelete = "assessment-delete"
+    AssessmentQuestionAnswer = "assessment-question-answer"
+    AssessmentQuestionSkip = "assessment-question-skip"
+    AssessmentFormPresented = "assessment-form-presented"
+    AssessmentFormSubmitted = "assessment-form-submitted"
+    AssessmentFormDraftSaved = "assessment-form-draft-saved"
+    AssessmentFormDraftDeleted = "assessment-form-draft-deleted"
 
     # Chatbot events
     ChatbotSentMessage = "chatbot-sent-message"

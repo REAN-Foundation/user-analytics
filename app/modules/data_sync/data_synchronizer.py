@@ -6,6 +6,7 @@ from app.database.mysql_connector import MySQLConnector
 import mysql.connector
 
 from app.domain_types.enums.event_types import EventType
+from app.domain_types.schemas.event import EventCreateModel
 from app.modules.data_sync.connectors import get_analytics_db_connector, get_reancare_db_connector
 
 ############################################################
@@ -603,6 +604,7 @@ class DataSynchronizer:
                     SourceName,
                     SourceVersion,
                     EventName,
+                    EventSubject,
                     EventCategory,
                     ActionType,
                     ActionStatement,
@@ -611,7 +613,7 @@ class DataSynchronizer:
                     DaysSinceRegistration,
                     TimeOffsetSinceRegistration
                 ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
             """
             diff = event['Timestamp'] - event['UserRegistrationDate']
@@ -627,6 +629,7 @@ class DataSynchronizer:
                 event['SourceName'],
                 event['SourceVersion'],
                 event['EventName'],
+                event['EventSubject'],
                 event['EventCategory'],
                 event['ActionType'],
                 event['ActionStatement'],

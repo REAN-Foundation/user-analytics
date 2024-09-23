@@ -1,6 +1,8 @@
+from dotenv import find_dotenv, load_dotenv
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
+load_dotenv(find_dotenv('.env'))
 class Settings(BaseSettings):
 
     # App
@@ -8,6 +10,7 @@ class Settings(BaseSettings):
     SERVICE_NAME: str ="User-Analytics-Service"
     BASE_URL: str = "http://localhost:23456"
     USER_ACCESS_TOKEN_SECRET: str ="secret"
+    USER_REFRESH_TOKEN_SECRET: str ="secret"
     CIPHER_SALT: str="salt"
     SERVICE_IDENTIFIER: str =f"{SERVICE_NAME}-{ENVIRONMENT}"
 
@@ -42,6 +45,11 @@ class Settings(BaseSettings):
     JAEGER_AGENT_HOST: str = "localhost"
     JAEGER_AGENT_PORT: int = 6831
     METRICS_ENABLED: bool = False
+
+    AWS_ACCESS_KEY_ID: str='AWS_ACCESS_KEY_ID'
+    AWS_SECRET_ACCESS_KEY: str='AWS_SECRET_ACCESS_KEY'
+    AWS_REGION: str='AWS_REGION'
+    AWS_BUCKET: str='AWS_BUCKET'
 
     class Config:
         env_file = ".env"

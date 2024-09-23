@@ -1,0 +1,16 @@
+meta {
+  name: sync-careplans
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/careplans
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

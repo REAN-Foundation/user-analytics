@@ -1,0 +1,16 @@
+meta {
+  name: sync-steps
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{BASE_URL}}/sync/events/steps
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}

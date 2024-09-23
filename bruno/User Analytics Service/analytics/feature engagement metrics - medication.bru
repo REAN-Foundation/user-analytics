@@ -1,0 +1,20 @@
+meta {
+  name: feature engagement metrics - medication
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{BASE_URL}}/analytics/feature-engagement-metrics/medication
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-api-key: {{API_KEY}}
+}
+
+body:json {
+  {}
+}

@@ -1,3 +1,5 @@
+from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.event_subjects import EventSubject
 from app.domain_types.enums.event_types import EventType
 from app.modules.data_sync.connectors import get_reancare_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
@@ -19,6 +21,7 @@ class LoginEventsSynchronizer:
                 session.ValidTill,
                 session.CreatedAt,
                 user.id as UserId,
+                user.RoleId,
                 user.TenantId,
                 user.CreatedAt as UserRegistrationDate
             from user_login_sessions as session
@@ -40,7 +43,9 @@ class LoginEventsSynchronizer:
     @staticmethod
     def add_login_session_events(session):
         try:
-            event_name = EventType.UserLogin.value
+            event_name: EventType = EventType.UserLoginWithOtp if session['RoleId'] == 2 else EventType.UserLoginWithPassword
+            event_subject = EventSubject.LoginSession.value
+            event_category = EventCategory.LoginSession.value
             event = {
                 'UserId': session['UserId'],
                 'TenantId': session['TenantId'],
@@ -50,7 +55,8 @@ class LoginEventsSynchronizer:
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
-                'EventCategory': "User-Login-Session",
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
                 'ActionType': "User-Action",
                 'ActionStatement': "User logged in.",
                 'Attributes': "{}",
@@ -79,7 +85,8 @@ class LoginEventsSynchronizer:
                 print("No user login sessions found.")
                 return None
             for session in sessions:
-                existing_event = DataSynchronizer.get_existing_event(session['UserId'], session['id'], EventType.UserLogin)
+                event_type: EventType = EventType.UserLoginWithOtp if session['RoleId'] == 2 else EventType.UserLoginWithPassword
+                existing_event = DataSynchronizer.get_existing_event(session['UserId'], session['id'], event_type)
                 if existing_event is not None:
                     existing_session_count += 1
                     continue

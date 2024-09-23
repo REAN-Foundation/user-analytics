@@ -1,9 +1,13 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
+import json
 from typing import Any, List, Optional
+
 from pydantic import UUID4, BaseModel, Field
+
 from app.domain_types.enums.types import EventActionType
-from app.domain_types.schemas.base_types import BaseSearchFilter, BaseSearchResults
+from app.domain_types.schemas.base_types import (BaseSearchFilter,
+                                                 BaseSearchResults)
 
 ###############################################################################
 
@@ -42,7 +46,7 @@ class BasicAnalyticsStatistics(BaseModel):
     PatientDeregistrationHistory : list|None         = Field(description="User deregistration history")
     PatientDemographics          : Demographics|None = Field(description="User demographics")
 
-class UserEngagementMetrics(BaseModel):
+class GenericEngagementMetrics(BaseModel):
       TenantId                        : UUID4|None     = Field(description="Tenant ID")
       TenantName                      : str            = Field(description="Tenant Name")
       StartDate                       : str|None       = Field(description="Start date for analytics")
@@ -56,34 +60,51 @@ class UserEngagementMetrics(BaseModel):
       RetentionRateOnSpecificDays     : list|dict|None = Field(description="Percentage of users who return to the app after their first use (day 1, day 7, day 30).")
       RetentionRateInSpecificIntervals: list|dict|None = Field(description="Percentage of users who return to the app after their first use (day 1, day 7, day 30).")
       MostCommonlyVisitedFeatures     : list|dict|None = Field(description="Most common events performed by users")
+      MostCommonlyVisitedScreens      : list|dict|None = Field(description="Most common screens visited by users")
 
 class FeatureEngagementMetrics(BaseModel):
-    TenantId                     : UUID4          = Field(description="Tenant ID")
-    TenantName                   : str            = Field(description="Tenant Name")
-    Feature                      : str            = Field(description="Name of the feature")
-    StartDate                    : datetime       = Field(description="Start date for analytics")
-    EndDate                      : datetime       = Field(description="End date for analytics")
-    FeatureAccessFrequency       : dict[str, int] = Field(description="Frequency of feature access daily/weekly/monthly")
-    AverageFeatureAccessDuration : dict[str, int] = Field(description="Duration of feature access daily/weekly/monthly")
-    FeatureEngagementRate        : dict[str, int] = Field(description="Percentage of active users engaging with each feature.")
-    FeatureChurnRate             : dict[str, int] = Field(description="Percentage of users who stop using the feature after their first use.")
-    FeatureRetentionRate         : dict[str, int] = Field(description="Percentage of users who return to the feature after their first use.")
-    TaskCompletionRate           : dict[str, int] = Field(description="Percentage of users who complete a task using the feature.")
-    TaskAbandonmentRate          : dict[str, int] = Field(description="Percentage of users who abandon a task using the feature.")
-    FeatureDropOffRate           : dict[str, int] = Field(description="Percentage of users who drop off after using the feature.")
-    AverageFeatureDropOffTime    : dict[str, int] = Field(description="Average time spent before drop off after using the feature.")
-    FeatureDropOffPoints         : dict[str, int] = Field(description="Most common points where users drop off after using the feature.")
+    Feature                          : str            = Field(description="Name of the feature")
+    TenantId                         : UUID4|None     = Field(description="Tenant ID")
+    TenantName                       : str|None       = Field(description="Tenant Name")
+    StartDate                        : datetime|None  = Field(description="Start date for analytics")
+    EndDate                          : datetime|None  = Field(description="End date for analytics")
+    AccessFrequency                  : list|dict|None = Field(description="Frequency of feature access daily/weekly/monthly")
+    AverageUsageDurationMinutes      : float|None     = Field(description="Duration of feature usage")
+    EngagementRate                   : list|dict|None = Field(description="Percentage of active users engaging with each feature.")
+    RetentionRateOnSpecificDays      : list|dict|None = Field(description="Percentage of users who return to the feature after their first use.")
+    RetentionRateInSpecificIntervals : list|dict|None = Field(description="Percentage of users who return to the feature after their first use.")
+    DropOffPoints                    : list|dict|None = Field(description="Most common points where users drop off after using the feature.")
 
+class EngagementMetrics(BaseModel):
+      TenantId        : UUID4|None                          = Field(description="Tenant ID")
+      TenantName      : str|None                            = Field(description="Tenant Name")
+      StartDate       : datetime                            = Field(description="Start date for analytics")
+      EndDate         : datetime                            = Field(description="End date for analytics")
+      BasicStatistics : BasicAnalyticsStatistics|None       = Field(description="Basic analytics statistics")
+      GenericMetrics  : GenericEngagementMetrics|None       = Field(description="User engagement metrics")
+      FeatureMetrics  : List[FeatureEngagementMetrics]|None = Field(description="Feature engagement metrics")
 
-class UserEngagementMetricsResponse(BaseModel):
+###############################################################################
+
+class CalculateMetricsResponse(BaseModel):
     TenantId     : Optional[UUID4|str|None]    = Field(description="Tenant ID")
+    RoleId       : Optional[int|str|None]      = Field(description="Role ID")
     StartDate    : Optional[datetime|str|None] = Field(description="Start date for analytics")
     EndDate      : Optional[datetime|str|None] = Field(description="End date for analytics")
     AnalysisCode : Optional[str]               = Field(description="Unique code to identify the analysis")
     URL          : Optional[str]               = Field(description="URL to access the user engagement metrics data")
     JsonURL      : Optional[str]               = Field(description="URL to access the JSON formatted user engagement metrics data")
     ExcelURL     : Optional[str]               = Field(description="URL to access the Excel formatted user engagement metrics data")
-    PDFURL       : Optional[str]               = Field(description="URL to access the PDF formatted user engagement metrics data")
+    PdfURL       : Optional[str]               = Field(description="URL to access the PDF formatted user engagement metrics data")
 
-class FeatureEngagementMetricsResponse(UserEngagementMetricsResponse):
-    Feature : str = Field(description="Name of the feature")
+class AnalyticsFilters(BaseModel):
+    TenantId   : Optional[UUID4|None] = Field(description="Tenant ID", default=None)
+    TenantName : Optional[str|None]   = Field(description="Tenant Name", default=None)
+    RoleId     : Optional[int|None]   = Field(description="Role ID", default=None)
+    Source     : Optional[str|None]   = Field(description="Source application of the event", default=None)
+    StartDate  : Optional[date|None]  = Field(description="Start date for events", default=None)
+    EndDate    : Optional[date|None]  = Field(description="End date for events", default=None)
+
+    def __repr__(self):
+        jsonStr = json.dumps(self.__dict__)
+        return jsonStr
