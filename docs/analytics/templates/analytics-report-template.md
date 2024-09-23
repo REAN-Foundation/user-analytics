@@ -69,6 +69,7 @@ Trends of how many users registered or deregistered from the system on a given d
 
 {{deregistration_history_chart}}
 
+{{registration_deregistration_table}}
 ---
 
 ### Demographics
