@@ -277,7 +277,7 @@ def feature_metrics_images(
                 x_label       = 'Month',
                 y_label       = 'Access Frequency',
                 color_palette = 'Blues_d',
-                file_path     = os.path.join(location, f'{feature}_access_frequency_by_month'))
+                file_path     = os.path.join(location, f'{featureName}_access_frequency_by_month'))
 
         if len(feature.EngagementRate) > 0:
 
@@ -300,7 +300,7 @@ def feature_metrics_images(
                 x_label       = 'Month',
                 y_label       = 'Engagement Rate (%)',
                 color_palette = 'Greens_d',
-                file_path     = os.path.join(location, f'{feature}_engagement_rate_by_month'))
+                file_path     = os.path.join(location, f'{featureName}_engagement_rate_by_month'))
 
         retention_on_specific_days = feature.RetentionRateOnSpecificDays['retention_on_specific_days']
         if len(retention_on_specific_days) > 0:
@@ -313,7 +313,7 @@ def feature_metrics_images(
                 x_label       = 'day',
                 y_label       = 'Retention',
                 color_palette = 'Set3',
-                file_path     = os.path.join(location, f'{feature}_retention_on_specific_days'))
+                file_path     = os.path.join(location, f'{featureName}_retention_on_specific_days'))
 
         retention_in_specific_intervals = feature.RetentionRateInSpecificIntervals['retention_in_specific_interval']
         if len(retention_in_specific_intervals) > 0:
@@ -326,7 +326,7 @@ def feature_metrics_images(
                 x_label       = 'Interval',
                 y_label       = 'Retention',
                 color_palette = 'Purples_d',
-                file_path     = os.path.join(location, f'{feature}_retention_in_specific_intervals'))
+                file_path     = os.path.join(location, f'{featureName}_retention_in_specific_intervals'))
 
         # if len(feature.DropOffPoints) > 0:
         #     drop_off_points_df     = pd.DataFrame(feature.DropOffPoints)
