@@ -30,9 +30,9 @@ class Forbidden(HTTPError):
         self.message = message
 
 class NotFound(HTTPError):
-    def __init__(self, message: str):
-        self.status_code = status.HTTP_404_NOT_FOUND
-        self.message = message
+    def __init__(self, message: str, detail=None):
+        super().__init__(status.HTTP_404_NOT_FOUND, message)
+        self.detail = detail or message
 
 class MethodNotAllowed(HTTPError):
     def __init__(self, message: str):
