@@ -1,3 +1,4 @@
+from app.common.utils import print_exception
 from app.common.validators import validate_uuid4
 from app.database.services import cohort_service
 from app.domain_types.miscellaneous.response_model import ResponseModel
@@ -15,7 +16,7 @@ def create_cohort_(model, db_session):
             Message=message, Data=cohort)
         return resp
     except Exception as e:
-        print(e)
+        print_exception(e)
         db_session.rollback()
         raise e
     finally:
@@ -31,7 +32,7 @@ def get_cohort_by_id_(id, db_session):
             Message=message, Data=cohort)
         return resp
     except Exception as e:
-        print(e)
+        print_exception(e)
         db_session.rollback()
         raise e
     finally:
@@ -46,7 +47,7 @@ def update_cohort_(id, model, db_session):
         resp = ResponseModel[CohortResponseModel](Message=message, Data=cohort)
         return resp
     except Exception as e:
-        print(e)
+        print_exception(e)
         db_session.rollback()
         raise e
     finally:
@@ -61,7 +62,7 @@ def delete_cohort_(id, db_session):
         resp = ResponseModel[bool](Message=message, Data=deleted)
         return resp
     except Exception as e:
-        print(e)
+        print_exception(e)
         db_session.rollback()
         raise e
     finally:

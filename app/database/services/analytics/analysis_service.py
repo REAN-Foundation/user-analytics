@@ -4,10 +4,12 @@ import os
 
 from pydantic import UUID4
 
+from app.common.utils import print_exception
 from app.database.database_accessor import get_db_session
 from app.database.models.analysis import Analysis
 from app.database.models.tenant import Tenant
 from app.database.services.analytics.basic_statistics import (
+    get_active_users_count_at_end_of_every_month,
     get_all_registered_patients,
     get_all_registered_users,
     get_current_active_patients,
@@ -19,12 +21,14 @@ from app.database.services.analytics.basic_statistics import (
     get_patient_hospital_distribution,
     get_patient_race_demographics,
     get_patient_registration_hisory_by_months,
-    get_patient_survivor_or_caregiver_distribution
+    get_patient_survivor_or_caregiver_distribution,
+    get_users_distribution_by_role
 )
 from app.database.services.analytics.common import get_role_id
 from app.database.services.analytics.generic_engagement import (
     get_daily_active_patients,
     get_monthly_active_patients,
+    get_most_fired_events_by_event_category,
     get_patient_stickiness_dau_mau,
     get_patients_average_session_length_in_minutes,
     get_patients_login_frequency,
@@ -32,7 +36,8 @@ from app.database.services.analytics.generic_engagement import (
     get_patients_most_commonly_visited_screens,
     get_patients_retention_rate_in_specific_time_interval,
     get_patients_retention_rate_on_specific_days,
-    get_weekly_active_patients
+    get_weekly_active_patients,
+    get_most_fired_events
 )
 from app.database.services.analytics.feature_engagement import (
     get_feature_access_frequency,
@@ -54,10 +59,11 @@ from app.domain_types.schemas.analytics import (
     EngagementMetrics,
     GenericEngagementMetrics
 )
+from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 
 ###############################################################################
-PAST_DAYS_TO_CONSIDER = 540
+PAST_DAYS_TO_CONSIDER = 900
 ###############################################################################
 
 async def calculate(
@@ -105,7 +111,7 @@ async def calculate(
         return metrics
 
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 ###############################################################################
 
@@ -126,7 +132,9 @@ async def calculate_basic_stats(filters: AnalyticsFilters | None = None) -> Basi
             get_patient_race_demographics(filters),
             get_patient_healthsystem_distribution(filters),
             get_patient_hospital_distribution(filters),
-            get_patient_survivor_or_caregiver_distribution(filters)
+            get_patient_survivor_or_caregiver_distribution(filters),
+            get_users_distribution_by_role(filters),
+            get_active_users_count_at_end_of_every_month(filters)
         )
 
         total_users                        = results[0]
@@ -141,6 +149,8 @@ async def calculate_basic_stats(filters: AnalyticsFilters | None = None) -> Basi
         healthsystem_distribution          = results[9]
         hospital_distribution              = results[10]
         survivor_or_caregiver_distribution = results[11]
+        users_distribution_by_role         = results[12]
+        active_users_count_at_end_of_every_month = results[13]
 
         demographics = Demographics(
             AgeGroups                       = age_demographics,
@@ -161,6 +171,8 @@ async def calculate_basic_stats(filters: AnalyticsFilters | None = None) -> Basi
             TotalUsers                   = total_users,
             TotalPatients                = total_patients,
             TotalActivePatients          = active_patients,
+            UsersDistributionByRole      = users_distribution_by_role,
+            ActiveUsersCountAtEndOfMonth = active_users_count_at_end_of_every_month,
             PatientRegistrationHistory   = registration_history,
             PatientDeregistrationHistory = deregistration_history,
             PatientDemographics          = demographics,
@@ -169,7 +181,7 @@ async def calculate_basic_stats(filters: AnalyticsFilters | None = None) -> Basi
         return stats
 
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None = None) -> GenericEngagementMetrics|None:
     try:
@@ -185,7 +197,9 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
                 get_patients_retention_rate_in_specific_time_interval(filters),
                 get_patient_stickiness_dau_mau(filters),
                 get_patients_most_commonly_used_features(filters),
-                get_patients_most_commonly_visited_screens(filters)
+                get_patients_most_commonly_visited_screens(filters),
+                get_most_fired_events(filters),
+                get_most_fired_events_by_event_category(filters)
             )
 
         daily_active_users                   = results[0]
@@ -198,6 +212,8 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
         stickiness_ratio                     = results[7]
         most_common_features                 = results[8]
         most_commonly_visited_screens        = results[9]
+        most_fired_events                   = results[10]
+        most_fired_events_by_event_category = results[11]
 
         generic_engagement_metrics = GenericEngagementMetrics(
                 TenantId                         = filters.TenantId,
@@ -207,19 +223,21 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
                 DailyActiveUsers                 = daily_active_users,
                 WeeklyActiveUsers                = weekly_active_users,
                 MonthlyActiveUsers               = monthly_active_users,
-                AverageSessionLengthMinutes      = average_session_length,
+                AverageSessionLengthMinutes      = average_session_length if average_session_length else 0,
                 LoginFrequency                   = login_frequency,
                 RetentionRateOnSpecificDays      = retention_rate_on_specific_days,
                 RetentionRateInSpecificIntervals = retention_rate_in_specific_intervals,
                 StickinessRatio                  = stickiness_ratio,
                 MostCommonlyVisitedFeatures      = most_common_features,
-                MostCommonlyVisitedScreens       = most_commonly_visited_screens
+                MostCommonlyVisitedScreens       = most_commonly_visited_screens,
+                MostFiredEvents                  = most_fired_events,
+                MostFiredEventsByEventCategory   = most_fired_events_by_event_category
             )
 
         return generic_engagement_metrics
 
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 async def calculate_feature_engagement_metrics(
         feature: str, filters: AnalyticsFilters | None = None)-> FeatureEngagementMetrics|None:
@@ -259,7 +277,7 @@ async def calculate_feature_engagement_metrics(
         return feature_engagement_metrics
 
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 ###############################################################################
 
@@ -315,7 +333,7 @@ async def generate_reports(analysis_code: str, metrics: EngagementMetrics):
         print(f"PDF file path: {pdf_file_path}")
 
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 ###############################################################################
 
@@ -329,7 +347,7 @@ async def get_analysis_code():
             existing_count = len(existing)
         session.close()
     except Exception as e:
-        print(e)
+        print_exception(e)
 
     existing_count += 1
     return f"{today}-{existing_count}"
@@ -340,22 +358,18 @@ async def get_tenant_by_id(tenantId: UUID4 | None):
         session = get_db_session()
         tenant = await session.query(Tenant).filter(Tenant.id == tenantId).first()
     except Exception as e:
-        print(e)
+        print_exception(e)
     finally:
         session.close()
     return tenant
 
 async def get_all_tenants():
-    tenants = []
-    try:
-        session = get_db_session()
-        tenants = await session.query(Tenant).filter(Tenant.DeletedAt != None).all()
-    except Exception as e:
-        print(e)
-    finally:
-        session.close()
-    return tenants
-
+    analytics_db_connector = get_analytics_db_connector()
+    query = f"""
+    SELECT * from tenants
+    """
+    rows = analytics_db_connector.execute_read_query(query)
+    return rows
 ###############################################################################
 
 async def save_analytics(analysis_code: str, metrics: EngagementMetrics)-> dict:
@@ -406,7 +420,7 @@ async def get_analysis_by_code(analysis_code: str)-> dict:
         # return analysis.__dict__
         return analysis
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 ###############################################################################
 
@@ -415,18 +429,17 @@ async def generate_daily_analytics():
         session = get_db_session()
 
         tenants = []
-        tenants_ = get_all_tenants()
-        if len(tenants_) == 1 and tenants_[0].TenantName == 'default':
+        tenants_ = await get_all_tenants()
+        for tenant in tenants_:
             tenants.append({
-                "TenantId": None,
-                "TenantCode": None,
+                "TenantId": tenant['id'],
+                "TenantCode": tenant['TenantCode'],
             })
-        else:
-            for tenant in tenants_:
-                tenants.append({
-                    "TenantId": tenant['id'],
-                    "TenantCode": tenant['TenantCode'],
-                })
+        # Also add analysis ignoring the tenant filter
+        tenants.append({
+            "TenantId": None,
+            "TenantCode": None,
+        })
 
         for tenant in tenants:
             filters = AnalyticsFilters(
@@ -438,11 +451,11 @@ async def generate_daily_analytics():
                 Source = None
             )
             analysis_code = await get_analysis_code()
-            if tenant.TenantCode is not None:
-                analysis_code = analysis_code + '_' + tenant.TenantCode
+            if tenant['TenantCode'] is not None:
+                analysis_code = analysis_code + '_' + tenant['TenantCode']
             metrics = await calculate(analysis_code, filters)
 
     except Exception as e:
-        print(e)
+        print_exception(e)
     finally:
         session.close()
