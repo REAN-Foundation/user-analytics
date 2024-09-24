@@ -5,6 +5,7 @@ from typing import List
 import pandas as pd
 
 from app.database.services.analytics.common import get_analytics_template_path
+from app.database.services.analytics.reports.feature_generator_markdown import generate_all_feature_engagement_markdown, generate_engagement_metrics_table_content
 from app.database.services.analytics.reports.report_utilities import add_table_to_markdown, reindex_dataframe_to_all_missing_dates
 from app.domain_types.schemas.analytics import (
     EngagementMetrics
@@ -84,6 +85,51 @@ async def generate_report_markdown(
 
     caregiver_or_stroke_survivor_distribution_table_str = generate_caregiver_or_stroke_survivor_distribution_table(metrics)
     template_str = template_str.replace("{{caregiver_or_stroke_survivor_distribution_table}}", caregiver_or_stroke_survivor_distribution_table_str)
+    
+    daily_active_users_chart_str = f"""<img src="./daily_active_users.png" width="{image_width}">"""
+    template_str = template_str.replace("{{daily_active_users_chart}}", daily_active_users_chart_str)
+
+    daily_active_users_table_str = generate_daily_active_users_table(metrics)
+    template_str = template_str.replace("{{daily_active_users_table}}", daily_active_users_table_str)
+
+    weekly_active_users_chart_str = f"""<img src="./weekly_active_users.png" width="{image_width}">"""
+    template_str = template_str.replace("{{weekly_active_users_chart}}", weekly_active_users_chart_str)
+
+    weekly_active_users_table_str = generate_weekly_active_users_table(metrics)
+    template_str = template_str.replace("{{weekly_active_users_table}}", weekly_active_users_table_str)
+
+    monthly_active_users_chart_str = f"""<img src="./monthly_active_users.png" width="{image_width}">"""
+    template_str = template_str.replace("{{monthly_active_users_chart}}", monthly_active_users_chart_str)
+
+    monthly_active_users_table_str = generate_monthly_active_users_table(metrics)
+    template_str = template_str.replace("{{monthly_active_users_table}}", monthly_active_users_table_str)
+
+    retention_rate_on_days_chart_str = f"""<img src="./retention_on_specific_days.png" width="{image_width}">"""
+    template_str = template_str.replace("{{retention_rate_On_specific_days_chart}}", retention_rate_on_days_chart_str)
+
+    retention_rate_on_days_table_str = generate_retention_rate_on_days_table(metrics)
+    template_str = template_str.replace("{{retention_rate_On_specific_days_table}}", retention_rate_on_days_table_str)
+
+    retention_rate_on_interval_chart_str = f"""<img src="./retention_in_specific_intervals.png" width="{image_width}">"""
+    template_str = template_str.replace("{{retention_rate_in_specific_intervals_chart}}", retention_rate_on_interval_chart_str)
+
+    retention_rate_on_interval_table_str = generate_retention_rate_on_interval_table(metrics)
+    template_str = template_str.replace("{{retention_rate_in_specific_intervals_table}}", retention_rate_on_interval_table_str)
+
+    login_frequency_chart_str = f"""<img src="./login_frequency.png" width="{image_width}">"""
+    template_str = template_str.replace("{{login_frequency_monthly_chart}}", login_frequency_chart_str)
+
+    login_frequency_table_str = generate_login_frequency_table(metrics)
+    template_str = template_str.replace("{{login_frequency_monthly_table}}", login_frequency_table_str)
+
+    most_commonly_visited_features_table_str = genrate_most_Commonly_Visited_Features(metrics)
+    template_str = template_str.replace("{{most_commonly_used_features_table}}", most_commonly_visited_features_table_str)
+    
+    feature_engagement_table_content_str = generate_engagement_metrics_table_content(metrics)
+    template_str = template_str.replace("{{feature_engagement_table_content}}", feature_engagement_table_content_str)
+    
+    all_features_engagement_str = generate_all_feature_engagement_markdown(metrics.FeatureMetrics)
+    template_str = template_str.replace("{{all_features_data}}", all_features_engagement_str)
 
     # Save the report
     with open(markdown_file_path, "w") as file:
@@ -215,3 +261,79 @@ def generate_caregiver_or_stroke_survivor_distribution_table(metrics: Engagement
         rename_columns = {'caregiver_status': 'Caregiver Status', 'count': 'Count'}
     )
     return caregiver_or_stroke_survivor_distribution_table 
+
+def generate_daily_active_users_table(metrics :EngagementMetrics)-> str:
+    daily_active_users_df = pd.DataFrame(metrics.GenericMetrics.DailyActiveUsers)
+    daily_active_users_df_= reindex_dataframe_to_all_missing_dates(
+        data_frame = daily_active_users_df, 
+        date_col = 'activity_date',
+        fill_col = 'daily_active_users',
+        frequency = 'daily'
+    )
+    daily_active_users_table = add_table_to_markdown(
+        data_frame = daily_active_users_df_,
+        rename_columns = {'activity_date':'Activity Date','daily_active_users':'Daily Active Users'}
+    )
+    return daily_active_users_table
+
+def generate_weekly_active_users_table(metrics :EngagementMetrics)-> str:
+    weekly_active_users_df = pd.DataFrame(metrics.GenericMetrics.WeeklyActiveUsers)
+    weekly_active_users_df_= reindex_dataframe_to_all_missing_dates(
+        weekly_active_users_df,
+        start_date_col = 'week_start_date',
+        end_date_col = 'week_end_date',
+        fill_col = 'weekly_active_users',
+        frequency = 'weekly'
+    )
+    weekly_active_users_table=add_table_to_markdown(
+        data_frame = weekly_active_users_df_,
+        rename_columns = {'week_start_date':'Week Start Date','week_end_date':'Week End Date','weekly_active_users':'Weekly Active Users'}
+    )
+    return weekly_active_users_table
+
+def generate_monthly_active_users_table(metrics :EngagementMetrics)-> str:
+    monthly_active_users_df = pd.DataFrame(metrics.GenericMetrics.MonthlyActiveUsers)
+    monthly_active_users_df = reindex_dataframe_to_all_missing_dates(
+        data_frame = monthly_active_users_df, 
+        date_col = 'activity_month',
+        fill_col = 'monthly_active_users',
+    )
+    monthly_active_users_table = add_table_to_markdown(
+        data_frame = monthly_active_users_df,
+        rename_columns = {'activity_month':'activity_month','monthly_active_users':'Monthly Active Users'}
+    )
+    return monthly_active_users_table
+
+def generate_retention_rate_on_days_table(metrics :EngagementMetrics)-> str:
+    retention_rate_on_days_df = pd.DataFrame(metrics.GenericMetrics.RetentionRateOnSpecificDays['retention_on_specific_days'])
+    retention_rate_on_days_table = add_table_to_markdown(
+        data_frame = retention_rate_on_days_df,
+        rename_columns = {'day':'Day','returning_users':'Returning Users','retention_rate':'Retention Rate'}
+    )
+    return retention_rate_on_days_table
+
+def generate_retention_rate_on_interval_table(metrics :EngagementMetrics)-> str:
+    retention_rate_on_interval_df = pd.DataFrame(metrics.GenericMetrics.RetentionRateInSpecificIntervals['retention_in_specific_interval'])
+    retention_rate_on_interval_table = add_table_to_markdown(
+        data_frame = retention_rate_on_interval_df,
+        rename_columns = {'interval':'Interval','returning_users':'Returning Users','retention_rate':'Retention Rate'}
+    )
+    return retention_rate_on_interval_table
+
+def generate_login_frequency_table(metrics :EngagementMetrics)-> str:
+    login_frequency_df = pd.DataFrame(metrics.GenericMetrics.LoginFrequency)
+    login_frequency_table = add_table_to_markdown(
+        data_frame = login_frequency_df,
+        rename_columns = {'month':'Month','login_count':'Login Count'}
+    )
+    return login_frequency_table
+
+def genrate_most_Commonly_Visited_Features(metrics : EngagementMetrics)-> str:
+    most_commonly_visited_features_df = pd.DataFrame(metrics.GenericMetrics.MostCommonlyVisitedFeatures)
+    most_commonly_visited_features_table = add_table_to_markdown(
+        data_frame = most_commonly_visited_features_df,
+        rename_columns = {'month':'Month','feature':'Feature','feature_usage_count':'Feature Usage Count'}
+    )
+    return most_commonly_visited_features_table
+
+

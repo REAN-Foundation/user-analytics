@@ -25,13 +25,7 @@
       - [Feature Retention Rate on specific days](#feature-retention-rate-on-specific-days)
       - [Feature Retention during specific intervals](#feature-retention-during-specific-intervals)
       - [Feature Drop-Off Points](#feature-drop-off-points)
-    - [Medication Engagement Metrics](#medication-engagement-metrics)
-      - [Monthly Medication Access Frequency](#monthly-medication-access-frequency)
-      - [Monthly Average Medication Usage Duration](#monthly-average-medication-usage-duration)
-      - [Medication Feature Engagement Rate](#medication-feature-engagement-rate)
-      - [Medication Feature Retention Rate on specific days](#medication-feature-retention-rate-on-specific-days)
-      - [Medication Feature Retention during specific intervals](#medication-feature-retention-during-specific-intervals)
-      - [Medication Feature Drop-Off Points](#medication-feature-drop-off-points)
+    {{feature_engagement_table_content}}   
     - [Appendix A :](#appendix-a-)
         - [Daily Registration and Deregistration History Table](#daily-registration-and-deregistration-history-table)
         - [Weekly Registration and Deregistration History Table](#weekly-registration-and-deregistration-history-table)
@@ -138,11 +132,7 @@ This section captures key metrics that provide insight into how users interact w
 DAU(t) = \sum_{i=1}^{n} \text{Active Users on Day } t
 \]
 
-{{daily_active_users_chart}}
-
-{{daily_active_users_table}}
-
-. Check table [here](#daily-active-users-table)
+{{daily_active_users_chart}}. Check table [here](#daily-active-users-table)
 
 - **Weekly Active Users (WAU)**: Total number of unique users who interact with the platform during a week.
 
@@ -150,11 +140,7 @@ DAU(t) = \sum_{i=1}^{n} \text{Active Users on Day } t
 WAU(t) = \sum_{i=1}^{n} \text{Active Users in Week } t
 \]
 
-{{weekly_active_users_chart}}
-
-{{weekly_active_users_table}}
-
- Check table [here](#weekly-active-users-table)
+{{weekly_active_users_chart}}. Check table [here](#weekly-active-users-table)
 
 - **Monthly Active Users (MAU)**: Total number of unique users who interact with the platform during a month.
 
@@ -162,10 +148,7 @@ WAU(t) = \sum_{i=1}^{n} \text{Active Users in Week } t
 MAU(t) = \sum_{i=1}^{n} \text{Active Users in Month } t
 \]
 
-{{monthly_active_users_chart}}
-
-{{monthly_active_users_table}}
-
+{{monthly_active_users_chart}}. Check table [here](#monthly-active-users-table)
 
 <!--
 ### Stickiness Ratio
@@ -305,61 +288,8 @@ These are found by identifying the most common sequences of events that lead to 
 | 3        | Feature A -> Feature B | 1000  | 20%        |
 | 4        | Feature A | 500   | 10%        |
 
-### Medication Engagement Metrics
 
-#### Monthly Medication Access Frequency
-
-| Month      | Medication Access Frequency |
-|------------|-----------------------------|
-| 2023-Jan   | 2                           |
-| 2023-Feb   | 3                           |
-| 2023-Mar   | 2                           |
-| 2023-Apr   | 2                           |
-
-#### Monthly Average Medication Usage Duration
-
-| Month      | Average Medication Usage Duration (minutes) |
-|------------|---------------------------------------------|
-| 2023-Jan   | 5                                           |
-| 2023-Feb   | 6                                           |
-| 2023-Mar   | 5                                           |
-| 2023-Apr   | 5                                           |
-
-#### Medication Feature Engagement Rate
-
-| Month      | Medication Feature Engagement Rate |
-|------------|------------------------------------|
-| 2023-Jan   | 0.4                                |
-| 2023-Feb   | 0.5                                |
-| 2023-Mar   | 0.4                                |
-| 2023-Apr   | 0.4                                |
-
-#### Medication Feature Retention Rate on specific days
-
-| Day       | Retention Rate | User Count |
-|-----------|----------------|------------|
-| Day 1     | 40%            | 200        |
-| Day 7     | 30%            | 150        |
-| Day 30    | 20%            | 100        |
-
-#### Medication Feature Retention during specific intervals
-
-| Interval  | Retention Rate | User Count |
-|-----------|----------------|------------|
-| 0-1 days  | 40%            | 200        |
-| 1-3 days  | 30%            | 150        |
-| 3-7 days  | 20%            | 100        |
-
-#### Medication Feature Drop-Off Points
-
-| Sequence | Drop-Off Point        | Count | Percentage |
-|----------|-----------------------|-------|------------|
-| 1        | Medication A -> Medication B -> Medication C -> Medication D | 2000  | 40%        |
-| 2        | Medication A -> Medication B -> Medication C | 1500  | 30%        |
-| 3        | Medication A -> Medication B | 1000  | 20%        |
-| 4        | Medication A | 500   | 10%        |
-
-
+{{all_features_data}}
 
 ### Appendix A :
 
@@ -390,24 +320,13 @@ These are found by identifying the most common sequences of events that lead to 
 
 ##### Daily Active Users Table
 
-| Date       | Active Users |
-|------------|--------------|
-| 2023-01-01 | 500          |
-| 2023-01-02 | 550          |
-| 2023-01-03 | 600          |
+{{daily_active_users_table}}
 
 ##### Weekly Active Users Table
 
-| Week       | Active Users |
-|------------|--------------|
-| 2023-W1    | 1500         |
-| 2023-W2    | 1600         |
-| 2023-W3    | 1700         |
+{{weekly_active_users_table}}
 
 ##### Monthly Active Users Table
 
-| Month      | Active Users |
-|------------|--------------|
-| 2023-Jan   | 3000         |
-| 2023-Feb   | 3200         |
-| 2023-Mar   | 3300         |
+{{monthly_active_users_table}}
+
