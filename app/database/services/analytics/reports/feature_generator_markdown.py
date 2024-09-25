@@ -45,13 +45,6 @@ def feature_metrics_markdown(feature: FeatureEngagementMetrics) -> str:
         
     if len(feature.EngagementRate) > 0:
         engagement_rate_df = pd.DataFrame(feature.EngagementRate)
-        engagement_rate_df = reindex_dataframe_to_all_dates(
-            data_frame  = engagement_rate_df,
-            date_column = 'month',
-            fill_column = 'engagement_rate',
-            frequency   = 'MS',
-            date_format = '%Y-%m'
-        )
         engagement_rate_df['engagement_rate'] = engagement_rate_df['engagement_rate'].astype(float)
         engagement_rate_chart_str= f"""<img src="./{feature_name}_engagement_rate_by_month.png" width="{image_width}">"""
         engagement_rate_table= add_table_to_markdown(

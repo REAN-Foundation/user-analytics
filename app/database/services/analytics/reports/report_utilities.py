@@ -331,7 +331,7 @@ rename_columns: Dict[str, str] = None
     if rename_columns:
         data_frame.rename(columns = rename_columns, inplace=True)
 
-    return data_frame.to_markdown(index=False)
+    return data_frame.to_markdown(index=False, tablefmt='github', stralign='left')
   
 def format_date_column(df : pd.DataFrame, column_name : str) -> pd.DataFrame:
     def format_date(date : date):

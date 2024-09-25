@@ -1,6 +1,6 @@
 
 import os
-from typing import List
+from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -333,10 +333,47 @@ def generate_login_frequency_table(metrics :EngagementMetrics)-> str:
 
 def genrate_most_Commonly_Visited_Features(metrics : EngagementMetrics)-> str:
     most_commonly_visited_features_df = pd.DataFrame(metrics.GenericMetrics.MostCommonlyVisitedFeatures)
-    most_commonly_visited_features_table = add_table_to_markdown(
+    # most_commonly_visited_features_table = add_table_to_markdown(
+    #     data_frame = most_commonly_visited_features_df,
+    #     rename_columns = {'month':'Month','feature':'Feature','feature_usage_count':'Feature Usage Count'}
+    # )
+    most_commonly_visited_features_table = commonly_visited_feature_group_by_month(
         data_frame = most_commonly_visited_features_df,
-        rename_columns = {'month':'Month','feature':'Feature','feature_usage_count':'Feature Usage Count'}
+        group_by_column = 'Month',
+        feature_column = 'Feature',
+        value_column = 'Usage Count',
+        rename_columns = {
+            'month': 'Month',
+            'feature': 'Feature',
+            'feature_usage_count': 'Usage Count'
+        },
     )
     return most_commonly_visited_features_table
 
+def commonly_visited_feature_group_by_month(
+    data_frame: pd.DataFrame,
+    group_by_column: str,
+    feature_column: str,
+    value_column: str,
+    rename_columns: Optional[Dict[str, str]] = None,
+) -> str:
+    if rename_columns:
+        data_frame = data_frame.rename(columns=rename_columns)
+
+    grouped_df = data_frame.groupby(group_by_column)
+
+    markdown_str = ''
+    markdown_str += "| Month   | Feature   | Usage Count |\n"
+    markdown_str += "|:--------|:----------|--------------------:|\n"
+    
+    for group_value, group in grouped_df:
+        month_shown = False
+        for _, row_data in group.iterrows():
+            if not month_shown:
+                markdown_str += f"| {group_value} | {row_data[feature_column]} | {row_data[value_column]} |\n"
+                month_shown = True
+            else:
+                markdown_str += f"|          | {row_data[feature_column]} | {row_data[value_column]} |\n"
+                
+    return markdown_str
 

@@ -138,17 +138,6 @@ MAU(t) = \sum_{i=1}^{n} \text{Active Users in Month } t
 
 {{monthly_active_users_chart}}
 
-<!--
-### Stickiness Ratio
-
-  The ratio of Daily Active Users (DAU) to Monthly Active Users (MAU), indicating user engagement and loyalty over time. This metric reflects how often users return to the platform within a month. A higher stickiness ratio indicates better user retention and engagement.
-
-\[
-\text{Stickiness Ratio} = \frac{DAU}{MAU}
-\]
-
-{{stickiness_ratio_chart}} -->
-
 ---
 
 ### Retention Rates on specific days
