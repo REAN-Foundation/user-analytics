@@ -61,7 +61,6 @@ def generate_basic_statistics_images(
             frequency   = 'MS',
             date_format = '%Y-%m')
 
-
         registration_history_df_filled_ = format_date_column(registration_history_df_filled,'month')
         deregistration_history_df_filled_ = format_date_column(deregistration_history_df_filled,'month')
         # plot the charts
@@ -86,24 +85,20 @@ def generate_basic_statistics_images(
             color_palette = 'Reds_d',
             file_path     = os.path.join(location, 'deregistration_history'))
 
-        plot_bar_chart(
+        plot_pie_chart(
             data_frame    = healthsystem_distribution_df,
-            x_column      = 'health_system',
-            y_column      = 'count',
+            value_column  = 'count',
+            label_column  = 'health_system',
             title         = 'Health System Distribution',
-            x_label       = 'Health System',
-            y_label       = 'Patient Count',
-            color_palette = 'Greens_d',
+            color_palette = 'Set3',
             file_path     = os.path.join(location, 'health_system_distribution'))
 
-        plot_bar_chart(
+        plot_pie_chart(
             data_frame    = hospital_distribution_df,
-            x_column      = 'hospital',
-            y_column      = 'count',
+            value_column  = 'count',
+            label_column  = 'hospital',
             title         = 'Hospital Distribution',
-            x_label       = 'Hospital',
-            y_label       = 'Patient Count',
-            color_palette = 'Oranges_d',
+            color_palette = 'Set3',
             file_path     = os.path.join(location, 'hospital_distribution'))
 
         plot_pie_chart(
@@ -229,23 +224,26 @@ def generate_generic_engagement_images(
             color_palette = 'cubehelix',
             file_path     = os.path.join(location, 'login_frequency'))
 
-        plot_pie_chart(
+        plot_bar_chart(
             data_frame    = retention_on_days_df,
-            value_column  = 'retention_rate',
-            label_column  = 'day',
+            x_column      = 'day',
+            y_column      = 'retention_rate',
             title         = 'Retention on Specific Days',
-            color_palette = 'coolwarm',
+            x_label       = 'Day',
+            y_label       = 'Retention',
+            color_palette = 'cubehelix',
             file_path     = os.path.join(location, 'retention_on_specific_days'))
-
-        plot_pie_chart(
+        
+        plot_bar_chart(
             data_frame    = retention_intervals_df,
-            value_column  = 'retention_rate',
-            label_column  = 'interval',
-            title         = 'Retention in Specific Intervals',
-            color_palette = 'coolwarm',
+            x_column      = 'interval',
+            y_column      = 'retention_rate',
+            title         = 'Retention Rate in Specific Intervals',
+            x_label       = 'Interval',
+            y_label       = 'Retention',
+            color_palette = 'cubehelix',
             file_path     = os.path.join(location, 'retention_in_specific_intervals'))
-
-
+        
     except Exception as e:
         print(f"Error generating basic statistics images: {e}")
         return False
