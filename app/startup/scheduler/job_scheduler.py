@@ -14,14 +14,14 @@ class JobScheduler:
 
             # CRONs
             # Daily Analytics runs every day at 1:30 (morning)
-            JobScheduler._scheduler.add_job(daily_analytics, 'cron', hour=1, minute=30)
+            JobScheduler._scheduler.add_job(daily_analytics, 'cron', hour=0, minute=15)
 
             # Cleanup old files runs every day at 2:30 (morning)
             JobScheduler._scheduler.add_job(cleanup_old_files, 'cron', hour=2, minute=0)
 
             # Intervals based tasks
             # To run the task every 5 minute (for testing):
-            # JobScheduler._scheduler.add_job(daily_analytics, 'interval', minutes=5)
+            # JobScheduler._scheduler.add_job(daily_analytics, 'interval', minutes=1)
 
             # JobScheduler._scheduler.add_job(cleanup_old_files, 'interval', minutes=5)
 

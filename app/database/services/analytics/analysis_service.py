@@ -337,12 +337,13 @@ async def generate_reports(analysis_code: str, metrics: EngagementMetrics):
 
 ###############################################################################
 
-async def get_analysis_code():
+async def get_analysis_code(suffix: str | None = None):
     today = date.today().strftime("%Y-%m-%d")
+    search = (today + '-' + suffix) if suffix is not None else today 
     existing_count = 0
     try:
         session = get_db_session()
-        existing = session.query(Analysis).filter(Analysis.Code.startswith(today)).all()
+        existing = session.query(Analysis).filter(Analysis.Code.startswith(search)).all()
         if existing is not None and len(existing) > 0:
             existing_count = len(existing)
         session.close()
@@ -350,19 +351,19 @@ async def get_analysis_code():
         print_exception(e)
 
     existing_count += 1
-    return f"{today}-{existing_count}"
+    return f"{search}-{existing_count}"
 
 async def get_tenant_by_id(tenantId: UUID4 | None):
     tenant = None
-    try:
-        session = get_db_session()
-        tenant = await session.query(Tenant).filter(Tenant.id == tenantId).first()
+    try: 
+        all_tenants = await get_all_tenants()
+        for tenant_ in all_tenants:
+            if tenant_['id'] == tenantId:
+                tenant = tenant_
+        return tenant
     except Exception as e:
         print_exception(e)
-    finally:
-        session.close()
-    return tenant
-
+ 
 async def get_all_tenants():
     analytics_db_connector = get_analytics_db_connector()
     query = f"""
@@ -429,18 +430,18 @@ async def generate_daily_analytics():
         session = get_db_session()
 
         tenants = []
+         # Also add analysis ignoring the tenant filter
+        tenants.append({
+            "TenantId": None,
+            "TenantCode": None,
+        })
         tenants_ = await get_all_tenants()
         for tenant in tenants_:
             tenants.append({
                 "TenantId": tenant['id'],
                 "TenantCode": tenant['TenantCode'],
             })
-        # Also add analysis ignoring the tenant filter
-        tenants.append({
-            "TenantId": None,
-            "TenantCode": None,
-        })
-
+       
         for tenant in tenants:
             filters = AnalyticsFilters(
                 TenantId = tenant['TenantId'],
@@ -450,9 +451,9 @@ async def generate_daily_analytics():
                 EndDate = date.today(),
                 Source = None
             )
-            analysis_code = await get_analysis_code()
+            analysis_code = await get_analysis_code(tenant['TenantCode'])
             if tenant['TenantCode'] is not None:
-                analysis_code = analysis_code + '_' + tenant['TenantCode']
+                analysis_code = analysis_code
             metrics = await calculate(analysis_code, filters)
 
     except Exception as e:

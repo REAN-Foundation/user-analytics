@@ -63,7 +63,7 @@ def get_metrics_(analysis_code:str):
 
 ###############################################################################
 
-async def get_analysis_code_() -> str:
-    return await get_analysis_code()
+async def get_analysis_code_(suffix: str | None = None) -> str:
+    return await get_analysis_code(suffix)
 
 ###############################################################################
