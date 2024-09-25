@@ -23,6 +23,8 @@ def feature_metrics_markdown(feature: FeatureEngagementMetrics) -> str:
     retention_in_specific_intervals_chart_str = ""
     
     feature_name = feature.Feature
+    feature_name_ = feature_name.replace("-", " ")
+    feature_name_title = feature_name_.title()
     
     if len(feature.AccessFrequency) > 0:
         access_frequency_df = pd.DataFrame(feature.AccessFrequency)
@@ -95,43 +97,43 @@ def feature_metrics_markdown(feature: FeatureEngagementMetrics) -> str:
         drop_off_points_table = "Data Not Available" 
         
     feature_engagement_str = f"""
-### {feature_name.capitalize()} Engagement Metrics
+### {feature_name_title} Engagement Metrics
 
-#### Monthly {feature_name.capitalize()} Access Frequency
+#### Monthly {feature_name_title} Access Frequency
 {access_frequency_chart_str}\n
 {access_frequency_table}\n
 
-#### {feature_name.capitalize()} Feature Engagement Rate
+#### {feature_name_title} Feature Engagement Rate
 {engagement_rate_chart_str}\n
 {engagement_rate_table}\n
 
-#### {feature_name.capitalize()} Feature Retention Rate on Specific Days
+#### {feature_name_title} Feature Retention Rate on Specific Days
 {retention_in_specific_days_chart_str}\n
 {retention_in_specific_days_table}\n
 
-#### {feature_name.capitalize()} Feature Retention during Specific Intervals
+#### {feature_name_title} Feature Retention during Specific Intervals
 {retention_in_specific_intervals_chart_str}\n
 {retention_in_specific_intervals_table}\n
 
-#### {feature_name.capitalize()} Feature Drop-Off Points
+#### {feature_name_title} Feature Drop-Off Points
 {drop_off_points_table}\n
 """
     return feature_engagement_str
 
 def generate_engagement_metrics_table_content(metrics: EngagementMetrics) -> str:
-    metrics = metrics.FeatureMetrics
-    all_features_table_content = ''
-    
-    for feature in metrics:
+    all_features_table_content = '' 
+    for feature in metrics.FeatureMetrics:
         feature_name = feature.Feature
+        feature_name_ = feature_name.replace("-", " ")
+        feature_name_title = feature_name_.title()
         feature_table_content = f"""
-- [{feature_name.capitalize()} Engagement Metrics](#{feature_name}-engagement-metrics)
-  - [Monthly {feature_name.capitalize()} Access Frequency](#monthly-{feature_name}-access-frequency)
-  - [Monthly Average {feature_name.capitalize()} Usage Duration](#monthly-average-{feature_name}-usage-duration)
-  - [{feature_name.capitalize()} Feature Engagement Rate](#{feature_name}-feature-engagement-rate)
-  - [{feature_name.capitalize()} Feature Retention Rate on specific days](#{feature_name}-feature-retention-rate-on-specific-days)
-  - [{feature_name.capitalize()} Feature Retention during specific intervals](#{feature_name}-feature-retention-during-specific-intervals)
-  - [{feature_name.capitalize()} Feature Drop-Off Points](#{feature_name}-feature-drop-off-points)
+  - [{feature_name_title} Engagement Metrics](#{feature_name}-engagement-metrics)
+    - [Monthly {feature_name_title} Access Frequency](#monthly-{feature_name}-access-frequency)
+    - [Monthly Average {feature_name_title} Usage Duration](#monthly-average-{feature_name}-usage-duration)
+    - [{feature_name_title} Feature Engagement Rate](#{feature_name}-feature-engagement-rate)
+    - [{feature_name_title} Feature Retention Rate on specific days](#{feature_name}-feature-retention-rate-on-specific-days)
+    - [{feature_name_title} Feature Retention during specific intervals](#{feature_name}-feature-retention-during-specific-intervals)
+    - [{feature_name_title} Feature Drop-Off Points](#{feature_name}-feature-drop-off-points)
 """
         all_features_table_content += feature_table_content
     
