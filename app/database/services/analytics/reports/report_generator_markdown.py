@@ -130,6 +130,9 @@ async def generate_report_markdown(
     
     all_features_engagement_str = generate_all_feature_engagement_markdown(metrics.FeatureMetrics)
     template_str = template_str.replace("{{all_features_data}}", all_features_engagement_str)
+    
+    average_session_length_str = str(int(metrics.GenericMetrics.AverageSessionLengthMinutes))
+    template_str = template_str.replace("{{average_session_length}}", average_session_length_str)
 
     # Save the report
     with open(markdown_file_path, "w") as file:

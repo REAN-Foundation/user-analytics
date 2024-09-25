@@ -25,14 +25,9 @@
       - [Feature Retention Rate on specific days](#feature-retention-rate-on-specific-days)
       - [Feature Retention during specific intervals](#feature-retention-during-specific-intervals)
       - [Feature Drop-Off Points](#feature-drop-off-points)
-    {{feature_engagement_table_content}}   
+      {{feature_engagement_table_content}}   
     - [Appendix A :](#appendix-a-)
-        - [Daily Registration and Deregistration History Table](#daily-registration-and-deregistration-history-table)
-        - [Weekly Registration and Deregistration History Table](#weekly-registration-and-deregistration-history-table)
-        - [Monthly Registration and Deregistration History Table](#monthly-registration-and-deregistration-history-table)
-        - [Daily Active Users Table](#daily-active-users-table)
-        - [Weekly Active Users Table](#weekly-active-users-table)
-        - [Monthly Active Users Table](#monthly-active-users-table)
+        - [Registration and Deregistration History Table](#registration-and-deregistration-history-table)
 
 ---
 
@@ -63,7 +58,6 @@ Trends of how many users registered or deregistered from the system on a given d
 
 {{deregistration_history_chart}}
 
-{{registration_deregistration_table}}
 ---
 
 ### Demographics
@@ -81,12 +75,6 @@ Demographics provide an understanding of the user base by categorizing them into
 {{gender_distribution_chart}}
 
 {{gender_distribution_table}}
-
-**Location Distribution**
-
-{{location_distribution_chart}}
-
-{{location_distribution_table}}
 
 **Ethnicity Distribution**
 
@@ -132,7 +120,7 @@ This section captures key metrics that provide insight into how users interact w
 DAU(t) = \sum_{i=1}^{n} \text{Active Users on Day } t
 \]
 
-{{daily_active_users_chart}}. Check table [here](#daily-active-users-table)
+{{daily_active_users_chart}}
 
 - **Weekly Active Users (WAU)**: Total number of unique users who interact with the platform during a week.
 
@@ -140,7 +128,7 @@ DAU(t) = \sum_{i=1}^{n} \text{Active Users on Day } t
 WAU(t) = \sum_{i=1}^{n} \text{Active Users in Week } t
 \]
 
-{{weekly_active_users_chart}}. Check table [here](#weekly-active-users-table)
+{{weekly_active_users_chart}}
 
 - **Monthly Active Users (MAU)**: Total number of unique users who interact with the platform during a month.
 
@@ -148,7 +136,7 @@ WAU(t) = \sum_{i=1}^{n} \text{Active Users in Week } t
 MAU(t) = \sum_{i=1}^{n} \text{Active Users in Month } t
 \]
 
-{{monthly_active_users_chart}}. Check table [here](#monthly-active-users-table)
+{{monthly_active_users_chart}}
 
 <!--
 ### Stickiness Ratio
@@ -206,10 +194,9 @@ This metric shows how often users are logging into the platform, which is an ind
 
 {{login_frequency_monthly_table}}
 
-
 ### Average Session Duration
 
-  ___Average Session length = 54 Minutes___
+  ___Average Session length = {{average_session_length}} Minutes___
 
   The average session length in minutes the users have spent on the app/platform.
   This is measured as the duration of a session based on the difference between the first and last event timestamps in that session. In many cases, especially previously synched data, this session information is not available and we can use the average time spent on the platform between first and last event captured for the user.
@@ -288,45 +275,12 @@ These are found by identifying the most common sequences of events that lead to 
 | 3        | Feature A -> Feature B | 1000  | 20%        |
 | 4        | Feature A | 500   | 10%        |
 
-
 {{all_features_data}}
 
 ### Appendix A :
 
-##### Daily Registration and Deregistration History Table
+##### Registration and Deregistration History Table
 
-| Date       | Registered Users | Deregistered Users |
-|------------|------------------|--------------------|
-| 2023-01-01 | 50               | 5                  |
-| 2023-01-02 | 100              | 10                 |
-| 2023-01-01 | 50               | 5                  |
-| 2023-01-02 | 100              | 10                 |
+{{registration_deregistration_table}}
 
-
-##### Weekly Registration and Deregistration History Table
-
-| Week       | Registered Users | Deregistered Users |
-|------------|------------------|--------------------|
-| 2023-W1    | 500              | 50                 |
-| 2023-W2    | 600              | 60                 |
-
-
-##### Monthly Registration and Deregistration History Table
-
-| Month      | Registered Users | Deregistered Users |
-|------------|------------------|--------------------|
-| 2023-Jan   | 2000             | 200                |
-| 2023-Feb   | 1500             | 150                |
-
-##### Daily Active Users Table
-
-{{daily_active_users_table}}
-
-##### Weekly Active Users Table
-
-{{weekly_active_users_table}}
-
-##### Monthly Active Users Table
-
-{{monthly_active_users_table}}
 
