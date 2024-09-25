@@ -337,12 +337,11 @@ async def generate_reports(analysis_code: str, metrics: EngagementMetrics):
 
 ###############################################################################
 
-async def get_analysis_code():
-    today = date.today().strftime("%Y-%m-%d")
+async def get_analysis_code(prefix: str):
     existing_count = 0
     try:
         session = get_db_session()
-        existing = session.query(Analysis).filter(Analysis.Code.startswith(today)).all()
+        existing = session.query(Analysis).filter(Analysis.Code.startswith(prefix)).all()
         if existing is not None and len(existing) > 0:
             existing_count = len(existing)
         session.close()
@@ -350,7 +349,7 @@ async def get_analysis_code():
         print_exception(e)
 
     existing_count += 1
-    return f"{today}-{existing_count}"
+    return f"{existing_count}"
 
 async def get_tenant_by_id(tenantId: UUID4 | None):
     tenant = None
@@ -450,10 +449,18 @@ async def generate_daily_analytics():
                 EndDate = date.today(),
                 Source = None
             )
-            analysis_code = await get_analysis_code()
             if tenant['TenantCode'] is not None:
-                analysis_code = analysis_code + '_' + tenant['TenantCode']
-            metrics = await calculate(analysis_code, filters)
+                analysis_code = date.today().strftime("%Y-%m-%d") + '_' + tenant['TenantCode']
+                code = await get_analysis_code(analysis_code)
+                analysis_code = analysis_code + '-' + code
+                print(f"Generating analytics -> {analysis_code}")
+                metrics = await calculate(analysis_code, filters)
+            else:
+                analysis_code = date.today().strftime("%Y-%m-%d") + '-'
+                code = await get_analysis_code(analysis_code)
+                analysis_code = analysis_code + code
+                print(f"Generating analytics -> {analysis_code}")
+                metrics = await calculate(analysis_code, filters)
 
     except Exception as e:
         print_exception(e)

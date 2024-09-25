@@ -1,3 +1,4 @@
+from datetime import date
 import json
 import os
 from fastapi import APIRouter, status, HTTPException, BackgroundTasks
@@ -12,7 +13,7 @@ from app.api.analytics.analytics_handler import (
     get_analysis_code_
 )
 from app.common.utils import generate_random_code
-from app.database.services.analytics.analysis_service import check_filter_params, get_tenant_by_id
+from app.database.services.analytics.analysis_service import check_filter_params, get_analysis_code, get_tenant_by_id
 from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
 from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.miscellaneous.response_model import ResponseModel, ResponseStatusTypes
@@ -71,7 +72,7 @@ async def calculate_metrics(
         background_tasks: BackgroundTasks,
         filters: AnalyticsFilters):
 
-    analysis_code = await get_analysis_code_()
+    analysis_code = date.today().strftime("%Y-%m-%d")
     base_url = os.getenv("BASE_URL")
     filters_updated = check_filter_params(filters)
 
@@ -79,8 +80,17 @@ async def calculate_metrics(
         tenant = await get_tenant_by_id(filters_updated.TenantId)
         if tenant is not None:
             analysis_code = analysis_code + '_' + tenant.TenantCode
-
-    background_tasks.add_task(calculate_, analysis_code, filters_updated)
+            code = await get_analysis_code(analysis_code)
+            analysis_code = analysis_code + '-' + code
+            background_tasks.add_task(calculate_, analysis_code, filters_updated)
+        else:
+            resp = ResponseModel[CalculateMetricsResponse](Message='Tenant not found!', Data= None)
+            return resp
+    else:
+        analysis_code = analysis_code + '-'
+        code = await get_analysis_code(analysis_code)
+        analysis_code = analysis_code + code
+        background_tasks.add_task(calculate_, analysis_code, filters_updated)
 
     res_model = CalculateMetricsResponse(
         TenantId     = filters_updated.TenantId,
@@ -96,7 +106,6 @@ async def calculate_metrics(
     message = "Engagement metrics analysis started successfully. It may take a while to complete. You can access the results through the urls shared."
     resp = ResponseModel[CalculateMetricsResponse](Message=message, Data=res_model)
     return resp
-
 @router.get("/metrics/{analysis_code}", # 2024-09-17-1
             status_code=status.HTTP_200_OK,
             response_model=ResponseModel[EngagementMetrics|None])
