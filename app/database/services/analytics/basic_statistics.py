@@ -461,7 +461,7 @@ async def get_users_distribution_by_role(filters: AnalyticsFilters) -> list:
                     RoleId,
                     count(*) AS registration_count
                 FROM 
-                    users
+                    users AS user
                 WHERE
                     RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__
