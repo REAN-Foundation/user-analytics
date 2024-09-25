@@ -6,7 +6,8 @@ import pandas as pd
 from app.database.services.analytics.reports.report_utilities import (
     plot_bar_chart,
     plot_pie_chart,
-    reindex_dataframe_to_all_dates
+    reindex_dataframe_to_all_dates,
+    format_date_column
 )
 from app.domain_types.schemas.analytics import (
     BasicAnalyticsStatistics,
@@ -60,10 +61,13 @@ def generate_basic_statistics_images(
             frequency   = 'MS',
             date_format = '%Y-%m')
 
+
+        registration_history_df_filled_ = format_date_column(registration_history_df_filled,'month')
+        deregistration_history_df_filled_ = format_date_column(deregistration_history_df_filled,'month')
         # plot the charts
 
         plot_bar_chart(
-            data_frame    = registration_history_df_filled,
+            data_frame    = registration_history_df_filled_,
             x_column      = 'month',
             y_column      = 'user_count',
             title         = 'Registration History',
@@ -73,7 +77,7 @@ def generate_basic_statistics_images(
             file_path     = os.path.join(location, 'registration_history'))
 
         plot_bar_chart(
-            data_frame    = deregistration_history_df_filled,
+            data_frame    = deregistration_history_df_filled_,
             x_column      = 'month',
             y_column      = 'user_count',
             title         = 'Deregistration History',
@@ -178,8 +182,13 @@ def generate_generic_engagement_images(
             frequency   = 'MS',
             date_format = '%Y-%m')
 
+        daily_active_users_df_filled_ = format_date_column(daily_active_users_df_filled,'activity_date')
+        weekly_active_users_df_ = format_date_column(weekly_active_users_df,'week_start_date')
+        monthly_active_users_df_filled_ = format_date_column(monthly_active_users_df_filled,'activity_month')
+        login_frequency_df_ = format_date_column(login_frequency_df,'month')
+
         plot_bar_chart(
-            data_frame     = daily_active_users_df_filled,
+            data_frame     = daily_active_users_df_filled_,
             x_column       = 'activity_date',
             y_column       = 'daily_active_users',
             title          = 'Daily Active Users',
@@ -191,7 +200,7 @@ def generate_generic_engagement_images(
             show_every_nth = 10)
 
         plot_bar_chart(
-            data_frame    = weekly_active_users_df,
+            data_frame    = weekly_active_users_df_,
             x_column      = 'week_start_date',
             y_column      = 'weekly_active_users',
             title         = 'Weekly Active Users',
@@ -201,7 +210,7 @@ def generate_generic_engagement_images(
             file_path     = os.path.join(location, 'weekly_active_users'))
 
         plot_bar_chart(
-            data_frame    = monthly_active_users_df_filled,
+            data_frame    = monthly_active_users_df_filled_,
             x_column      = 'activity_month',
             y_column      = 'monthly_active_users',
             title         = 'Monthly Active Users',
@@ -211,7 +220,7 @@ def generate_generic_engagement_images(
             file_path     = os.path.join(location, 'monthly_active_users'))
 
         plot_bar_chart(
-            data_frame    = login_frequency_df,
+            data_frame    = login_frequency_df_,
             x_column      = 'month',
             y_column      = 'login_count',
             title         = 'Login Frequency by Month',
@@ -269,8 +278,10 @@ def feature_metrics_images(
             frequency   = 'MS',
             date_format = '%Y-%m')
 
+            access_frequency_df_ = format_date_column(access_frequency_df,'month')
+
             plot_bar_chart(
-                data_frame    = access_frequency_df,
+                data_frame    = access_frequency_df_,
                 x_column      = 'month',
                 y_column      = 'access_frequency',
                 title         = 'Access Frequency by Month',
@@ -291,9 +302,10 @@ def feature_metrics_images(
                 date_format = '%Y-%m')
 
             engagement_rate_df['engagement_rate'] = engagement_rate_df['engagement_rate'].astype(float)
+            engagement_rate_df_ = format_date_column(engagement_rate_df,'month')
 
             plot_bar_chart(
-                data_frame    = engagement_rate_df,
+                data_frame    = engagement_rate_df_,
                 x_column      = 'month',
                 y_column      = 'engagement_rate',
                 title         = 'Engagement Rate by Month',
