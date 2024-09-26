@@ -6,7 +6,8 @@ import pandas as pd
 from app.database.services.analytics.reports.report_utilities import (
     plot_bar_chart,
     plot_pie_chart,
-    reindex_dataframe_to_all_dates
+    reindex_dataframe_to_all_dates,
+    format_date_column
 )
 from app.domain_types.schemas.analytics import (
     BasicAnalyticsStatistics,
@@ -60,10 +61,12 @@ def generate_basic_statistics_images(
             frequency   = 'MS',
             date_format = '%Y-%m')
 
+        registration_history_df_filled_ = format_date_column(registration_history_df_filled,'month')
+        deregistration_history_df_filled_ = format_date_column(deregistration_history_df_filled,'month')
         # plot the charts
 
         plot_bar_chart(
-            data_frame    = registration_history_df_filled,
+            data_frame    = registration_history_df_filled_,
             x_column      = 'month',
             y_column      = 'user_count',
             title         = 'Registration History',
@@ -73,7 +76,7 @@ def generate_basic_statistics_images(
             file_path     = os.path.join(location, 'registration_history'))
 
         plot_bar_chart(
-            data_frame    = deregistration_history_df_filled,
+            data_frame    = deregistration_history_df_filled_,
             x_column      = 'month',
             y_column      = 'user_count',
             title         = 'Deregistration History',
@@ -82,24 +85,20 @@ def generate_basic_statistics_images(
             color_palette = 'Reds_d',
             file_path     = os.path.join(location, 'deregistration_history'))
 
-        plot_bar_chart(
+        plot_pie_chart(
             data_frame    = healthsystem_distribution_df,
-            x_column      = 'health_system',
-            y_column      = 'count',
+            value_column  = 'count',
+            label_column  = 'health_system',
             title         = 'Health System Distribution',
-            x_label       = 'Health System',
-            y_label       = 'Patient Count',
-            color_palette = 'Greens_d',
+            color_palette = 'Set3',
             file_path     = os.path.join(location, 'health_system_distribution'))
 
-        plot_bar_chart(
+        plot_pie_chart(
             data_frame    = hospital_distribution_df,
-            x_column      = 'hospital',
-            y_column      = 'count',
+            value_column  = 'count',
+            label_column  = 'hospital',
             title         = 'Hospital Distribution',
-            x_label       = 'Hospital',
-            y_label       = 'Patient Count',
-            color_palette = 'Oranges_d',
+            color_palette = 'Set3',
             file_path     = os.path.join(location, 'hospital_distribution'))
 
         plot_pie_chart(
@@ -178,8 +177,13 @@ def generate_generic_engagement_images(
             frequency   = 'MS',
             date_format = '%Y-%m')
 
+        daily_active_users_df_filled_ = format_date_column(daily_active_users_df_filled,'activity_date')
+        weekly_active_users_df_ = format_date_column(weekly_active_users_df,'week_start_date')
+        monthly_active_users_df_filled_ = format_date_column(monthly_active_users_df_filled,'activity_month')
+        login_frequency_df_ = format_date_column(login_frequency_df,'month')
+
         plot_bar_chart(
-            data_frame     = daily_active_users_df_filled,
+            data_frame     = daily_active_users_df_filled_,
             x_column       = 'activity_date',
             y_column       = 'daily_active_users',
             title          = 'Daily Active Users',
@@ -191,7 +195,7 @@ def generate_generic_engagement_images(
             show_every_nth = 10)
 
         plot_bar_chart(
-            data_frame    = weekly_active_users_df,
+            data_frame    = weekly_active_users_df_,
             x_column      = 'week_start_date',
             y_column      = 'weekly_active_users',
             title         = 'Weekly Active Users',
@@ -201,7 +205,7 @@ def generate_generic_engagement_images(
             file_path     = os.path.join(location, 'weekly_active_users'))
 
         plot_bar_chart(
-            data_frame    = monthly_active_users_df_filled,
+            data_frame    = monthly_active_users_df_filled_,
             x_column      = 'activity_month',
             y_column      = 'monthly_active_users',
             title         = 'Monthly Active Users',
@@ -211,7 +215,7 @@ def generate_generic_engagement_images(
             file_path     = os.path.join(location, 'monthly_active_users'))
 
         plot_bar_chart(
-            data_frame    = login_frequency_df,
+            data_frame    = login_frequency_df_,
             x_column      = 'month',
             y_column      = 'login_count',
             title         = 'Login Frequency by Month',
@@ -220,23 +224,26 @@ def generate_generic_engagement_images(
             color_palette = 'cubehelix',
             file_path     = os.path.join(location, 'login_frequency'))
 
-        plot_pie_chart(
+        plot_bar_chart(
             data_frame    = retention_on_days_df,
-            value_column  = 'retention_rate',
-            label_column  = 'day',
+            x_column      = 'day',
+            y_column      = 'retention_rate',
             title         = 'Retention on Specific Days',
-            color_palette = 'coolwarm',
+            x_label       = 'Day',
+            y_label       = 'Retention',
+            color_palette = 'cubehelix',
             file_path     = os.path.join(location, 'retention_on_specific_days'))
-
-        plot_pie_chart(
+        
+        plot_bar_chart(
             data_frame    = retention_intervals_df,
-            value_column  = 'retention_rate',
-            label_column  = 'interval',
-            title         = 'Retention in Specific Intervals',
-            color_palette = 'coolwarm',
+            x_column      = 'interval',
+            y_column      = 'retention_rate',
+            title         = 'Retention Rate in Specific Intervals',
+            x_label       = 'Interval',
+            y_label       = 'Retention',
+            color_palette = 'cubehelix',
             file_path     = os.path.join(location, 'retention_in_specific_intervals'))
-
-
+        
     except Exception as e:
         print(f"Error generating basic statistics images: {e}")
         return False
@@ -269,15 +276,17 @@ def feature_metrics_images(
             frequency   = 'MS',
             date_format = '%Y-%m')
 
+            access_frequency_df_ = format_date_column(access_frequency_df,'month')
+
             plot_bar_chart(
-                data_frame    = access_frequency_df,
+                data_frame    = access_frequency_df_,
                 x_column      = 'month',
                 y_column      = 'access_frequency',
                 title         = 'Access Frequency by Month',
                 x_label       = 'Month',
                 y_label       = 'Access Frequency',
                 color_palette = 'Blues_d',
-                file_path     = os.path.join(location, f'{feature}_access_frequency_by_month'))
+                file_path     = os.path.join(location, f'{featureName}_access_frequency_by_month'))
 
         if len(feature.EngagementRate) > 0:
 
@@ -291,16 +300,17 @@ def feature_metrics_images(
                 date_format = '%Y-%m')
 
             engagement_rate_df['engagement_rate'] = engagement_rate_df['engagement_rate'].astype(float)
+            engagement_rate_df_ = format_date_column(engagement_rate_df,'month')
 
             plot_bar_chart(
-                data_frame    = engagement_rate_df,
+                data_frame    = engagement_rate_df_,
                 x_column      = 'month',
                 y_column      = 'engagement_rate',
                 title         = 'Engagement Rate by Month',
                 x_label       = 'Month',
                 y_label       = 'Engagement Rate (%)',
                 color_palette = 'Greens_d',
-                file_path     = os.path.join(location, f'{feature}_engagement_rate_by_month'))
+                file_path     = os.path.join(location, f'{featureName}_engagement_rate_by_month'))
 
         retention_on_specific_days = feature.RetentionRateOnSpecificDays['retention_on_specific_days']
         if len(retention_on_specific_days) > 0:
@@ -313,7 +323,7 @@ def feature_metrics_images(
                 x_label       = 'day',
                 y_label       = 'Retention',
                 color_palette = 'Set3',
-                file_path     = os.path.join(location, f'{feature}_retention_on_specific_days'))
+                file_path     = os.path.join(location, f'{featureName}_retention_on_specific_days'))
 
         retention_in_specific_intervals = feature.RetentionRateInSpecificIntervals['retention_in_specific_interval']
         if len(retention_in_specific_intervals) > 0:
@@ -326,7 +336,7 @@ def feature_metrics_images(
                 x_label       = 'Interval',
                 y_label       = 'Retention',
                 color_palette = 'Purples_d',
-                file_path     = os.path.join(location, f'{feature}_retention_in_specific_intervals'))
+                file_path     = os.path.join(location, f'{featureName}_retention_in_specific_intervals'))
 
         # if len(feature.DropOffPoints) > 0:
         #     drop_off_points_df     = pd.DataFrame(feature.DropOffPoints)

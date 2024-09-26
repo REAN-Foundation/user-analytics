@@ -64,7 +64,7 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                     df_len = len(access_frequency_df_), 
                     value_col = start_col + 1)
                 worksheet.insert_chart(current_row + 2, graph_pos, access_frequency_chart)
-                current_row = current_row + len(access_frequency_df_) + 6
+                current_row = current_row + len(access_frequency_df_) + 12
                 
         if feature_feature_engagement_metrics.EngagementRate:
                 engagement_rate_df= pd.DataFrame(feature_feature_engagement_metrics.EngagementRate)
@@ -96,7 +96,7 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                         value_col = start_col + 2
                     )
                     worksheet.insert_chart(current_row + 2, graph_pos, engagement_rate_chart)
-                    current_row = current_row + len(engagement_rate_df) + 6
+                    current_row = current_row + len(engagement_rate_df) + 12
 
         if feature_feature_engagement_metrics.RetentionRateOnSpecificDays:
             retention_specific_days = feature_feature_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']

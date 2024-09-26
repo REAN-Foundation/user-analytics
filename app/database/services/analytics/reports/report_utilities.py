@@ -1,6 +1,6 @@
 
 from typing import Dict, Optional
-from datetime import datetime
+from datetime import date, datetime
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -29,26 +29,32 @@ def plot_bar_chart(
         y_label: str,
         color_palette: str,
         file_path: str,
-        rotation: int = 45,
+        rotation: int = 0,
         show_every_nth: int = 5
     ):
     fig, ax = plt.subplots(figsize=(10, 6))
+    plt.tight_layout(pad=2)
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
 
     sns.barplot(
         x=x_column,
         y=y_column,
         data=data_frame,
-        palette=sns.color_palette("Spectral"), #sns.husl_palette(as_cmap=True),#
+        edgecolor= "#87CEEB",
+        facecolor="#ADD8E6",
         ax=ax,
         legend=False)
 
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
+    plt.ylabel("")
     ax.tick_params(axis='x', rotation=rotation)
     ax.xaxis.set_major_locator(plt.MaxNLocator(show_every_nth))
     save_figure(fig, file_path)
-
+    
 def plot_pie_chart(
         data_frame: pd.DataFrame,
         value_column: str,
@@ -165,7 +171,7 @@ def create_chart(
     chart.add_series({
         'name': series_name,
         'categories': [sheet_name, start_row + 1, start_col, start_row + df_len, start_col],
-        'values': [sheet_name, start_row + 1, value_col, start_row + df_len, value_col],
+        'values': [sheet_name, start_row + 1, value_col, start_row + df_len, value_col]
     })
     chart.set_title({'name': f'{series_name}'})
 
@@ -317,4 +323,26 @@ def add_title_and_description(
 
     worksheet.write(start_row, start_col, title, title_format)
     worksheet.write(start_row + 2, start_col, description, description_format)
+    
+def add_table_to_markdown(
+data_frame: pd.DataFrame, 
+rename_columns: Dict[str, str] = None
+) -> str:
+    if rename_columns:
+        data_frame.rename(columns = rename_columns, inplace=True)
 
+    return data_frame.to_markdown(index=False, tablefmt='github', stralign='left')
+  
+def format_date_column(df : pd.DataFrame, column_name : str) -> pd.DataFrame:
+    def format_date(date : date):
+        try:
+            if len(date) == 7:  
+                return pd.to_datetime(date).strftime('%b %Y')
+            elif len(date) == 10:  
+                return pd.to_datetime(date).strftime('%d %b %Y')
+        except Exception as e:
+            print(f"Error: {e}")
+            return "Invalid date format"
+
+    df[column_name] = df[column_name].apply(format_date)
+    return df
