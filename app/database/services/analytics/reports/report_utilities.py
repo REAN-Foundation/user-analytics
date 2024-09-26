@@ -66,10 +66,19 @@ def plot_pie_chart(
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.pie(
         data_frame[value_column],
-        labels=data_frame[label_column],
         wedgeprops=dict(width=0.5),
-        autopct='%1.1f%%',
-        colors=sns.color_palette(color_palette))
+        autopct=lambda p : '{:.1f}%'.format(p) if p > 3 else '',
+        pctdistance=0.7,
+        colors=sns.color_palette(color_palette),
+        labels=None,
+        textprops={'fontsize': 12, 'va': 'center'}
+    )
+    ax.legend(
+        data_frame[label_column],
+        loc='upper right',
+        bbox_to_anchor=(1.2, 1),
+        fontsize=12
+    )
     ax.set_title(title)
     save_figure(fig, file_path)
 
@@ -346,3 +355,9 @@ def format_date_column(df : pd.DataFrame, column_name : str) -> pd.DataFrame:
 
     df[column_name] = df[column_name].apply(format_date)
     return df
+
+def get_image_markdown(image_path: str, image_width: int) -> str:
+    if os.path.exists(image_path):
+        return f"""<img src="./{os.path.basename(image_path)}" width="{image_width}">"""
+    else:
+        return "Image data not available"
