@@ -299,7 +299,8 @@ class DataSynchronizer:
             else:
                 user_ = DataSynchronizer.get_reancare_user(user_id)
                 if user_ is not None:
-                    user = DataSynchronizer.add_analytics_user(user_id, user_)
+                    updated_row_count = DataSynchronizer.add_analytics_user(user_id, user_)
+                    user = DataSynchronizer.get_analytics_user(user_id) if updated_row_count is not None else None
                     return user
         return None
 
