@@ -494,8 +494,20 @@ async def get_active_users_count_at_end_of_every_month(filters: AnalyticsFilters
         connector = get_analytics_db_connector()
         query = f"""
                 SELECT 
-                    DATE_FORMAT(LAST_DAY(RegistrationDate), '%Y-%m-%d') AS month_end, 
-                    COUNT(*) AS active_user_count
+                    DATE_FORMAT(LAST_DAY(RegistrationDate), '%Y-%m-%d') AS month_end,
+                    (SELECT 
+                        COUNT(*) 
+                    FROM 
+                        users AS u2 
+                    WHERE 
+                        u2.RegistrationDate <= LAST_DAY(user.RegistrationDate)
+                        AND
+                        RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                        AND 
+                        u2.DeletedAt IS NULL
+                        {f'AND u2.RoleId = {role_id}' if role_id else '' }
+                        {f'AND u2.TenantId = {tenant_id}' if tenant_id else '' }
+                        ) AS active_user_count
                 FROM 
                     users as user
                 WHERE 
@@ -504,7 +516,7 @@ async def get_active_users_count_at_end_of_every_month(filters: AnalyticsFilters
                     DeletedAt IS NULL
                     __CHECKS__
                 GROUP BY 
-                    DATE_FORMAT(RegistrationDate, '%Y-%m')
+                    month_end
                 ORDER BY 
                     month_end
             """
