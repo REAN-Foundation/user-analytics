@@ -356,7 +356,7 @@ def format_date_column(df : pd.DataFrame, column_name : str) -> pd.DataFrame:
     df[column_name] = df[column_name].apply(format_date)
     return df
 
-def get_image_markdown(image_path: str, image_width: int) -> str:
+def get_image(image_path: str, image_width: int) -> str:
     if os.path.exists(image_path):
         return f"""<img src="./{os.path.basename(image_path)}" width="{image_width}">"""
     else:
