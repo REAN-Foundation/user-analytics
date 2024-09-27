@@ -84,6 +84,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
 
         start_row = 1
         start_col = 1
+        graph_col=7
         title = "Basic Analytics Statistics"
         description = "This section provides an overview of the basic analytics related to the tenant, including the total number of users, patient statistics, and registration/deregistration history."
 
@@ -180,6 +181,58 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 worksheet.set_column('D:D', 20,value_format)
                 worksheet.set_column('B:B', 20, value_format)
                 worksheet.set_column('C:C', 20, value_format)
+                start_row = startrow_combined_data + len(patient_registration_history_df) + 10
+
+        if basic_analytics.UsersDistributionByRole:
+            user_distribution_by_role_df  = pd.DataFrame(basic_analytics.UsersDistributionByRole)
+            user_distribution_by_role_df_ = write_data_to_excel(
+            data_frame     = user_distribution_by_role_df,
+            sheet_name     = sheet_name,
+            start_row      = start_row,
+            start_col      = start_col,
+            writer         = writer,
+            title          = 'Users Distribution By Role',
+            rename_columns = {'RoleId': 'RoleId', 'registration_count': 'Registration Count'}
+        )
+            user_distribution_by_role_chart = create_chart(
+            workbook     = writer.book,
+            chart_type   = 'pie',
+            series_name  = 'Age Distribution',
+            sheet_name   = sheet_name,
+            start_row    = start_row,
+            start_col    = start_col,
+            df_len       = len(user_distribution_by_role_df_),
+            value_col    = start_col + 1
+        )
+        worksheet.insert_chart(start_row, graph_col, user_distribution_by_role_chart)
+        start_row = start_row + len(user_distribution_by_role_df_) + 12
+        
+        if basic_analytics.ActiveUsersCountAtEndOfMonth:
+            
+            active_users_count_at_end_of_month  = pd.DataFrame(basic_analytics.ActiveUsersCountAtEndOfMonth)
+            
+            active_users_count_at_end_of_month_ = write_data_to_excel(
+                    data_frame     = active_users_count_at_end_of_month,
+                    sheet_name     = sheet_name,
+                    start_row      = start_row,
+                    start_col      = start_col,
+                    writer         = writer,
+                    title          = 'Active Users Count At End Of Month',
+                    rename_columns = {'month_end': 'Month End', 'active_user_count': 'Active User Count'}
+                )
+
+            chart = create_chart(
+                workbook    = writer.book,
+                chart_type  = 'area',
+                series_name = 'Active Users',
+                sheet_name  = sheet_name,
+                start_row   = start_row,
+                start_col   = start_col,
+                df_len      = len(active_users_count_at_end_of_month_),
+                value_col   = start_col + 1,
+            )
+
+            worksheet.insert_chart(start_row, graph_col, chart)
 
     except Exception as e:
         print_exception(e)
@@ -606,6 +659,35 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                     value_col = start_col + 2
                 )
             worksheet.insert_chart(current_row + 2, graph_pos, retention_intervals_chart)
+            current_row = current_row + len(retention_intervals_df) + 12
+            
+        if generic_engagement_metrics.MostFiredEvents:
+            most_fired_events  = pd.DataFrame(generic_engagement_metrics.MostFiredEvents)
+            write_data_to_excel(
+                data_frame = most_fired_events,
+                sheet_name = sheet_name,
+                start_row = current_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Most Fired Events',
+                rename_columns = {'EventName': 'Event Name', 'event_count': 'Event Count'},
+                description = 'particular event fired for particular Time'
+            )
+            current_row = current_row + len(most_fired_events) + 12
+            
+        if generic_engagement_metrics.MostFiredEventsByEventCategory:
+            most_fired_events_by_event_category_df  = pd.DataFrame(generic_engagement_metrics.MostFiredEventsByEventCategory)
+            write_data_to_excel(
+                data_frame = most_fired_events_by_event_category_df,
+                sheet_name = sheet_name,
+                start_row = current_row,
+                start_col = start_col,
+                writer = writer,
+                title = 'Most Fired Events By Category',
+                rename_columns = {'EventCategory': 'Event Category', 'EventName': 'Event Name','event_count':'Event Count'},
+                description = 'category wise event fired count'
+            ) 
+               
     except Exception as e:
         print_exception(e)
         return False

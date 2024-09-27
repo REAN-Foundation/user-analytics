@@ -185,6 +185,11 @@ def create_chart(
         'values': [sheet_name, start_row + 1, value_col, start_row + df_len, value_col]
     })
     chart.set_title({'name': f'{series_name}'})
+    
+    if chart_type == 'area':
+        chart.set_chartarea({
+        'border': {'color': '#000000', 'width': 0.5, 'dash_type': 'solid'}
+    })
 
     if chart_type != 'pie':
         chart.set_x_axis({
