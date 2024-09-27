@@ -7,7 +7,8 @@ from app.database.services.analytics.reports.report_utilities import (
     plot_bar_chart,
     plot_pie_chart,
     reindex_dataframe_to_all_dates,
-    format_date_column
+    format_date_column,
+    reindex_dataframe_to_all_missing_dates
 )
 from app.domain_types.schemas.analytics import (
     BasicAnalyticsStatistics,
@@ -35,7 +36,6 @@ def generate_basic_statistics_images(
         metrics: BasicAnalyticsStatistics) -> bool:
 
     try:
-
         registration_history_df      = pd.DataFrame(metrics.PatientRegistrationHistory)
         deregistration_history_df    = pd.DataFrame(metrics.PatientDeregistrationHistory)
         age_groups_df                = pd.DataFrame(metrics.PatientDemographics.AgeGroups)
@@ -46,100 +46,105 @@ def generate_basic_statistics_images(
         hospital_distribution_df     = pd.DataFrame(metrics.PatientDemographics.HospitalDistribution)
         caregiver_status_df          = pd.DataFrame(metrics.PatientDemographics.SurvivorOrCareGiverDistribution)
 
-        # handling missing values
-        registration_history_df_filled = reindex_dataframe_to_all_dates(
-            data_frame  = registration_history_df,
-            date_column = 'month',
-            fill_column = 'user_count',
-            frequency   = 'MS',
-            date_format = '%Y-%m')
+        if not registration_history_df.empty:
+            registration_history_df  = pd.DataFrame(metrics.PatientRegistrationHistory) 
+            registration_history_df_filled = reindex_dataframe_to_all_missing_dates(
+                data_frame = registration_history_df,
+                date_col = 'month',
+                fill_col = 'user_count',
+            )
+            registration_history_df_filled_ = format_date_column(registration_history_df_filled, 'month')
+            
+            plot_bar_chart(
+                data_frame    = registration_history_df_filled_,
+                x_column      = 'month',
+                y_column      = 'user_count',
+                title         = 'Registration History',
+                x_label       = 'Month',
+                y_label       = 'Number of Registrations',
+                color_palette = 'Blues_d',
+                file_path     = os.path.join(location, 'registration_history'))
 
-        deregistration_history_df_filled = reindex_dataframe_to_all_dates(
-            data_frame  = deregistration_history_df,
-            date_column = 'month',
-            fill_column = 'user_count',
-            frequency   = 'MS',
-            date_format = '%Y-%m')
+        if not deregistration_history_df.empty:
+            deregistration_history_df_filled = reindex_dataframe_to_all_missing_dates(
+                data_frame = deregistration_history_df,
+                date_col = 'month',
+                fill_col = 'user_count',
+            )
+            deregistration_history_df_filled_ = format_date_column(deregistration_history_df_filled, 'month')
 
-        registration_history_df_filled_ = format_date_column(registration_history_df_filled,'month')
-        deregistration_history_df_filled_ = format_date_column(deregistration_history_df_filled,'month')
-        # plot the charts
+            plot_bar_chart(
+                data_frame    = deregistration_history_df_filled_,
+                x_column      = 'month',
+                y_column      = 'user_count',
+                title         = 'Deregistration History',
+                x_label       = 'Month',
+                y_label       = 'Number of Deregistrations',
+                color_palette = 'Reds_d',
+                file_path     = os.path.join(location, 'deregistration_history'))
 
-        plot_bar_chart(
-            data_frame    = registration_history_df_filled_,
-            x_column      = 'month',
-            y_column      = 'user_count',
-            title         = 'Registration History',
-            x_label       = 'Month',
-            y_label       = 'Number of Registrations',
-            color_palette = 'Blues_d',
-            file_path     = os.path.join(location, 'registration_history'))
+        if not healthsystem_distribution_df.empty:
+            plot_pie_chart(
+                data_frame    = healthsystem_distribution_df,
+                value_column  = 'count',
+                label_column  = 'health_system',
+                title         = 'Health System Distribution',
+                color_palette = 'Set3',
+                file_path     = os.path.join(location, 'health_system_distribution'))
 
-        plot_bar_chart(
-            data_frame    = deregistration_history_df_filled_,
-            x_column      = 'month',
-            y_column      = 'user_count',
-            title         = 'Deregistration History',
-            x_label       = 'Month',
-            y_label       = 'Number of Deregistrations',
-            color_palette = 'Reds_d',
-            file_path     = os.path.join(location, 'deregistration_history'))
+        if not healthsystem_distribution_df.empty:
+            plot_pie_chart(
+                data_frame    = hospital_distribution_df,
+                value_column  = 'count',
+                label_column  = 'hospital',
+                title         = 'Hospital Distribution',
+                color_palette = 'Set3',
+                file_path     = os.path.join(location, 'hospital_distribution'))
 
-        plot_pie_chart(
-            data_frame    = healthsystem_distribution_df,
-            value_column  = 'count',
-            label_column  = 'health_system',
-            title         = 'Health System Distribution',
-            color_palette = 'Set3',
-            file_path     = os.path.join(location, 'health_system_distribution'))
+        if not age_groups_df.empty:
+            plot_pie_chart(
+                data_frame    = age_groups_df,
+                value_column  = 'count',
+                label_column  = 'age_group',
+                title         = 'Patient Age Distribution',
+                color_palette = 'Set3',
+                file_path     = os.path.join(location, 'age_distribution'))
 
-        plot_pie_chart(
-            data_frame    = hospital_distribution_df,
-            value_column  = 'count',
-            label_column  = 'hospital',
-            title         = 'Hospital Distribution',
-            color_palette = 'Set3',
-            file_path     = os.path.join(location, 'hospital_distribution'))
+        if not gender_groups_df.empty:
+            plot_pie_chart(
+                data_frame    = gender_groups_df,
+                value_column  = 'count',
+                label_column  = 'gender',
+                title         = 'Patient Gender Groups',
+                color_palette = 'Set3',
+                file_path     = os.path.join(location, 'patient_gender_groups'))
 
-        plot_pie_chart(
-            data_frame    = age_groups_df,
-            value_column  = 'count',
-            label_column  = 'age_group',
-            title         = 'Patient Age Distribution',
-            color_palette = 'Set3',
-            file_path     = os.path.join(location, 'age_distribution'))
+        if not ethnicity_groups_df.empty:
+            plot_pie_chart(
+                data_frame    = ethnicity_groups_df,
+                value_column  = 'count',
+                label_column  = 'ethnicity',
+                title         = 'Patient Ethnicity Groups',
+                color_palette = 'Set2',
+                file_path     = os.path.join(location, 'patient_ethnicity_groups'))
 
-        plot_pie_chart(
-            data_frame    = gender_groups_df,
-            value_column  = 'count',
-            label_column  = 'gender',
-            title         = 'Patient Gender Groups',
-            color_palette = 'Set3',
-            file_path     = os.path.join(location, 'patient_gender_groups'))
+        if not race_groups_df.empty:
+            plot_pie_chart(
+                data_frame    = race_groups_df,
+                value_column  = 'count',
+                label_column  = 'race',
+                title         = 'Patient Race Groups',
+                color_palette = 'Set2',
+                file_path     = os.path.join(location, 'patient_race_groups'))
 
-        plot_pie_chart(
-            data_frame    = ethnicity_groups_df,
-            value_column  = 'count',
-            label_column  = 'ethnicity',
-            title         = 'Patient Ethnicity Groups',
-            color_palette = 'Set2',
-            file_path     = os.path.join(location, 'patient_ethnicity_groups'))
-
-        plot_pie_chart(
-            data_frame    = race_groups_df,
-            value_column  = 'count',
-            label_column  = 'race',
-            title         = 'Patient Race Groups',
-            color_palette = 'Set2',
-            file_path     = os.path.join(location, 'patient_race_groups'))
-
-        plot_pie_chart(
-            data_frame    = caregiver_status_df,
-            value_column  = 'count',
-            label_column  = 'caregiver_status',
-            title         = 'Survivor or Caregiver Distribution',
-            color_palette = 'Set1',
-            file_path     = os.path.join(location, 'survivor_caregiver_distribution'))
+        if not caregiver_status_df.empty:
+            plot_pie_chart(
+                data_frame    = caregiver_status_df,
+                value_column  = 'count',
+                label_column  = 'caregiver_status',
+                title         = 'Survivor or Caregiver Distribution',
+                color_palette = 'Set1',
+                file_path     = os.path.join(location, 'survivor_caregiver_distribution'))
 
     except Exception as e:
         print(f"Error generating basic statistics images: {e}")
@@ -162,94 +167,112 @@ def generate_generic_engagement_images(
         retention_intervals_df   = pd.DataFrame(metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval'])
         most_visited_features_df = pd.DataFrame(metrics.MostCommonlyVisitedFeatures)
 
-        # missing dates, weeks, and months
-        daily_active_users_df_filled   = reindex_dataframe_to_all_dates(
-            data_frame  = daily_active_users_df,
-            date_column = 'activity_date',
-            fill_column = 'daily_active_users',
-            frequency   = 'D',
-            date_format = '%Y-%m-%d')
+        if not daily_active_users_df.empty:
+            daily_active_users_df_filled = reindex_dataframe_to_all_missing_dates(
+                data_frame = daily_active_users_df,
+                date_col = 'activity_date',
+                fill_col = 'daily_active_users',
+                frequency = 'daily'
+            )
+            
+            daily_active_users_df_filled_ = format_date_column(
+                df          = daily_active_users_df_filled,
+                column_name = 'activity_date')
 
-        monthly_active_users_df_filled = reindex_dataframe_to_all_dates(
-            data_frame  = monthly_active_users_df,
-            date_column = 'activity_month',
-            fill_column = 'monthly_active_users',
-            frequency   = 'MS',
-            date_format = '%Y-%m')
+            plot_bar_chart(
+                data_frame     = daily_active_users_df_filled_,
+                x_column       = 'activity_date',
+                y_column       = 'daily_active_users',
+                title          = 'Daily Active Users',
+                x_label        = 'Date',
+                y_label        = 'Number of Active Users',
+                color_palette  = 'Blues_d',
+                file_path      = os.path.join(location, 'daily_active_users'),
+                rotation       = 45,
+                show_every_nth = 10)
 
-        daily_active_users_df_filled_ = format_date_column(daily_active_users_df_filled,'activity_date')
-        weekly_active_users_df_ = format_date_column(weekly_active_users_df,'week_start_date')
-        monthly_active_users_df_filled_ = format_date_column(monthly_active_users_df_filled,'activity_month')
-        login_frequency_df_ = format_date_column(login_frequency_df,'month')
+        if not weekly_active_users_df.empty:
+            weekly_active_users_df = reindex_dataframe_to_all_missing_dates(
+                data_frame      = weekly_active_users_df,
+                start_date_col  = 'week_start_date',
+                end_date_col    = 'week_end_date',
+                fill_col        = 'weekly_active_users',
+                frequency       = 'weekly')
+            
+            weekly_active_users_df_ = format_date_column(
+                df          = weekly_active_users_df,
+                column_name = 'week_start_date')
+            
+            plot_bar_chart(
+                data_frame    = weekly_active_users_df_,
+                x_column      = 'week_start_date',
+                y_column      = 'weekly_active_users',
+                title         = 'Weekly Active Users',
+                x_label       = 'Week Start Date',
+                y_label       = 'Number of Active Users',
+                color_palette = 'Reds_d',
+                file_path     = os.path.join(location, 'weekly_active_users'))
 
-        plot_bar_chart(
-            data_frame     = daily_active_users_df_filled_,
-            x_column       = 'activity_date',
-            y_column       = 'daily_active_users',
-            title          = 'Daily Active Users',
-            x_label        = 'Date',
-            y_label        = 'Number of Active Users',
-            color_palette  = 'Blues_d',
-            file_path      = os.path.join(location, 'daily_active_users'),
-            rotation       = 45,
-            show_every_nth = 10)
+        if not weekly_active_users_df.empty:
+            monthly_active_users_df_filled = reindex_dataframe_to_all_missing_dates(
+                data_frame = monthly_active_users_df,
+                date_col = 'activity_month',
+                fill_col = 'monthly_active_users',
+            )
+            
+            monthly_active_users_df_filled_ = format_date_column(
+                df           = monthly_active_users_df_filled,
+                column_name  = 'activity_month')
+            
+            plot_bar_chart(
+                data_frame    = monthly_active_users_df_filled_,
+                x_column      = 'activity_month',
+                y_column      = 'monthly_active_users',
+                title         = 'Monthly Active Users',
+                x_label       = 'Month',
+                y_label       = 'Number of Active Users',
+                color_palette = 'Greens_d',
+                file_path     = os.path.join(location, 'monthly_active_users'))
 
-        plot_bar_chart(
-            data_frame    = weekly_active_users_df_,
-            x_column      = 'week_start_date',
-            y_column      = 'weekly_active_users',
-            title         = 'Weekly Active Users',
-            x_label       = 'Week Start Date',
-            y_label       = 'Number of Active Users',
-            color_palette = 'Reds_d',
-            file_path     = os.path.join(location, 'weekly_active_users'))
+        if not login_frequency_df.empty:
+            login_frequency_df_ = format_date_column(login_frequency_df, 'month')
+            plot_bar_chart(
+                data_frame    = login_frequency_df_,
+                x_column      = 'month',
+                y_column      = 'login_count',
+                title         = 'Login Frequency by Month',
+                x_label       = 'Month',
+                y_label       = 'Login Count',
+                color_palette = 'cubehelix',
+                file_path     = os.path.join(location, 'login_frequency'))
 
-        plot_bar_chart(
-            data_frame    = monthly_active_users_df_filled_,
-            x_column      = 'activity_month',
-            y_column      = 'monthly_active_users',
-            title         = 'Monthly Active Users',
-            x_label       = 'Month',
-            y_label       = 'Number of Active Users',
-            color_palette = 'Greens_d',
-            file_path     = os.path.join(location, 'monthly_active_users'))
+        if not retention_on_days_df.empty:
+            plot_bar_chart(
+                data_frame    = retention_on_days_df,
+                x_column      = 'day',
+                y_column      = 'retention_rate',
+                title         = 'Retention on Specific Days',
+                x_label       = 'Day',
+                y_label       = 'Retention',
+                color_palette = 'cubehelix',
+                file_path     = os.path.join(location, 'retention_on_specific_days'))
 
-        plot_bar_chart(
-            data_frame    = login_frequency_df_,
-            x_column      = 'month',
-            y_column      = 'login_count',
-            title         = 'Login Frequency by Month',
-            x_label       = 'Month',
-            y_label       = 'Login Count',
-            color_palette = 'cubehelix',
-            file_path     = os.path.join(location, 'login_frequency'))
+        if not retention_intervals_df.empty:
+            plot_bar_chart(
+                data_frame    = retention_intervals_df,
+                x_column      = 'interval',
+                y_column      = 'retention_rate',
+                title         = 'Retention Rate in Specific Intervals',
+                x_label       = 'Interval',
+                y_label       = 'Retention',
+                color_palette = 'cubehelix',
+                file_path     = os.path.join(location, 'retention_in_specific_intervals'))
 
-        plot_bar_chart(
-            data_frame    = retention_on_days_df,
-            x_column      = 'day',
-            y_column      = 'retention_rate',
-            title         = 'Retention on Specific Days',
-            x_label       = 'Day',
-            y_label       = 'Retention',
-            color_palette = 'cubehelix',
-            file_path     = os.path.join(location, 'retention_on_specific_days'))
-        
-        plot_bar_chart(
-            data_frame    = retention_intervals_df,
-            x_column      = 'interval',
-            y_column      = 'retention_rate',
-            title         = 'Retention Rate in Specific Intervals',
-            x_label       = 'Interval',
-            y_label       = 'Retention',
-            color_palette = 'cubehelix',
-            file_path     = os.path.join(location, 'retention_in_specific_intervals'))
-        
     except Exception as e:
-        print(f"Error generating basic statistics images: {e}")
+        print(f"Error generating generic engagement images: {e}")
         return False
 
     return True
-
 ###############################################################################
 
 def generate_feature_engagement_images(
@@ -351,7 +374,7 @@ def feature_metrics_images(
         #         file_path     = os.path.join(location, f'{feature}_retention_in_specific_intervals'))
 
     except Exception as e:
-        print(f"Error generating basic statistics images: {e}")
+        print(f"Error generating feature engagement images: {e}")
         return False
 
     return True

@@ -22,7 +22,7 @@ async def generate_report_pdf(
             return None
 
         markdown_file_path = os.path.join(report_folder_path, f"report_{analysis_code}.md")
-        markdown_generated = await generate_report_markdown(markdown_file_path, metrics)
+        markdown_generated = await generate_report_markdown(markdown_file_path, metrics, report_folder_path)
         if not markdown_generated:
             return None
 

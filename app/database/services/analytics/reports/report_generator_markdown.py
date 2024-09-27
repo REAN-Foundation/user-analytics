@@ -1,12 +1,17 @@
 
 import os
 from typing import Dict, List, Optional
-
 import pandas as pd
-
 from app.database.services.analytics.common import get_analytics_template_path
-from app.database.services.analytics.reports.feature_generator_markdown import generate_all_feature_engagement_markdown, generate_engagement_metrics_table_content
-from app.database.services.analytics.reports.report_utilities import add_table_to_markdown, reindex_dataframe_to_all_missing_dates
+from app.database.services.analytics.reports.feature_generator_markdown import (
+    generate_all_feature_engagement_markdown,
+    generate_engagement_metrics_table_content
+)
+from app.database.services.analytics.reports.report_utilities import (
+    add_table_to_markdown,
+    get_image,
+    reindex_dataframe_to_all_missing_dates
+)
 from app.domain_types.schemas.analytics import (
     EngagementMetrics
 )
@@ -15,131 +20,132 @@ from app.domain_types.schemas.analytics import (
 
 async def generate_report_markdown(
         markdown_file_path: str,
-        metrics: EngagementMetrics) -> bool:
+        metrics: EngagementMetrics,
+        report_folder_path: str) -> bool:
 
     # Generate the report
-    template_path_ = get_analytics_template_path()
-    template_path = os.path.join(template_path_, "analytics-report-template.md")
-    template_str = ""
-    with open(template_path, "r") as file:
-        template_str = file.read()
+    try:
+        template_path_ = get_analytics_template_path()
+        template_path = os.path.join(template_path_, "analytics-report-template.md")
+        template_str = ''
+        with open(template_path, "r") as file:
+            template_str = file.read()
 
-    # Replace the placeholders in the template
-    # template_str = template_str.replace("{{report_title}}", metrics.title)
+        report_details_table_str = generate_report_details_table(metrics)
+        template_str = template_str.replace("{{report_details_table}}", report_details_table_str)
 
-    image_width = 1300
+        basic_statistics_overview_table_str = generate_basic_statistics_overview_table(metrics)
+        template_str = template_str.replace("{{basic_statistics_overview_table}}", basic_statistics_overview_table_str)
 
-    report_details_table_str = generate_report_details_table(metrics)
-    template_str = template_str.replace("{{report_details_table}}", report_details_table_str)
+        registration_history_chart_str = get_image("registration_history.png", report_folder_path)
+        template_str = template_str.replace("{{registration_history_chart}}", registration_history_chart_str)
 
-    basic_statistics_overview_table_str = generate_basic_statistics_overview_table(metrics)
-    template_str = template_str.replace("{{basic_statistics_overview_table}}", basic_statistics_overview_table_str)
+        deregistration_history_chart_str = get_image("deregistration_history.png", report_folder_path)
+        template_str = template_str.replace("{{deregistration_history_chart}}", deregistration_history_chart_str)
+        
+        registration_deregistration_table_str = generate_registration_deregistration_table(metrics)
+        template_str = template_str.replace("{{registration_deregistration_table}}", registration_deregistration_table_str)
 
-    registration_history_chart_str = f"""<img src="./registration_history.png" width="{image_width}">"""
-    template_str = template_str.replace("{{registration_history_chart}}", registration_history_chart_str)
+        age_distribution_chart_str = get_image("age_distribution.png", report_folder_path)
+        template_str = template_str.replace("{{age_distribution_chart}}", age_distribution_chart_str)
 
-    deregistration_history_chart_str = f"""<img src="./deregistration_history.png" width="{image_width}">"""
-    template_str = template_str.replace("{{deregistration_history_chart}}", deregistration_history_chart_str)
+        age_distribution_table_str = generate_age_distribution_table(metrics)
+        template_str = template_str.replace("{{age_distribution_table}}", age_distribution_table_str)
+
+        gender_distribution_chart_str = get_image("patient_gender_groups.png", report_folder_path)
+        template_str = template_str.replace("{{gender_distribution_chart}}", gender_distribution_chart_str)
+
+        gender_distribution_table_str = generate_gender_distribution_table(metrics)
+        template_str = template_str.replace("{{gender_distribution_table}}", gender_distribution_table_str)
+
+        ethnicity_distribution_chart_str = get_image("patient_ethnicity_groups.png", report_folder_path)
+        template_str = template_str.replace("{{ethnicity_distribution_chart}}", ethnicity_distribution_chart_str)
+
+        ethnicity_distribution_table_str = generate_ethnicity_distribution_table(metrics)
+        template_str = template_str.replace("{{ethnicity_distribution_table}}", ethnicity_distribution_table_str)
+
+        race_distribution_chart_str = get_image("patient_race_groups.png", report_folder_path)
+        template_str = template_str.replace("{{race_distribution_chart}}", race_distribution_chart_str)
+
+        race_distribution_table_str = generate_race_distribution_table(metrics)
+        template_str = template_str.replace("{{race_distribution_table}}", race_distribution_table_str)
+
+        health_system_distribution_chart_str = get_image("health_system_distribution.png", report_folder_path)
+        template_str = template_str.replace("{{health_system_distribution_chart}}", health_system_distribution_chart_str)
+
+        health_system_distribution_table_str = generate_health_system_distribution_table(metrics)
+        template_str = template_str.replace("{{health_system_distribution_table}}", health_system_distribution_table_str)
+
+        hospital_distribution_chart_str = get_image("hospital_distribution.png", report_folder_path)
+        template_str = template_str.replace("{{hospital_affiliation_distribution_chart}}", hospital_distribution_chart_str)
+
+        hospital_distribution_table_str = generate_hospital_affiliation_distribution_table(metrics)
+        template_str = template_str.replace("{{hospital_affiliation_distribution_table}}", hospital_distribution_table_str)
+
+        caregiver_or_stroke_survivor_distribution_chart_str = get_image("survivor_caregiver_distribution.png", report_folder_path)
+        template_str = template_str.replace("{{caregiver_or_stroke_survivor_distribution_chart}}", caregiver_or_stroke_survivor_distribution_chart_str)
+
+        caregiver_or_stroke_survivor_distribution_table_str = generate_caregiver_or_stroke_survivor_distribution_table(metrics)
+        template_str = template_str.replace("{{caregiver_or_stroke_survivor_distribution_table}}", caregiver_or_stroke_survivor_distribution_table_str)
+        
+        daily_active_users_chart_str = get_image("daily_active_users.png", report_folder_path)
+        template_str = template_str.replace("{{daily_active_users_chart}}", daily_active_users_chart_str)
+
+        daily_active_users_table_str = generate_daily_active_users_table(metrics)
+        template_str = template_str.replace("{{daily_active_users_table}}", daily_active_users_table_str)
+
+        weekly_active_users_chart_str = get_image("weekly_active_users.png", report_folder_path)
+        template_str = template_str.replace("{{weekly_active_users_chart}}", weekly_active_users_chart_str)
+
+        weekly_active_users_table_str = generate_weekly_active_users_table(metrics)
+        template_str = template_str.replace("{{weekly_active_users_table}}", weekly_active_users_table_str)
+
+        monthly_active_users_chart_str = get_image("monthly_active_users.png", report_folder_path)
+        template_str = template_str.replace("{{monthly_active_users_chart}}", monthly_active_users_chart_str)
+
+        monthly_active_users_table_str = generate_monthly_active_users_table(metrics)
+        template_str = template_str.replace("{{monthly_active_users_table}}", monthly_active_users_table_str)
+
+        retention_rate_on_days_chart_str = get_image("retention_on_specific_days.png", report_folder_path)
+        template_str = template_str.replace("{{retention_rate_On_specific_days_chart}}", retention_rate_on_days_chart_str)
+
+        retention_rate_on_days_table_str = generate_retention_rate_on_days_table(metrics)
+        template_str = template_str.replace("{{retention_rate_On_specific_days_table}}", retention_rate_on_days_table_str)
+
+        retention_rate_on_interval_chart_str = get_image("retention_in_specific_intervals.png", report_folder_path)
+        template_str = template_str.replace("{{retention_rate_in_specific_intervals_chart}}", retention_rate_on_interval_chart_str)
+
+        retention_rate_on_interval_table_str = generate_retention_rate_on_interval_table(metrics)
+        template_str = template_str.replace("{{retention_rate_in_specific_intervals_table}}", retention_rate_on_interval_table_str)
+
+        login_frequency_chart_str = get_image("login_frequency.png", report_folder_path)
+        template_str = template_str.replace("{{login_frequency_monthly_chart}}", login_frequency_chart_str)
+
+        login_frequency_table_str = generate_login_frequency_table(metrics)
+        template_str = template_str.replace("{{login_frequency_monthly_table}}", login_frequency_table_str)
+
+        most_commonly_visited_features_table_str = genrate_most_commonly_visited_features(metrics)
+        template_str = template_str.replace("{{most_commonly_used_features_table}}", most_commonly_visited_features_table_str)
+        
+        feature_engagement_table_content_str = generate_engagement_metrics_table_content(metrics)
+        template_str = template_str.replace("{{feature_engagement_table_content}}", feature_engagement_table_content_str)
+        
+        all_features_engagement_str = generate_all_feature_engagement_markdown(metrics.FeatureMetrics)
+        template_str = template_str.replace("{{all_features_data}}", all_features_engagement_str)
+        
+        average_session_length_str = str(int(metrics.GenericMetrics.AverageSessionLengthMinutes))
+        template_str = template_str.replace("{{average_session_length}}", average_session_length_str)
+
+        # Save the report
+        with open(markdown_file_path, "w") as file:
+            file.write(template_str)
+
+        return True
+
+    except Exception as e:
+        print(f"Error generating report: {str(e)}")
+        return False
     
-    registration_deregistration_table_str = generate_registration_deregistration_table(metrics)
-    template_str = template_str.replace("{{registration_deregistration_table}}", registration_deregistration_table_str)
-
-    age_distribution_chart_str = f"""<img src="./age_distribution.png" width="{image_width}">"""
-    template_str = template_str.replace("{{age_distribution_chart}}", age_distribution_chart_str)
-
-    age_distribution_table_str = generate_age_distribution_table(metrics)
-    template_str = template_str.replace("{{age_distribution_table}}", age_distribution_table_str)
-
-    gender_distribution_chart_str = f"""<img src="./patient_gender_groups.png" width="{image_width}">"""
-    template_str = template_str.replace("{{gender_distribution_chart}}", gender_distribution_chart_str)
-
-    gender_distribution_table_str = generate_gender_distribution_table(metrics)
-    template_str = template_str.replace("{{gender_distribution_table}}", gender_distribution_table_str)
-    
-    ethnicity_distribution_chart_str = f"""<img src="./patient_ethnicity_groups.png" width="{image_width}">"""
-    template_str = template_str.replace("{{ethnicity_distribution_chart}}", ethnicity_distribution_chart_str)
-
-    ethnicity_distribution_table_str = generate_ethnicity_distribution_table(metrics)
-    template_str = template_str.replace("{{ethnicity_distribution_table}}", ethnicity_distribution_table_str)
-
-    race_distribution_chart_str = f"""<img src="./patient_race_groups.png" width="{image_width}">"""
-    template_str = template_str.replace("{{race_distribution_chart}}", race_distribution_chart_str)
-
-    race_distribution_table_str = generate_race_distribution_table(metrics)
-    template_str = template_str.replace("{{race_distribution_table}}", race_distribution_table_str)
-
-    health_system_distribution_chart_str = f"""<img src="./health_system_distribution.png" width="{image_width}">"""
-    template_str = template_str.replace("{{health_system_distribution_chart}}", health_system_distribution_chart_str)
-
-    health_system_distribution_table_str = generate_health_system_distribution_table(metrics)
-    template_str = template_str.replace("{{health_system_distribution_table}}", health_system_distribution_table_str)
-
-    hospital_distribution_chart_str = f"""<img src="./hospital_distribution.png" width="{image_width}">"""
-    template_str = template_str.replace("{{hospital_affiliation_distribution_chart}}", hospital_distribution_chart_str)
-
-    hospital_distribution_table_str = generate_hospital_affiliation_distribution_table(metrics)
-    template_str = template_str.replace("{{hospital_affiliation_distribution_table}}", hospital_distribution_table_str)
-
-    caregiver_or_stroke_survivor_distribution_chart_str = f"""<img src="./survivor_caregiver_distribution.png" width="{image_width}">"""
-    template_str = template_str.replace("{{caregiver_or_stroke_survivor_distribution_chart}}", caregiver_or_stroke_survivor_distribution_chart_str)
-
-    caregiver_or_stroke_survivor_distribution_table_str = generate_caregiver_or_stroke_survivor_distribution_table(metrics)
-    template_str = template_str.replace("{{caregiver_or_stroke_survivor_distribution_table}}", caregiver_or_stroke_survivor_distribution_table_str)
-    
-    daily_active_users_chart_str = f"""<img src="./daily_active_users.png" width="{image_width}">"""
-    template_str = template_str.replace("{{daily_active_users_chart}}", daily_active_users_chart_str)
-
-    daily_active_users_table_str = generate_daily_active_users_table(metrics)
-    template_str = template_str.replace("{{daily_active_users_table}}", daily_active_users_table_str)
-
-    weekly_active_users_chart_str = f"""<img src="./weekly_active_users.png" width="{image_width}">"""
-    template_str = template_str.replace("{{weekly_active_users_chart}}", weekly_active_users_chart_str)
-
-    weekly_active_users_table_str = generate_weekly_active_users_table(metrics)
-    template_str = template_str.replace("{{weekly_active_users_table}}", weekly_active_users_table_str)
-
-    monthly_active_users_chart_str = f"""<img src="./monthly_active_users.png" width="{image_width}">"""
-    template_str = template_str.replace("{{monthly_active_users_chart}}", monthly_active_users_chart_str)
-
-    monthly_active_users_table_str = generate_monthly_active_users_table(metrics)
-    template_str = template_str.replace("{{monthly_active_users_table}}", monthly_active_users_table_str)
-
-    retention_rate_on_days_chart_str = f"""<img src="./retention_on_specific_days.png" width="{image_width}">"""
-    template_str = template_str.replace("{{retention_rate_On_specific_days_chart}}", retention_rate_on_days_chart_str)
-
-    retention_rate_on_days_table_str = generate_retention_rate_on_days_table(metrics)
-    template_str = template_str.replace("{{retention_rate_On_specific_days_table}}", retention_rate_on_days_table_str)
-
-    retention_rate_on_interval_chart_str = f"""<img src="./retention_in_specific_intervals.png" width="{image_width}">"""
-    template_str = template_str.replace("{{retention_rate_in_specific_intervals_chart}}", retention_rate_on_interval_chart_str)
-
-    retention_rate_on_interval_table_str = generate_retention_rate_on_interval_table(metrics)
-    template_str = template_str.replace("{{retention_rate_in_specific_intervals_table}}", retention_rate_on_interval_table_str)
-
-    login_frequency_chart_str = f"""<img src="./login_frequency.png" width="{image_width}">"""
-    template_str = template_str.replace("{{login_frequency_monthly_chart}}", login_frequency_chart_str)
-
-    login_frequency_table_str = generate_login_frequency_table(metrics)
-    template_str = template_str.replace("{{login_frequency_monthly_table}}", login_frequency_table_str)
-
-    most_commonly_visited_features_table_str = genrate_most_Commonly_Visited_Features(metrics)
-    template_str = template_str.replace("{{most_commonly_used_features_table}}", most_commonly_visited_features_table_str)
-    
-    feature_engagement_table_content_str = generate_engagement_metrics_table_content(metrics)
-    template_str = template_str.replace("{{feature_engagement_table_content}}", feature_engagement_table_content_str)
-    
-    all_features_engagement_str = generate_all_feature_engagement_markdown(metrics.FeatureMetrics)
-    template_str = template_str.replace("{{all_features_data}}", all_features_engagement_str)
-    
-    average_session_length_str = str(int(metrics.GenericMetrics.AverageSessionLengthMinutes))
-    template_str = template_str.replace("{{average_session_length}}", average_session_length_str)
-
-    # Save the report
-    with open(markdown_file_path, "w") as file:
-        file.write(template_str)
-
-    return True
-
 ###############################################################################
 
 def generate_report_details_table(metrics: EngagementMetrics) -> str:
@@ -180,6 +186,9 @@ def generate_registration_deregistration_table(metrics: EngagementMetrics) -> st
     patient_registration_history_df = pd.DataFrame(metrics.BasicStatistics.PatientRegistrationHistory)
     patient_deregistration_history_df = pd.DataFrame(metrics.BasicStatistics.PatientDeregistrationHistory)
     
+    if patient_registration_history_df.empty and patient_deregistration_history_df.empty:
+        return "Registration or deregistration data not available."
+    
     patient_registration_history_df = reindex_dataframe_to_all_missing_dates(
             data_frame=patient_registration_history_df,
             date_col='month',
@@ -207,6 +216,8 @@ def generate_registration_deregistration_table(metrics: EngagementMetrics) -> st
 
 def generate_age_distribution_table(metrics: EngagementMetrics) -> str:
     age_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.AgeGroups)
+    if age_distribution_df.empty:
+        return "Data not available."
     age_distribution_table = add_table_to_markdown(
         data_frame = age_distribution_df, 
         rename_columns = {'age_group': 'Age Group', 'count': 'Count'}
@@ -215,6 +226,8 @@ def generate_age_distribution_table(metrics: EngagementMetrics) -> str:
    
 def generate_gender_distribution_table(metrics: EngagementMetrics) -> str:
     gender_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.GenderGroups)
+    if gender_distribution_df.empty:
+        return "Data not available."
     gender_distribution_table = add_table_to_markdown(
         data_frame = gender_distribution_df,
         rename_columns = {'gender': 'Gender', 'count': 'Count'}
@@ -223,6 +236,8 @@ def generate_gender_distribution_table(metrics: EngagementMetrics) -> str:
 
 def generate_ethnicity_distribution_table(metrics: EngagementMetrics) -> str:
     ethnicity_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.EthnicityGroups)
+    if ethnicity_distribution_df.empty:
+        return "Data not available."
     ethnicity_distribution_df['ethnicity'] = ethnicity_distribution_df['ethnicity'].replace('', 'Unspecified').fillna('Unspecified')
     
     ethnicity_distribution_table = add_table_to_markdown(
@@ -233,6 +248,8 @@ def generate_ethnicity_distribution_table(metrics: EngagementMetrics) -> str:
 
 def generate_race_distribution_table(metrics: EngagementMetrics) -> str:
     race_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.RaceGroups)
+    if race_distribution_df.empty:
+        return "Data not available."
     race_distribution_df['race'] = race_distribution_df['race'].replace('', 'Unspecified').fillna('Unspecified')
     
     race_distribution_table = add_table_to_markdown(
@@ -243,6 +260,9 @@ def generate_race_distribution_table(metrics: EngagementMetrics) -> str:
  
 def generate_health_system_distribution_table(metrics: EngagementMetrics) -> str:
     health_system_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.HealthSystemDistribution)
+    if health_system_distribution_df.empty:
+        return "Data not available."
+    
     health_system_distribution_table = add_table_to_markdown(
         data_frame = health_system_distribution_df,
         rename_columns = {'health_system': 'Health System', 'count': 'Count'}
@@ -251,6 +271,8 @@ def generate_health_system_distribution_table(metrics: EngagementMetrics) -> str
 
 def generate_hospital_affiliation_distribution_table(metrics: EngagementMetrics) -> str:
     hospital_affiliation_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.HospitalDistribution)
+    if hospital_affiliation_distribution_df.empty:
+        return "Data not available."
     hospital_affiliation_distribution_table = add_table_to_markdown(
         data_frame = hospital_affiliation_distribution_df,
         rename_columns = {'hospital': 'Hospital', 'count': 'Count'}
@@ -259,6 +281,8 @@ def generate_hospital_affiliation_distribution_table(metrics: EngagementMetrics)
     
 def generate_caregiver_or_stroke_survivor_distribution_table(metrics: EngagementMetrics) -> str:
     caregiver_or_stroke_survivor_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.SurvivorOrCareGiverDistribution)
+    if caregiver_or_stroke_survivor_distribution_df.empty:
+        return "Data not available."
     caregiver_or_stroke_survivor_distribution_table = add_table_to_markdown(
         data_frame = caregiver_or_stroke_survivor_distribution_df,
         rename_columns = {'caregiver_status': 'Caregiver Status', 'count': 'Count'}
@@ -267,6 +291,8 @@ def generate_caregiver_or_stroke_survivor_distribution_table(metrics: Engagement
 
 def generate_daily_active_users_table(metrics :EngagementMetrics)-> str:
     daily_active_users_df = pd.DataFrame(metrics.GenericMetrics.DailyActiveUsers)
+    if daily_active_users_df.empty:
+        return "Data not available."
     daily_active_users_df_= reindex_dataframe_to_all_missing_dates(
         data_frame = daily_active_users_df, 
         date_col = 'activity_date',
@@ -281,6 +307,8 @@ def generate_daily_active_users_table(metrics :EngagementMetrics)-> str:
 
 def generate_weekly_active_users_table(metrics :EngagementMetrics)-> str:
     weekly_active_users_df = pd.DataFrame(metrics.GenericMetrics.WeeklyActiveUsers)
+    if weekly_active_users_df.empty:
+        return "Data not available."
     weekly_active_users_df_= reindex_dataframe_to_all_missing_dates(
         weekly_active_users_df,
         start_date_col = 'week_start_date',
@@ -296,6 +324,8 @@ def generate_weekly_active_users_table(metrics :EngagementMetrics)-> str:
 
 def generate_monthly_active_users_table(metrics :EngagementMetrics)-> str:
     monthly_active_users_df = pd.DataFrame(metrics.GenericMetrics.MonthlyActiveUsers)
+    if monthly_active_users_df.empty:
+        return "Data not available."
     monthly_active_users_df = reindex_dataframe_to_all_missing_dates(
         data_frame = monthly_active_users_df, 
         date_col = 'activity_month',
@@ -309,6 +339,8 @@ def generate_monthly_active_users_table(metrics :EngagementMetrics)-> str:
 
 def generate_retention_rate_on_days_table(metrics :EngagementMetrics)-> str:
     retention_rate_on_days_df = pd.DataFrame(metrics.GenericMetrics.RetentionRateOnSpecificDays['retention_on_specific_days'])
+    if retention_rate_on_days_df.empty:
+        return "Data not available."
     retention_rate_on_days_table = add_table_to_markdown(
         data_frame = retention_rate_on_days_df,
         rename_columns = {'day':'Day','returning_users':'Returning Users','retention_rate':'Retention Rate'}
@@ -325,13 +357,15 @@ def generate_retention_rate_on_interval_table(metrics :EngagementMetrics)-> str:
 
 def generate_login_frequency_table(metrics :EngagementMetrics)-> str:
     login_frequency_df = pd.DataFrame(metrics.GenericMetrics.LoginFrequency)
+    if login_frequency_df.empty:
+        return "Data not available."
     login_frequency_table = add_table_to_markdown(
         data_frame = login_frequency_df,
         rename_columns = {'month':'Month','login_count':'Login Count'}
     )
     return login_frequency_table
 
-def genrate_most_Commonly_Visited_Features(metrics : EngagementMetrics)-> str:
+def genrate_most_commonly_visited_features(metrics : EngagementMetrics)-> str:
     most_commonly_visited_features_df = pd.DataFrame(metrics.GenericMetrics.MostCommonlyVisitedFeatures)
     # most_commonly_visited_features_table = add_table_to_markdown(
     #     data_frame = most_commonly_visited_features_df,
@@ -359,6 +393,9 @@ def commonly_visited_feature_group_by_month(
 ) -> str:
     if rename_columns:
         data_frame = data_frame.rename(columns=rename_columns)
+        
+    if data_frame.empty:
+        return "Data not available."
 
     grouped_df = data_frame.groupby(group_by_column)
 
@@ -377,3 +414,4 @@ def commonly_visited_feature_group_by_month(
                 
     return markdown_str
 
+##################################################################
