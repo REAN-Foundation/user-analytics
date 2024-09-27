@@ -8,8 +8,6 @@ import seaborn as sns
 import json
 from tabulate import tabulate
 
-from app.database.services.analytics.common import get_current_report_folder_temp_path
-
 ###############################################################################
 
 def save_figure(
@@ -56,28 +54,32 @@ def plot_bar_chart(
     save_figure(fig, file_path)
     
 def plot_pie_chart(
-        data_frame: pd.DataFrame,
-        value_column: str,
-        label_column: str,
-        title: str,
-        color_palette: str,
-        file_path: str
-    ):
+    data_frame: pd.DataFrame,
+    value_column: str,
+    label_column: str,
+    title: str,
+    color_palette: str,
+    file_path: str
+):
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.pie(
         data_frame[value_column],
-        wedgeprops=dict(width=0.5),
-        autopct=lambda p : '{:.1f}%'.format(p) if p > 3 else '',
-        pctdistance=0.7,
-        colors=sns.color_palette(color_palette),
-        labels=None,
-        textprops={'fontsize': 12, 'va': 'center'}
+        wedgeprops    = dict(width=0.5),
+        autopct       = lambda p: '{:.1f}%'.format(p) if p > 3 else '',
+        pctdistance   = 0.7,
+        colors        = sns.color_palette(color_palette),
+        labels        = None,
+        textprops     = {'fontsize': 10, 'va': 'center'}
     )
+    labels = data_frame[label_column].apply(lambda x: x if x else 'unspecified')
+    labels = [label[:15] + '...' if len(label) > 15 else label for label in labels]
     ax.legend(
-        data_frame[label_column],
-        loc='upper right',
-        bbox_to_anchor=(1.2, 1),
-        fontsize=12
+        labels,
+        loc            = 'upper right',
+        bbox_to_anchor = (1.2, 1),
+        fontsize       = 10,
+        handlelength   = 0.5,
+        handletextpad  = 0.2
     )
     ax.set_title(title)
     save_figure(fig, file_path)
@@ -356,8 +358,12 @@ def format_date_column(df : pd.DataFrame, column_name : str) -> pd.DataFrame:
     df[column_name] = df[column_name].apply(format_date)
     return df
 
-def get_image(image_path: str, image_width: int) -> str:
-    if os.path.exists(image_path):
-        return f"""<img src="./{os.path.basename(image_path)}" width="{image_width}">"""
+def get_image(image_name : str, report_folder_path : str) -> str:
+    image_width = 1300
+    image_location_path = os.path.join(report_folder_path, image_name)  
+    if os.path.exists(image_location_path): 
+        image_path = f"""<img src="./{image_name}" width="{image_width}">"""
+        return image_path
     else:
         return "Image data not available"
+
