@@ -2,6 +2,7 @@ from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
+from app.modules.data_sync.data_synchronizer import DataSynchronizer
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
@@ -476,8 +477,7 @@ async def get_users_distribution_by_role(filters: AnalyticsFilters) -> list:
             checks_str = "AND " + checks_str
         query = query.replace("__CHECKS__", checks_str)
         result = connector.execute_read_query(query)
-
-        return result
+        return map_role_id_to_role_name(result)
 
     except Exception as e:
         print(e)
@@ -533,3 +533,11 @@ async def get_active_users_count_at_end_of_every_month(filters: AnalyticsFilters
         print(e)
         return []
     
+def map_role_id_to_role_name(result):
+    if not result:
+        return []
+    for item in result:
+        role_detail = DataSynchronizer._role_type_cache.get(item['RoleId'])
+        role_name = role_detail['RoleName'] if role_detail else 'Unknown'
+        item['RoleName'] = role_name
+    return result

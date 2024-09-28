@@ -60,8 +60,8 @@ def sync_medication_events_(filters: DataSyncSearchFilter):
 def sync_symptom_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting symptom events synchronization...")
-        SymptomEventsSynchronizer.sync_symptom_create_events(filters),
-        SymptomEventsSynchronizer.sync_symptom_update_events(filters),
+        SymptomEventsSynchronizer.sync_symptom_create_events(filters)
+        SymptomEventsSynchronizer.sync_symptom_update_events(filters)
         SymptomEventsSynchronizer.sync_symptom_delete_events(filters)
 
         print("Symptom events synchronization completed.")
@@ -163,9 +163,9 @@ def sync_sleep_events_(filters: DataSyncSearchFilter):
 def sync_nutrition_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting nutrition events synchronization...")
-        NutritionEventsSynchronizer.sync_nutrition_start_events(filters),
-        NutritionEventsSynchronizer.sync_nutrition_update_events(filters),
-        NutritionEventsSynchronizer.sync_nutrition_complete_events(filters),
+        NutritionEventsSynchronizer.sync_nutrition_start_events(filters)
+        NutritionEventsSynchronizer.sync_nutrition_update_events(filters)
+        NutritionEventsSynchronizer.sync_nutrition_complete_events(filters)
         NutritionEventsSynchronizer.sync_nutrition_cancel_events(filters)
         NutritionEventsSynchronizer.sync_water_intake_create_events(filters)
         NutritionEventsSynchronizer.sync_water_intake_update_events(filters)
@@ -187,7 +187,9 @@ def sync_stand_events_(filters: DataSyncSearchFilter):
 def sync_mood_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting mood events synchronization...")
-        MoodEventsSynchronizer.sync_mood_create_events(filters),
+        MoodEventsSynchronizer.sync_mood_create_events(filters)
+        MoodEventsSynchronizer.sync_mood_update_events(filters)
+        MoodEventsSynchronizer.sync_mood_delete_events(filters)
         print("Mood events synchronization completed.")
     except Exception as e:
         print_exception(e)
