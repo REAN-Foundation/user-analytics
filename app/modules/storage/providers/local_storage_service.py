@@ -52,8 +52,12 @@ class LocalStorageService:
     async def upload_file_as_object(self, storage_location: str, content, file_name: str):
         try:
             storage_path = f"{local_storage_path}/{storage_location}"
-            os.makedirs(os.path.dirname(storage_path), exist_ok=True)
+            os.makedirs(os.path.join(storage_path), exist_ok=True)
             destination_path = f"{storage_path}/{file_name}"
+            if isinstance(content, str):
+                content = content.encode('utf-8')
+            if isinstance(content, BytesIO):
+                content = content.getvalue()
             with open(destination_path, 'wb') as f:
                 f.write(content)
             print(f"File uploaded to {destination_path}")
