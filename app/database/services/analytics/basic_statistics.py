@@ -539,5 +539,7 @@ def map_role_id_to_role_name(result):
     for item in result:
         role_detail = DataSynchronizer._role_type_cache.get(item['RoleId'])
         role_name = role_detail['RoleName'] if role_detail else 'Unknown'
-        item['RoleName'] = role_name
+        item['role_name'] = role_name
+        if 'RoleId' in item:
+            del item['RoleId']
     return result
