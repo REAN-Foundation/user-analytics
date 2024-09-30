@@ -107,6 +107,35 @@ def plot_line_chart(
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     save_figure(fig, file_name)
+    
+def plot_area_graph(
+    data_frame:pd.DataFrame,
+    x_column: str,
+    y_column:str,
+    title:str,
+    xlabel:str,
+    ylabel:str,
+    file_path:str,
+    color_palette='Set3',
+    figsize=(10, 6),
+    show_every_nth: int = 5
+):
+    fig, ax = plt.subplots(figsize=figsize)
+    sns.set_palette(color_palette)
+    ax.fill_between(data_frame[x_column], data_frame[y_column], alpha=0.7)
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    plt.ylabel("")
+    ax.xaxis.set_major_locator(plt.MaxNLocator(show_every_nth))
+    ax.grid(True, linestyle='--', alpha=0.2)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.set_ylim(bottom=0)
+    
+    plt.tight_layout()
+    save_figure(fig, file_path)
+
 
 ###############################################################################
 
@@ -185,6 +214,11 @@ def create_chart(
         'values': [sheet_name, start_row + 1, value_col, start_row + df_len, value_col]
     })
     chart.set_title({'name': f'{series_name}'})
+    
+    if chart_type == 'area':
+        chart.set_chartarea({
+        'border': {'color': '#000000', 'width': 0.5, 'dash_type': 'solid'}
+    })
 
     if chart_type != 'pie':
         chart.set_x_axis({

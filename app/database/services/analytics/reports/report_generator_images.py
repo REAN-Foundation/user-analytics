@@ -1,9 +1,9 @@
 
 import os
 from typing import List
-
 import pandas as pd
 from app.database.services.analytics.reports.report_utilities import (
+    plot_area_graph,
     plot_bar_chart,
     plot_pie_chart,
     reindex_dataframe_to_all_dates,
@@ -36,15 +36,17 @@ def generate_basic_statistics_images(
         metrics: BasicAnalyticsStatistics) -> bool:
 
     try:
-        registration_history_df      = pd.DataFrame(metrics.PatientRegistrationHistory)
-        deregistration_history_df    = pd.DataFrame(metrics.PatientDeregistrationHistory)
-        age_groups_df                = pd.DataFrame(metrics.PatientDemographics.AgeGroups)
-        gender_groups_df             = pd.DataFrame(metrics.PatientDemographics.GenderGroups)
-        ethnicity_groups_df          = pd.DataFrame(metrics.PatientDemographics.EthnicityGroups)
-        race_groups_df               = pd.DataFrame(metrics.PatientDemographics.RaceGroups)
-        healthsystem_distribution_df = pd.DataFrame(metrics.PatientDemographics.HealthSystemDistribution)
-        hospital_distribution_df     = pd.DataFrame(metrics.PatientDemographics.HospitalDistribution)
-        caregiver_status_df          = pd.DataFrame(metrics.PatientDemographics.SurvivorOrCareGiverDistribution)
+        registration_history_df             = pd.DataFrame(metrics.PatientRegistrationHistory)
+        deregistration_history_df           = pd.DataFrame(metrics.PatientDeregistrationHistory)
+        age_groups_df                       = pd.DataFrame(metrics.PatientDemographics.AgeGroups)
+        gender_groups_df                    = pd.DataFrame(metrics.PatientDemographics.GenderGroups)
+        ethnicity_groups_df                 = pd.DataFrame(metrics.PatientDemographics.EthnicityGroups)
+        race_groups_df                      = pd.DataFrame(metrics.PatientDemographics.RaceGroups)
+        healthsystem_distribution_df        = pd.DataFrame(metrics.PatientDemographics.HealthSystemDistribution)
+        hospital_distribution_df            = pd.DataFrame(metrics.PatientDemographics.HospitalDistribution)
+        caregiver_status_df                 = pd.DataFrame(metrics.PatientDemographics.SurvivorOrCareGiverDistribution)
+        user_distribution_by_role_df        = pd.DataFrame(metrics.UsersDistributionByRole)
+        active_users_count_at_end_of_month  = pd.DataFrame(metrics.ActiveUsersCountAtEndOfMonth)
 
         if not registration_history_df.empty:
             registration_history_df  = pd.DataFrame(metrics.PatientRegistrationHistory) 
@@ -146,6 +148,26 @@ def generate_basic_statistics_images(
                 color_palette = 'Set1',
                 file_path     = os.path.join(location, 'survivor_caregiver_distribution'))
 
+        if not user_distribution_by_role_df.empty:
+            plot_pie_chart(
+                data_frame    = user_distribution_by_role_df,
+                value_column  = 'registration_count',
+                label_column  = 'role_name',
+                title         = 'User Distribution By Role',
+                color_palette = 'Set2',
+                file_path     = os.path.join(location, 'user_distribution_by_role'))
+        
+        if not active_users_count_at_end_of_month.empty:
+            active_users_count_at_EndOfMonth_= format_date_column(active_users_count_at_end_of_month,'month_end')
+            plot_area_graph(
+                data_frame  = active_users_count_at_EndOfMonth_,
+                x_column    = 'month_end',
+                y_column    = 'active_user_count',
+                title       = 'Active Users Count at End of Month',
+                xlabel      = 'Month',
+                ylabel      = 'Active Users',
+                file_path   = os.path.join(location,'active_users_count_at_end_of_month'))
+            
     except Exception as e:
         print(f"Error generating basic statistics images: {e}")
         return False

@@ -8,9 +8,13 @@
   - [Introduction](#introduction)
   - [Basic Statistics](#basic-statistics)
     - [Overview](#overview)
+    - [User Distribution By Role](#user-distribution-by-role)
+    - [Active Users At End Of Month](#active-users-at-end-of-month)
     - [Demographics](#demographics)
   - [Generic Engagement Metrics](#generic-engagement-metrics)
     - [Daily, Weekly, and Monthly Active Users](#daily-weekly-and-monthly-active-users)
+    - [Most Fired Events](#most-fired-events)
+    - [Most Fired Events By Category](#most-fired-events-by-category)
     - [Retention Rates on specific days](#retention-rates-on-specific-days)
     - [Retention Rates during specific intervals](#retention-rates-during-specific-intervals)
     - [Login Frequency](#login-frequency)
@@ -57,6 +61,22 @@ Trends of how many users registered or deregistered from the system on a given d
 {{registration_history_chart}}
 
 {{deregistration_history_chart}}
+
+---
+
+### User Distribution By Role
+
+{{user_distribution_by_role_chart}}
+
+{{user_distribution_by_role_table}}
+
+---
+
+### Active Users At End Of Month
+
+{{active_users_count_at_end_of_month_chart}}
+
+{{active_users_count_at_end_of_month_table}}
 
 ---
 
@@ -137,6 +157,18 @@ MAU(t) = \sum_{i=1}^{n} \text{Active Users in Month } t
 \]
 
 {{monthly_active_users_chart}}
+
+---
+
+### Most Fired Events
+
+{{most_fired_events_table}}
+
+---
+
+### Most Fired Events By Category
+
+{{most_fired_events_by_category_table}}
 
 ---
 
@@ -271,5 +303,6 @@ These are found by identifying the most common sequences of events that lead to 
 ##### Registration and Deregistration History Table
 
 {{registration_deregistration_table}}
+
 
 
