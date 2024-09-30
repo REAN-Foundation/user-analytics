@@ -192,7 +192,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             start_col      = start_col,
             writer         = writer,
             title          = 'Users Distribution By Role',
-            rename_columns = {'RoleId': 'Role Id', 'registration_count': 'Registration Count', 'RoleName': 'Role Name'}
+            rename_columns = {'registration_count': 'Registration Count', 'role_name': 'Role Name'}
         )
             user_distribution_by_role_chart = create_chart(
             workbook     = writer.book,
@@ -200,9 +200,9 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             series_name  = 'Age Distribution',
             sheet_name   = sheet_name,
             start_row    = start_row,
-            start_col    = start_col,
+            start_col    = start_col + 1,
             df_len       = len(user_distribution_by_role_df_),
-            value_col    = start_col + 1
+            value_col    = start_col
         )
         worksheet.insert_chart(start_row, graph_col, user_distribution_by_role_chart)
         start_row = start_row + len(user_distribution_by_role_df_) + 12

@@ -152,7 +152,7 @@ def generate_basic_statistics_images(
             plot_pie_chart(
                 data_frame    = user_distribution_by_role_df,
                 value_column  = 'registration_count',
-                label_column  = 'RoleName',
+                label_column  = 'role_name',
                 title         = 'User Distribution By Role',
                 color_palette = 'Set2',
                 file_path     = os.path.join(location, 'user_distribution_by_role'))

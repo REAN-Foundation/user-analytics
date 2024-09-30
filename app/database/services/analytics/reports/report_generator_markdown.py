@@ -238,7 +238,7 @@ def generate_user_distribution_by_role_table(metrics: EngagementMetrics)-> str:
         return "Data not available."
     user_distribution_by_role_df_table = add_table_to_markdown(
         data_frame = user_distribution_by_role_df,
-        rename_columns = {'RoleId': 'Role Id', 'registration_count': 'Registration Count', 'RoleName': 'Role Name'}
+        rename_columns = {'registration_count': 'Registration Count', 'role_name': 'Role Name'}
     )
     
     return user_distribution_by_role_df_table
