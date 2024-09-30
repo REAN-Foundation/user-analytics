@@ -192,7 +192,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             start_col      = start_col,
             writer         = writer,
             title          = 'Users Distribution By Role',
-            rename_columns = {'RoleId': 'RoleId', 'registration_count': 'Registration Count'}
+            rename_columns = {'RoleId': 'Role Id', 'registration_count': 'Registration Count', 'RoleName': 'Role Name'}
         )
             user_distribution_by_role_chart = create_chart(
             workbook     = writer.book,

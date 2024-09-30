@@ -135,6 +135,24 @@ async def generate_report_markdown(
         
         average_session_length_str = str(int(metrics.GenericMetrics.AverageSessionLengthMinutes))
         template_str = template_str.replace("{{average_session_length}}", average_session_length_str)
+        
+        user_distribution_by_role_chart_str = get_image("user_distribution_by_role.png", report_folder_path)
+        template_str = template_str.replace("{{user_distribution_by_role_chart}}", user_distribution_by_role_chart_str)
+
+        user_distribution_by_role_table_str = generate_user_distribution_by_role_table(metrics)
+        template_str = template_str.replace("{{user_distribution_by_role_table}}", user_distribution_by_role_table_str)
+
+        active_users_count_at_end_of_month_chart_str = get_image("active_users_count_at_end_of_month.png", report_folder_path)
+        template_str = template_str.replace("{{active_users_count_at_end_of_month_chart}}", active_users_count_at_end_of_month_chart_str)
+
+        active_users_count_at_end_of_month_table_str = generate_active_users_count_at_end_of_month_table(metrics)
+        template_str = template_str.replace("{{active_users_count_at_end_of_month_table}}", active_users_count_at_end_of_month_table_str)
+        
+        most_fired_events_table_str = generate_most_fired_event(metrics)
+        template_str = template_str.replace("{{most_fired_events_table}}", most_fired_events_table_str)
+
+        most_fired_events_by_category_table_str = generate_most_fired_event_by_category(metrics)
+        template_str = template_str.replace("{{most_fired_events_by_category_table}}", most_fired_events_by_category_table_str)
 
         # Save the report
         with open(markdown_file_path, "w") as file:
@@ -213,6 +231,28 @@ def generate_registration_deregistration_table(metrics: EngagementMetrics) -> st
     )
     
     return registration_deregistration_table   
+
+def generate_user_distribution_by_role_table(metrics: EngagementMetrics)-> str:
+    user_distribution_by_role_df = pd.DataFrame(metrics.BasicStatistics.UsersDistributionByRole)
+    if user_distribution_by_role_df.empty:
+        return "Data not available."
+    user_distribution_by_role_df_table = add_table_to_markdown(
+        data_frame = user_distribution_by_role_df,
+        rename_columns = {'RoleId': 'Role Id', 'registration_count': 'Registration Count', 'RoleName': 'Role Name'}
+    )
+    
+    return user_distribution_by_role_df_table
+
+def generate_active_users_count_at_end_of_month_table(metrics:EngagementMetrics)->str:
+    active_users_count_st_end_of_month_df = pd.DataFrame(metrics.BasicStatistics.ActiveUsersCountAtEndOfMonth)
+    if active_users_count_st_end_of_month_df.empty:
+        return "Data not available."
+    active_users_count_st_end_of_month_df_table = add_table_to_markdown(
+        data_frame = active_users_count_st_end_of_month_df,
+        rename_columns= {'month_end':'Month End','active_user_count':'Active User Count'}
+    )
+
+    return active_users_count_st_end_of_month_df_table 
 
 def generate_age_distribution_table(metrics: EngagementMetrics) -> str:
     age_distribution_df = pd.DataFrame(metrics.BasicStatistics.PatientDemographics.AgeGroups)
@@ -413,5 +453,22 @@ def commonly_visited_feature_group_by_month(
                 markdown_str += f"|          | {row_data[feature_column]} | {row_data[value_column]} |\n"
                 
     return markdown_str
+
+def generate_most_fired_event(metrics: EngagementMetrics)->str:
+    most_fired_events_df = pd.DataFrame(metrics.GenericMetrics.MostFiredEvents).nlargest(15, 'event_count')
+    most_fired_events_table = add_table_to_markdown(
+        data_frame = most_fired_events_df,
+        rename_columns = {'EventName':'Event Name','event_count':'Event Count'}
+    )
+    return most_fired_events_table
+
+def generate_most_fired_event_by_category(metrics:EngagementMetrics)->str:
+    most_fired_event_by_category_df = pd.DataFrame(metrics.GenericMetrics.MostFiredEventsByEventCategory).nlargest(15, 'event_count')
+    most_fired_event_by_category_table = add_table_to_markdown(
+        data_frame = most_fired_event_by_category_df,
+        rename_columns = {'EventCategory':'Event Category','EventName':'Event Name','event_count':'Event Count'}
+    )
+
+    return most_fired_event_by_category_table
 
 ##################################################################
