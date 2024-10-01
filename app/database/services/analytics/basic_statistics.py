@@ -506,7 +506,7 @@ async def get_active_users_count_at_end_of_every_month(filters: AnalyticsFilters
                         AND 
                         u2.DeletedAt IS NULL
                         {f'AND u2.RoleId = {role_id}' if role_id else '' }
-                        {f'AND u2.TenantId = {tenant_id}' if tenant_id else '' }
+                        {f'AND u2.TenantId = "{tenant_id}"' if tenant_id else '' }
                         ) AS active_user_count
                 FROM 
                     users as user
