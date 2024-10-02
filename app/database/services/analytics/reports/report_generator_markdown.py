@@ -161,7 +161,7 @@ async def generate_report_markdown(
         return True
 
     except Exception as e:
-        print(f"Error generating report: {str(e)}")
+        print(f"Error generating markdown report: {str(e)}")
         return False
     
 ###############################################################################
@@ -201,29 +201,35 @@ def generate_basic_statistics_overview_table(metrics: EngagementMetrics) -> str:
     return basic_statistics_table
 
 def generate_registration_deregistration_table(metrics: EngagementMetrics) -> str:
-    patient_registration_history_df = pd.DataFrame(metrics.BasicStatistics.PatientRegistrationHistory)
-    patient_deregistration_history_df = pd.DataFrame(metrics.BasicStatistics.PatientDeregistrationHistory)
-    
-    if patient_registration_history_df.empty and patient_deregistration_history_df.empty:
+    if len(metrics.BasicStatistics.PatientRegistrationHistory) == 0 and len(metrics.BasicStatistics.PatientDeregistrationHistory) == 0:
         return "Registration or deregistration data not available."
-    
-    patient_registration_history_df = reindex_dataframe_to_all_missing_dates(
+
+    if len(metrics.BasicStatistics.PatientRegistrationHistory) > 0:
+        patient_registration_history_df = pd.DataFrame(metrics.BasicStatistics.PatientRegistrationHistory)
+        patient_registration_history_df = reindex_dataframe_to_all_missing_dates(
             data_frame=patient_registration_history_df,
             date_col='month',
             fill_col='user_count',
         )
-    patient_deregistration_history_df = reindex_dataframe_to_all_missing_dates(
+    else:
+        patient_registration_history_df = pd.DataFrame(columns=['month', 'user_count'])
+
+    if len(metrics.BasicStatistics.PatientDeregistrationHistory) > 0:
+        patient_deregistration_history_df = pd.DataFrame(metrics.BasicStatistics.PatientDeregistrationHistory)
+        patient_deregistration_history_df = reindex_dataframe_to_all_missing_dates(
             data_frame=patient_deregistration_history_df,
             date_col='month',
             fill_col='user_count',
         )
-
+    else:
+        patient_deregistration_history_df = pd.DataFrame(columns=['month', 'user_count'])
+    
     df_combined = pd.merge(
         patient_registration_history_df[['month', 'user_count']].rename(columns={'user_count': 'registration_count'}),
         patient_deregistration_history_df[['month', 'user_count']].rename(columns={'user_count': 'deregistration_count'}),
         on='month',
         how='outer'
-    ).fillna(0)
+    ).fillna(0).infer_objects(copy=False)
     
     registration_deregistration_table = add_table_to_markdown(
         data_frame = df_combined,
@@ -378,9 +384,9 @@ def generate_monthly_active_users_table(metrics :EngagementMetrics)-> str:
     return monthly_active_users_table
 
 def generate_retention_rate_on_days_table(metrics :EngagementMetrics)-> str:
-    retention_rate_on_days_df = pd.DataFrame(metrics.GenericMetrics.RetentionRateOnSpecificDays['retention_on_specific_days'])
-    if retention_rate_on_days_df.empty:
+    if len(metrics.GenericMetrics.RetentionRateOnSpecificDays['retention_on_specific_days']) == 0:
         return "Data not available."
+    retention_rate_on_days_df = pd.DataFrame(metrics.GenericMetrics.RetentionRateOnSpecificDays['retention_on_specific_days'])
     retention_rate_on_days_table = add_table_to_markdown(
         data_frame = retention_rate_on_days_df,
         rename_columns = {'day':'Day','returning_users':'Returning Users','retention_rate':'Retention Rate'}
@@ -388,6 +394,8 @@ def generate_retention_rate_on_days_table(metrics :EngagementMetrics)-> str:
     return retention_rate_on_days_table
 
 def generate_retention_rate_on_interval_table(metrics :EngagementMetrics)-> str:
+    if len(metrics.GenericMetrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']) == 0:
+        return "Data not available."
     retention_rate_on_interval_df = pd.DataFrame(metrics.GenericMetrics.RetentionRateInSpecificIntervals['retention_in_specific_interval'])
     retention_rate_on_interval_table = add_table_to_markdown(
         data_frame = retention_rate_on_interval_df,
@@ -396,9 +404,9 @@ def generate_retention_rate_on_interval_table(metrics :EngagementMetrics)-> str:
     return retention_rate_on_interval_table
 
 def generate_login_frequency_table(metrics :EngagementMetrics)-> str:
-    login_frequency_df = pd.DataFrame(metrics.GenericMetrics.LoginFrequency)
-    if login_frequency_df.empty:
+    if len(metrics.GenericMetrics.LoginFrequency) == 0:
         return "Data not available."
+    login_frequency_df = pd.DataFrame(metrics.GenericMetrics.LoginFrequency)
     login_frequency_table = add_table_to_markdown(
         data_frame = login_frequency_df,
         rename_columns = {'month':'Month','login_count':'Login Count'}
@@ -406,11 +414,9 @@ def generate_login_frequency_table(metrics :EngagementMetrics)-> str:
     return login_frequency_table
 
 def genrate_most_commonly_visited_features(metrics : EngagementMetrics)-> str:
+    if len(metrics.GenericMetrics.MostCommonlyVisitedFeatures) == 0:
+        return "Data not available."
     most_commonly_visited_features_df = pd.DataFrame(metrics.GenericMetrics.MostCommonlyVisitedFeatures)
-    # most_commonly_visited_features_table = add_table_to_markdown(
-    #     data_frame = most_commonly_visited_features_df,
-    #     rename_columns = {'month':'Month','feature':'Feature','feature_usage_count':'Feature Usage Count'}
-    # )
     most_commonly_visited_features_table = commonly_visited_feature_group_by_month(
         data_frame = most_commonly_visited_features_df,
         group_by_column = 'Month',
@@ -454,8 +460,11 @@ def commonly_visited_feature_group_by_month(
                 
     return markdown_str
 
+
 def generate_most_fired_event(metrics: EngagementMetrics)->str:
-    most_fired_events_df = pd.DataFrame(metrics.GenericMetrics.MostFiredEvents).nlargest(15, 'event_count')
+    if len(metrics.GenericMetrics.MostFiredEvents) == 0 :
+      return "Data not available."  
+    most_fired_events_df = pd.DataFrame(metrics.GenericMetrics.MostFiredEvents).nlargest(15, 'event_count')    
     most_fired_events_table = add_table_to_markdown(
         data_frame = most_fired_events_df,
         rename_columns = {'EventName':'Event Name','event_count':'Event Count'}
@@ -463,6 +472,8 @@ def generate_most_fired_event(metrics: EngagementMetrics)->str:
     return most_fired_events_table
 
 def generate_most_fired_event_by_category(metrics:EngagementMetrics)->str:
+    if len(metrics.GenericMetrics.MostFiredEventsByEventCategory) == 0 :
+      return "Data not available." 
     most_fired_event_by_category_df = pd.DataFrame(metrics.GenericMetrics.MostFiredEventsByEventCategory).nlargest(15, 'event_count')
     most_fired_event_by_category_table = add_table_to_markdown(
         data_frame = most_fired_event_by_category_df,
