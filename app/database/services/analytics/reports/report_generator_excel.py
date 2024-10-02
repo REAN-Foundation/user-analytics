@@ -63,7 +63,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 'Total Active Patients'
             ],
             'Value': [
-                basic_analytics.TenantId,
+                str(basic_analytics.TenantId),
                 basic_analytics.TenantName,
                 basic_analytics.StartDate.strftime('%Y-%m-%d'),
                 basic_analytics.EndDate.strftime('%Y-%m-%d'),
@@ -117,52 +117,58 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
             worksheet.write(row_num + 5, 2, df_stats.at[row_num, 'Value'], value_format)
             worksheet.write(row_num + 5, 3, df_stats.at[row_num, 'Description'], value_format)
 
-        if basic_analytics.PatientRegistrationHistory and basic_analytics.PatientDeregistrationHistory:
+        start_row = len(df_stats) + 10
+        if basic_analytics.PatientRegistrationHistory or basic_analytics.PatientDeregistrationHistory:
             patient_registration_history_df = pd.DataFrame(basic_analytics.PatientRegistrationHistory)
-            paitent_deregistration_history_df = pd.DataFrame(basic_analytics.PatientDeregistrationHistory)
+            patient_deregistration_history_df = pd.DataFrame(basic_analytics.PatientDeregistrationHistory)
 
-            patient_registration_history_df = reindex_dataframe_to_all_missing_dates(
-                data_frame = patient_registration_history_df,
-                date_col = 'month',
-                fill_col = 'user_count',
-            )
-            paitent_deregistration_history_df = reindex_dataframe_to_all_missing_dates(
-                data_frame = paitent_deregistration_history_df,
-                date_col = 'month',
-                fill_col = 'user_count',
-            )
+            if not patient_registration_history_df.empty:
+                patient_registration_history_df = reindex_dataframe_to_all_missing_dates(
+                    data_frame=patient_registration_history_df,
+                    date_col='month',
+                    fill_col='user_count',
+                )
+            else:
+                patient_registration_history_df = pd.DataFrame(columns=['month', 'user_count'])
+
+            if not patient_deregistration_history_df.empty:
+                patient_deregistration_history_df = reindex_dataframe_to_all_missing_dates(
+                    data_frame=patient_deregistration_history_df,
+                    date_col='month',
+                    fill_col='user_count',
+                )
+            else:
+                patient_deregistration_history_df = pd.DataFrame(columns=['month', 'user_count'])
 
             df_combined = pd.merge(
                 patient_registration_history_df[['month', 'user_count']].rename(columns={'user_count': 'registration_count'}),
-                paitent_deregistration_history_df[['month', 'user_count']].rename(columns={'user_count': 'deregistration_count'}),
+                patient_deregistration_history_df[['month', 'user_count']].rename(columns={'user_count': 'deregistration_count'}),
                 on='month',
                 how='outer'
-            ).fillna(0)
-
-            startrow_combined_data = len(df_stats) + 10
+            ).fillna(0).infer_objects(copy=False)
 
             df_combined = write_data_to_excel(
-                data_frame = df_combined,
-                sheet_name = sheet_name,
-                start_row = startrow_combined_data,
-                start_col = start_col,
-                writer = writer,
-                title = 'Patient Registration & Deregistration History',
-                rename_columns = {'month': 'Month', 'registration_count': 'Registration Count', 'deregistration_count': 'Deregistration Count'},
-                description = 'Trends of how many users registered or deregistered from the system on a given day, in a given week or a month.'
+                data_frame=df_combined,
+                sheet_name=sheet_name,
+                start_row=start_row,
+                start_col=start_col,
+                writer=writer,
+                title='Patient Registration & Deregistration History',
+                rename_columns={'month': 'Month', 'registration_count': 'Registration Count', 'deregistration_count': 'Deregistration Count'},
+                description='Trends of how many users registered or deregistered from the system on a given day, in a given week, or a month.'
             )
 
             if not df_combined.empty:
                 reg_dereg_chart = workbook.add_chart({'type': 'column'})
                 reg_dereg_chart.add_series({
                     'name': 'Registration',
-                    'categories': [sheet_name, startrow_combined_data + 3, start_col, startrow_combined_data + len(df_combined), start_col],
-                    'values': [sheet_name, startrow_combined_data + 3, start_col + 1, startrow_combined_data + len(df_combined), start_col + 1],
+                    'categories': [sheet_name, start_row + 3, start_col, start_row + len(df_combined), start_col],
+                    'values': [sheet_name, start_row + 3, start_col + 1, start_row + len(df_combined), start_col + 1],
                 })
                 reg_dereg_chart.add_series({
                     'name': 'Deregistration',
-                    'categories': [sheet_name, startrow_combined_data + 3, start_col, startrow_combined_data + len(df_combined), start_col],
-                    'values': [sheet_name, startrow_combined_data + 3, start_col + 2, startrow_combined_data + len(df_combined), start_col + 2],
+                    'categories': [sheet_name, start_row + 3, start_col, start_row + len(df_combined), start_col],
+                    'values': [sheet_name, start_row + 3, start_col + 2, start_row + len(df_combined), start_col + 2],
                 })
                 reg_dereg_chart.set_x_axis({
                     'major_gridlines': {
@@ -181,7 +187,7 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 worksheet.set_column('D:D', 20,value_format)
                 worksheet.set_column('B:B', 20, value_format)
                 worksheet.set_column('C:C', 20, value_format)
-                start_row = startrow_combined_data + len(patient_registration_history_df) + 10
+                start_row = start_row + len(patient_registration_history_df) + 10
 
         if basic_analytics.UsersDistributionByRole:
             user_distribution_by_role_df  = pd.DataFrame(basic_analytics.UsersDistributionByRole)
@@ -464,7 +470,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
         )
 
         start_row += 6
-        if generic_engagement_metrics.DailyActiveUsers:
+        if len(generic_engagement_metrics.DailyActiveUsers) > 0:
             daily_active_users_df = pd.DataFrame(generic_engagement_metrics.DailyActiveUsers)
             daily_active_users_df = reindex_dataframe_to_all_missing_dates(
                 data_frame = daily_active_users_df,
@@ -495,7 +501,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
                 )
                 worksheet.insert_chart(start_row , col_monthly + 3, daily_active_users_chart)
 
-        if generic_engagement_metrics.WeeklyActiveUsers:
+        if len(generic_engagement_metrics.WeeklyActiveUsers) > 0:
             weekly_active_users_df = pd.DataFrame(generic_engagement_metrics.WeeklyActiveUsers)
             weekly_active_users_df = reindex_dataframe_to_all_missing_dates(weekly_active_users_df, start_date_col='week_start_date', end_date_col='week_end_date', fill_col='weekly_active_users', frequency='weekly')
             weekly_active_users_df_ = write_data_to_excel(
@@ -521,7 +527,7 @@ async def add_active_users_data(generic_engagement_metrics: GenericEngagementMet
             )
             worksheet.insert_chart(start_row + 16, col_monthly + 3, weekly_active_users_chart)
 
-        if generic_engagement_metrics.MonthlyActiveUsers:
+        if len(generic_engagement_metrics.MonthlyActiveUsers) > 0 :
             monthly_active_users_df = pd.DataFrame(generic_engagement_metrics.MonthlyActiveUsers)
             monthly_active_users_reindex = reindex_dataframe_to_all_missing_dates(
                 data_frame = monthly_active_users_df,
@@ -582,7 +588,7 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
         )
 
         start_row = start_row + 4
-        if generic_engagement_metrics.LoginFrequency:
+        if len(generic_engagement_metrics.LoginFrequency) > 0:
             df_login_freq = pd.DataFrame(generic_engagement_metrics.LoginFrequency)
             df_login_freq = write_data_to_excel(
                 data_frame = df_login_freq,
@@ -607,7 +613,7 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 worksheet.insert_chart(current_row + 2, graph_pos, chart_login_freq)
             current_row = current_row + len(df_login_freq) + 6
 
-        if generic_engagement_metrics.RetentionRateOnSpecificDays:
+        if len(generic_engagement_metrics.RetentionRateOnSpecificDays) > 0:
             retention_specific_days = generic_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
             retention_days_df = pd.DataFrame(retention_specific_days)
             retention_days_df_ = write_data_to_excel(
@@ -634,7 +640,7 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
             worksheet.insert_chart(current_row + 2, graph_pos, retention_rate_on_specific_days_chart)
             current_row = current_row + len(retention_days_df_) + 12
 
-        if generic_engagement_metrics.RetentionRateInSpecificIntervals:
+        if len(generic_engagement_metrics.RetentionRateInSpecificIntervals) > 0:
             retention_intervals = generic_engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']
             retention_intervals_df = pd.DataFrame(retention_intervals)
             retention_intervals_df_ = write_data_to_excel(
@@ -661,7 +667,7 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
             worksheet.insert_chart(current_row + 2, graph_pos, retention_intervals_chart)
             current_row = current_row + len(retention_intervals_df) + 12
             
-        if generic_engagement_metrics.MostFiredEvents:
+        if len(generic_engagement_metrics.MostFiredEvents) > 0:
             most_fired_events  = pd.DataFrame(generic_engagement_metrics.MostFiredEvents)
             write_data_to_excel(
                 data_frame = most_fired_events,
@@ -671,11 +677,11 @@ async def add_generic_engagement_data(generic_engagement_metrics: GenericEngagem
                 writer = writer,
                 title = 'Most Fired Events',
                 rename_columns = {'EventName': 'Event Name', 'event_count': 'Event Count'},
-                description = 'particular event fired for particular Time'
+                description = 'Particular event fired for particular time'
             )
             current_row = current_row + len(most_fired_events) + 12
             
-        if generic_engagement_metrics.MostFiredEventsByEventCategory:
+        if len(generic_engagement_metrics.MostFiredEventsByEventCategory) > 0:
             most_fired_events_by_event_category_df  = pd.DataFrame(generic_engagement_metrics.MostFiredEventsByEventCategory)
             write_data_to_excel(
                 data_frame = most_fired_events_by_event_category_df,
@@ -706,7 +712,7 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
         else:
             worksheet = writer.sheets[sheet_name]
 
-        if generic_engagement_metrics.MostCommonlyVisitedFeatures:
+        if len(generic_engagement_metrics.MostCommonlyVisitedFeatures) > 0:
             most_commonly_visited_features_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedFeatures)
             write_grouped_data_to_excel(
                 data_frame = most_commonly_visited_features_df,
@@ -721,7 +727,7 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
                 rename_columns = {'month': 'Month', 'feature': 'Feature', 'feature_usage_count': 'Usage Count'},
                 description = 'The most frequently used features within the platform, indicating user preferences and popular functionalities.'
             )
-        if generic_engagement_metrics.MostCommonlyVisitedScreens:
+        if len(generic_engagement_metrics.MostCommonlyVisitedScreens) > 0:
             most_commonly_visited_screens_df = pd.DataFrame(generic_engagement_metrics.MostCommonlyVisitedScreens)
             write_grouped_data_to_excel(
                 data_frame = most_commonly_visited_screens_df,
@@ -741,6 +747,7 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
         return False
 
     return True
+
 ################################################################################################
 
 async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagementMetrics, writer) -> bool:
@@ -748,12 +755,12 @@ async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagem
         for metrics in feature_engagement_metrics:
             sheet_name = metrics.Feature
             await feature_engagement(
-                feature_feature_engagement_metrics = metrics,
+                feature_engagement_metrics = metrics,
                 writer = writer,
                 sheet_name = sheet_name
             )
     except Exception as e:
-        print(f"Error generating report: {e}")
+        print(f"Error generating feature engagement excel report: {e}")
         return False
     return True
 
