@@ -358,7 +358,7 @@ async def get_tenant_by_id(tenantId: UUID4 | None):
     try: 
         all_tenants = await get_all_tenants()
         for tenant_ in all_tenants:
-            if tenant_['id'] == tenantId:
+            if str(tenant_['id']) == str(tenantId):
                 tenant = tenant_
         return tenant
     except Exception as e:

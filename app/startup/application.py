@@ -1,3 +1,4 @@
+import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -29,7 +30,8 @@ def start():
     server.add_middleware(ClientAuthMiddleware)
     server.include_router(router)
 
-    JobScheduler.start_scheduler()
+    scheduler_thread = threading.Thread(target=JobScheduler.start_scheduler)
+    scheduler_thread.start()
 
     return server
 
