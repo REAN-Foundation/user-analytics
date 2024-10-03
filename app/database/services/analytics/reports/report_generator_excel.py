@@ -189,31 +189,31 @@ async def add_basic_analytics_statistics(basic_analytics: BasicAnalyticsStatisti
                 worksheet.set_column('C:C', 20, value_format)
                 start_row = start_row + len(patient_registration_history_df) + 10
 
-        if basic_analytics.UsersDistributionByRole:
+        if len(basic_analytics.UsersDistributionByRole) > 0:
             user_distribution_by_role_df  = pd.DataFrame(basic_analytics.UsersDistributionByRole)
             user_distribution_by_role_df_ = write_data_to_excel(
-            data_frame     = user_distribution_by_role_df,
-            sheet_name     = sheet_name,
-            start_row      = start_row,
-            start_col      = start_col,
-            writer         = writer,
-            title          = 'Users Distribution By Role',
-            rename_columns = {'registration_count': 'Registration Count', 'role_name': 'Role Name'}
-        )
+                data_frame     = user_distribution_by_role_df,
+                sheet_name     = sheet_name,
+                start_row      = start_row,
+                start_col      = start_col,
+                writer         = writer,
+                title          = 'Users Distribution By Role',
+                rename_columns = {'registration_count': 'Registration Count', 'role_name': 'Role Name'}
+            )
             user_distribution_by_role_chart = create_chart(
-            workbook     = writer.book,
-            chart_type   = 'pie',
-            series_name  = 'Age Distribution',
-            sheet_name   = sheet_name,
-            start_row    = start_row,
-            start_col    = start_col + 1,
-            df_len       = len(user_distribution_by_role_df_),
-            value_col    = start_col
-        )
-        worksheet.insert_chart(start_row, graph_col, user_distribution_by_role_chart)
-        start_row = start_row + len(user_distribution_by_role_df_) + 12
+                workbook     = writer.book,
+                chart_type   = 'pie',
+                series_name  = 'Age Distribution',
+                sheet_name   = sheet_name,
+                start_row    = start_row,
+                start_col    = start_col + 1,
+                df_len       = len(user_distribution_by_role_df_),
+                value_col    = start_col
+            )
+            worksheet.insert_chart(start_row, graph_col, user_distribution_by_role_chart)
+            start_row = start_row + len(user_distribution_by_role_df_) + 12
         
-        if basic_analytics.ActiveUsersCountAtEndOfMonth:
+        if len(basic_analytics.ActiveUsersCountAtEndOfMonth) > 0:
             
             active_users_count_at_end_of_month  = pd.DataFrame(basic_analytics.ActiveUsersCountAtEndOfMonth)
             
