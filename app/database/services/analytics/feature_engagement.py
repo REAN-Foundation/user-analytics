@@ -1,3 +1,4 @@
+from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
@@ -42,7 +43,7 @@ async def get_feature_access_frequency(feature: str, filters: AnalyticsFilters):
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics: feature engagement: get_feature_engagement_rate")
@@ -107,7 +108,7 @@ async def get_feature_engagement_rate(feature: str, filters: AnalyticsFilters):
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics: feature engagement: get_feature_retention_rate_on_specific_days")
@@ -259,42 +260,42 @@ async def get_feature_retention_rate_on_specific_days(feature: str, filters: Ana
                 {
                     "day": 1,
                     "returning_users": row['returning_on_day_1'],
-                    "retention_rate": float(row['retention_1d_rate'])
+                    "retention_rate": float(row['retention_1d_rate']) if row['retention_1d_rate'] != None else 0.0
                 },
                 {
                     "day": 3,
                     "returning_users": row['returning_on_day_3'],
-                    "retention_rate": float(row['retention_3d_rate'])
+                    "retention_rate": float(row['retention_3d_rate']) if row['retention_3d_rate'] != None else 0.0
                 },
                 {
                     "day": 7,
                     "returning_users": row['returning_on_day_7'],
-                    "retention_rate": float(row['retention_7d_rate'])
+                    "retention_rate": float(row['retention_7d_rate']) if row['retention_7d_rate'] != None else 0.0
                 },
                 {
                     "day": 10,
                     "returning_users": row['returning_on_day_10'],
-                    "retention_rate": float(row['retention_10d_rate'])
+                    "retention_rate": float(row['retention_10d_rate']) if row['retention_10d_rate'] != None else 0.0
                 },
                 {
                     "day": 15,
                     "returning_users": row['returning_on_day_15'],
-                    "retention_rate": float(row['retention_15d_rate'])
+                    "retention_rate": float(row['retention_15d_rate']) if row['retention_15d_rate'] != None else 0.0
                 },
                 {
                     "day": 20,
                     "returning_users": row['returning_on_day_20'],
-                    "retention_rate": float(row['retention_20d_rate'])
+                    "retention_rate": float(row['retention_20d_rate']) if row['retention_20d_rate'] != None else 0.0
                 },
                 {
                     "day": 25,
                     "returning_users": row['returning_on_day_25'],
-                    "retention_rate": float(row['retention_25d_rate'])
+                    "retention_rate": float(row['retention_25d_rate']) if row['retention_25d_rate'] != None else 0.0
                 },
                 {
                     "day": 30,
                     "returning_users": row['returning_on_day_30'],
-                    "retention_rate": float(row['retention_30d_rate'])
+                    "retention_rate": float(row['retention_30d_rate']) if row['retention_30d_rate'] != None else 0.0
                 }
             ]
         }
@@ -302,7 +303,7 @@ async def get_feature_retention_rate_on_specific_days(feature: str, filters: Ana
         return result_
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics: feature engagement: get_feature_retention_rate_in_specific_intervals")
@@ -464,42 +465,42 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, filters
                 {
                     "interval": "0d-1d",
                     "returning_users": row['returning_before_day_1'],
-                    "retention_rate": float(row['retention_1d_rate'])
+                    "retention_rate": float(row['retention_1d_rate']) if row['retention_1d_rate'] != None else 0.0
                 },
                 {
                     "interval": "1d-3d",
                     "returning_users": row['returning_between_day_1_and_day_3'],
-                    "retention_rate": float(row['retention_3d_rate'])
+                    "retention_rate": float(row['retention_3d_rate']) if row['retention_3d_rate'] != None else 0.0
                 },
                 {
                     "interval": "3d-7d",
                     "returning_users": row['returning_between_day_3_and_day_7'],
-                    "retention_rate": float(row['retention_7d_rate'])
+                    "retention_rate": float(row['retention_7d_rate']) if row['retention_7d_rate'] != None else 0.0
                 },
                 {
                     "interval": "7d-10d",
                     "returning_users": row['returning_between_day_7_and_day_10'],
-                    "retention_rate": float(row['retention_10d_rate'])
+                    "retention_rate": float(row['retention_10d_rate']) if row['retention_10d_rate'] != None else 0.0
                 },
                 {
                     "interval": "10d-15d",
                     "returning_users": row['returning_between_day_10_and_day_15'],
-                    "retention_rate": float(row['retention_15d_rate'])
+                    "retention_rate": float(row['retention_15d_rate']) if row['retention_15d_rate'] != None else 0.0
                 },
                 {
                     "interval": "15d-20d",
                     "returning_users": row['returning_between_day_15_and_day_20'],
-                    "retention_rate": float(row['retention_20d_rate'])
+                    "retention_rate": float(row['retention_20d_rate']) if row['retention_20d_rate'] != None else 0.0
                 },
                 {
                     "interval": "20d-25d",
                     "returning_users": row['returning_between_day_20_and_day_25'],
-                    "retention_rate": float(row['retention_25d_rate'])
+                    "retention_rate": float(row['retention_25d_rate']) if row['retention_25d_rate'] != None else 0.0
                 },
                 {
                     "interval": "25d-30d",
                     "returning_users": row['returning_between_day_25_and_day_30'],
-                    "retention_rate": float(row['retention_30d_rate'])
+                    "retention_rate": float(row['retention_30d_rate']) if row['retention_30d_rate'] != None else 0.0
                 }
             ]
         }
@@ -507,7 +508,7 @@ async def get_feature_retention_rate_in_specific_intervals(feature: str, filters
         return result_
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 # The first and last events recorded for a user are considered as
@@ -552,7 +553,7 @@ async def get_feature_average_usage_duration_minutes(feature: str, filters: Anal
                         f.feature,                                            -- The feature (EventCategory)
                         TIMESTAMPDIFF(MINUTE, f.first_event_time, f.last_event_time) AS duration_minutes -- Duration in minutes
                     FROM FeatureUsage f
-                    WHERE f.first_event_time IS NOT NULL AND f.last_event_time IS NOT NULL  -- Ensure valid timestamps
+                    WHERE f.first_event_time != NULL AND f.last_event_time != NULL  -- Ensure valid timestamps
                 )
 
                 -- Step 3: Calculate the average usage duration per feature
@@ -577,7 +578,7 @@ async def get_feature_average_usage_duration_minutes(feature: str, filters: Anal
         average_session_length = float(row['avg_duration_minutes'])
         return average_session_length
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics: feature engagement: get_feature_drop_off_points")
@@ -651,5 +652,5 @@ async def get_feature_drop_off_points(feature: str, filters: AnalyticsFilters):
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0

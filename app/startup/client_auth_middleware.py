@@ -8,6 +8,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 class ClientAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        if request.url.path in ["/", "/health-check"]:
+            return await call_next(request)
         api_key = request.headers.get("x-api-key")
         if not api_key:
             return Response("x-api-key header is missing", status_code=400)

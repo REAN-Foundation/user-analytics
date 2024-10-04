@@ -1,6 +1,8 @@
+from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
+from app.modules.data_sync.data_synchronizer import DataSynchronizer
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
@@ -33,7 +35,7 @@ async def get_all_registered_users(filters: AnalyticsFilters) -> int:
         return total_users
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics_basics: get_all_registered_patients")
@@ -65,7 +67,7 @@ async def get_all_registered_patients(filters: AnalyticsFilters) -> int:
         return total_patients
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 
@@ -101,7 +103,7 @@ async def get_current_active_patients(filters: AnalyticsFilters) -> int:
         return active_patients
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return 0
 
 @trace_span("service: analytics_basics: get_patient_registration_history")
@@ -137,7 +139,7 @@ async def get_patient_registration_hisory_by_months(filters: AnalyticsFilters) -
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_deregistration_history")
@@ -173,7 +175,7 @@ async def get_patient_deregistration_history_by_months(filters: AnalyticsFilters
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_age_demographics")
@@ -219,7 +221,7 @@ async def get_patient_age_demographics(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_gender_demographics")
@@ -257,7 +259,7 @@ async def get_patient_gender_demographics(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_ethnicity_demographics")
@@ -293,7 +295,7 @@ async def get_patient_ethnicity_demographics(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_race_demographics")
@@ -330,7 +332,7 @@ async def get_patient_race_demographics(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_healthsystem_distribution")
@@ -367,7 +369,7 @@ async def get_patient_healthsystem_distribution(filters: AnalyticsFilters) -> li
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_hospital_distribution")
@@ -404,7 +406,7 @@ async def get_patient_hospital_distribution(filters: AnalyticsFilters) -> list:
         return result
 
     except Exception as e:
-        print(e)
+        print_exception(e)
         return []
 
 @trace_span("service: analytics_basics: get_patient_survivor_or_caregiver_distribution")
@@ -443,5 +445,101 @@ async def get_patient_survivor_or_caregiver_distribution(filters: AnalyticsFilte
         return result
 
     except Exception as e:
+        print_exception(e)
+        return []
+
+async def get_users_distribution_by_role(filters: AnalyticsFilters) -> list:
+    try:
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+        query = f"""
+                SELECT 
+                    RoleId,
+                    count(*) AS registration_count
+                FROM 
+                    users AS user
+                WHERE
+                    RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                    __CHECKS__
+                GROUP BY 
+                    RoleId
+                ORDER BY
+                    RoleId ASC
+            """
+
+        checks_str = add_common_checks(tenant_id, None)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+        result = connector.execute_read_query(query)
+        return map_role_id_to_role_name(result)
+
+    except Exception as e:
         print(e)
         return []
+
+async def get_active_users_count_at_end_of_every_month(filters: AnalyticsFilters) -> list:
+    try:
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+        query = f"""
+                SELECT 
+                    DATE_FORMAT(LAST_DAY(RegistrationDate), '%Y-%m-%d') AS month_end,
+                    (SELECT 
+                        COUNT(*) 
+                    FROM 
+                        users AS u2 
+                    WHERE 
+                        u2.RegistrationDate <= LAST_DAY(user.RegistrationDate)
+                        AND
+                        RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                        AND 
+                        u2.DeletedAt IS NULL
+                        {f'AND u2.RoleId = {role_id}' if role_id else '' }
+                        {f'AND u2.TenantId = "{tenant_id}"' if tenant_id else '' }
+                        ) AS active_user_count
+                FROM 
+                    users as user
+                WHERE 
+                    RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                    AND
+                    DeletedAt IS NULL
+                    __CHECKS__
+                GROUP BY 
+                    month_end
+                ORDER BY 
+                    month_end
+            """
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+        result = connector.execute_read_query(query)
+
+        return result
+
+    except Exception as e:
+        print(e)
+        return []
+    
+def map_role_id_to_role_name(result):
+    if not result:
+        return []
+    for item in result:
+        role_detail = DataSynchronizer._role_type_cache.get(item['RoleId'])
+        role_name = role_detail['RoleName'] if role_detail else 'Unknown'
+        item['role_name'] = role_name
+        if 'RoleId' in item:
+            del item['RoleId']
+    return result

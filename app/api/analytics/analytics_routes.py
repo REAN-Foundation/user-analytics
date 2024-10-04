@@ -71,15 +71,16 @@ async def calculate_metrics(
         background_tasks: BackgroundTasks,
         filters: AnalyticsFilters):
 
-    analysis_code = await get_analysis_code_()
     base_url = os.getenv("BASE_URL")
     filters_updated = check_filter_params(filters)
 
+    suffix = None
     if filters_updated.TenantId is not None:
         tenant = await get_tenant_by_id(filters_updated.TenantId)
         if tenant is not None:
-            analysis_code = analysis_code + '_' + tenant.TenantCode
-
+            suffix = tenant["TenantCode"]
+    analysis_code = await get_analysis_code_(suffix)
+    
     background_tasks.add_task(calculate_, analysis_code, filters_updated)
 
     res_model = CalculateMetricsResponse(
@@ -119,11 +120,3 @@ async def download_user_engagement_metrics(analysis_code: str, file_format: str)
     return StreamingResponse(stream, media_type="application/octet-stream")
 
 ###############################################################################
-
-# This end point is only for testing the excel report generation code
-# @router.get("/excel-test-report",
-#             status_code=status.HTTP_200_OK)
-# async def get_excel_data():
-#     await generate_report_excel()
-#     message = "Excel sheet created successfully."
-#     return message

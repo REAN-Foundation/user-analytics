@@ -1,6 +1,7 @@
 import datetime as dt
 import json
 import asyncio
+import logging
 from app.database.models.event import Event
 from app.database.models.user import User
 from app.domain_types.miscellaneous.exceptions import NotFound
@@ -23,12 +24,16 @@ async def create_event(model: EventCreateModel):
     return True
 
 async def worker_create_event(create_event_queue: asyncio.Queue, engine: Engine):
-    session_ = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)()
-    while True:
-        model = await create_event_queue.get()
-        if model is None:
-            break
-        add_event_to_db(session_, model)
+    try:
+        session_ = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)()
+        while True:
+            model = await create_event_queue.get()
+            if model is None:
+                break
+            add_event_to_db(session_, model)
+    except Exception as e:
+        logging.error(f"Error in worker_create_event: {e}")
+        # raise
 
 def add_event_to_db(session_, model):
     try:
@@ -57,12 +62,13 @@ def add_event_to_db(session_, model):
         event = db_model
         event.Attributes = json.loads(event.Attributes)
     except Exception as e:
-        session_.rollback()
-        session_.close()
+        if session_ is not None:
+            session_.rollback()
+            session_.close()
         raise e
     finally:
         session_.close()
-
+    
 @trace_span("service: get_event_by_id")
 def get_event_by_id(session: Session, event_id: str) -> EventResponseModel:
     event = session.query(Event).filter(Event.id == event_id).first()

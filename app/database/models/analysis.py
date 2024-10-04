@@ -1,5 +1,6 @@
 import json
 from sqlalchemy import Column, ForeignKey, Enum, Integer, String, DateTime, Text, func, JSON
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from app.common.utils import generate_uuid4
 from app.database.base import Base
 from app.domain_types.enums.types import EventActionType
@@ -17,7 +18,7 @@ class Analysis(Base):
     DateStr    = Column(String(64), default=None, nullable=False)
     StartDate  = Column(DateTime(timezone=True), default=None, nullable=False)
     EndDate    = Column(DateTime(timezone=True), default=None, nullable=False)
-    Data       = Column(Text, default=None, nullable=True)
+    Data       = Column(MEDIUMTEXT, default=None, nullable=True)
     JsonUrl    = Column(String(256), default=None, nullable=True)
     ExcelUrl   = Column(String(256), default=None, nullable=True)
     PdfUrl     = Column(String(256), default=None, nullable=True)
