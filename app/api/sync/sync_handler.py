@@ -122,7 +122,7 @@ def sync_careplan_events_(filters: DataSyncSearchFilter):
         CareplanEventsSynchronizer.sync_careplan_enroll_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_start_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_stop_events(filters)
-        CareplanEventsSynchronizer.sync_careplan_complete_events(filters)
+        # CareplanEventsSynchronizer.sync_careplan_complete_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_task_start_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_task_complete_events(filters)
         CareplanEventsSynchronizer.sync_careplan_stop_events(filters)
