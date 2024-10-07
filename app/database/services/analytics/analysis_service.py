@@ -36,6 +36,7 @@ from app.database.services.analytics.generic_engagement import (
     get_patients_most_commonly_visited_screens,
     get_patients_retention_rate_in_specific_time_interval,
     get_patients_retention_rate_on_specific_days,
+    get_user_engagement_over_last_8_days,
     get_weekly_active_patients,
     get_most_fired_events
 )
@@ -105,8 +106,8 @@ async def calculate(
         saved_analytics = await save_analytics(analysis_code, metrics)
         print(f"Saved analytics -> {analysis_code}")
 
-        await generate_reports(analysis_code, metrics)
-        print(f"Generated reports -> {analysis_code}")
+        # await generate_reports(analysis_code, metrics)
+        # print(f"Generated reports -> {analysis_code}")
 
         return metrics
 
@@ -199,7 +200,8 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
                 get_patients_most_commonly_used_features(filters),
                 get_patients_most_commonly_visited_screens(filters),
                 get_most_fired_events(filters),
-                get_most_fired_events_by_event_category(filters)
+                get_most_fired_events_by_event_category(filters),
+                get_user_engagement_over_last_8_days(filters)
             )
 
         daily_active_users                   = results[0]
@@ -212,8 +214,9 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
         stickiness_ratio                     = results[7]
         most_common_features                 = results[8]
         most_commonly_visited_screens        = results[9]
-        most_fired_events                   = results[10]
-        most_fired_events_by_event_category = results[11]
+        most_fired_events                    = results[10]
+        most_fired_events_by_event_category  = results[11]
+        user_engagement_over_last_8_days     = results[12]
 
         generic_engagement_metrics = GenericEngagementMetrics(
                 TenantId                         = filters.TenantId,
@@ -231,7 +234,8 @@ async def calculate_generic_engagement_metrics(filters: AnalyticsFilters | None 
                 MostCommonlyVisitedFeatures      = most_common_features,
                 MostCommonlyVisitedScreens       = most_commonly_visited_screens,
                 MostFiredEvents                  = most_fired_events,
-                MostFiredEventsByEventCategory   = most_fired_events_by_event_category
+                MostFiredEventsByEventCategory   = most_fired_events_by_event_category,
+                UserEngagementOverLast8Days      = user_engagement_over_last_8_days
             )
 
         return generic_engagement_metrics

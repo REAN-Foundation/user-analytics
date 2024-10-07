@@ -65,6 +65,8 @@ class GenericEngagementMetrics(BaseModel):
       MostCommonlyVisitedScreens      : list|dict|None = Field(description="Most common screens visited by users")
       MostFiredEvents                 : list|dict|None = Field(description="Most frequently fired events")
       MostFiredEventsByEventCategory  : list|dict|None = Field(description="Most frequently fired events by event category")
+      UserEngagementOverLast8Days     : list|dict|None = Field(description="User engagement over last 8 days")
+
 
 class FeatureEngagementMetrics(BaseModel):
     Feature                          : str            = Field(description="Name of the feature")
