@@ -917,3 +917,48 @@ async def get_most_fired_events_by_event_category(filters: AnalyticsFilters) -> 
         print(e)
         return []
         
+async def get_user_engagement_over_last_8_days(filters) -> list:
+    try:
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+
+        query = f"""
+                SELECT 
+                    EventCategory as event_category, 
+                    EventName as event_name, 
+                    COUNT(*) AS event_count
+                FROM 
+                    events e
+                JOIN
+                    users user ON e.UserId = user.id
+                WHERE
+                    e.Timestamp >= NOW() - INTERVAL 8 DAY
+                    AND
+                    e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+                    __CHECKS__
+                GROUP BY 
+                    EventCategory, 
+                    EventName
+                ORDER BY 
+                    EventCategory, 
+                    event_count DESC
+                """
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
+        result = connector.execute_read_query(query)
+
+        return result
+
+    except Exception as e:
+        print(e)
+        return []
+    
