@@ -37,7 +37,7 @@ jobs:
          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
         with:
            tag: ${{ github.event.inputs.Tag_name }}
-           repo: REAN-Foundation/user-analytics-dev
+           repo: REAN-Foundation/user-analytics-dev-uat
            
       - name: Configure AWS credentials
         if: ${{ steps.checkTag.outputs.exists == 'true' }}
@@ -52,7 +52,7 @@ jobs:
         id: imageidvar
         run: |
           image_tag+=${{ steps.result_release.outputs.tag_name }} && image_tag+=_ && image_tag+=${{ steps.result_release.outputs.id }}
-          echo "imagetag_value=$(aws ecr-public describe-image-tags --repository-name user-analytics-dev --region us-east-1 --query "imageTagDetails[?imageTag=='$image_tag'].imageTag" --output text)" >> $GITHUB_OUTPUT
+          echo "imagetag_value=$(aws ecr-public describe-image-tags --repository-name user-analytics-dev-uat --region us-east-1 --query "imageTagDetails[?imageTag=='$image_tag'].imageTag" --output text)" >> $GITHUB_OUTPUT
             
       - name: ECR Image and Github Tag Check
         run: |
@@ -67,7 +67,7 @@ jobs:
 
   Deploy-ECS:
     needs: Github-ECR-Tag-Check
-    environment: aha-prod
+    environment: aha-uat
     runs-on: ubuntu-latest
 
     steps:
@@ -81,7 +81,7 @@ jobs:
          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
         with:
            tag: ${{ github.event.inputs.Tag_name }}
-           repo: REAN-Foundation/user-analytics-prod
+           repo: REAN-Foundation/user-analytics-dev-uat
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -116,7 +116,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: default
-          image: public.ecr.aws/i9y2d4u3/user-analytics-dev:${{ needs.Github-ECR-Tag-Check.outputs.release_name }}_${{ needs.Github-ECR-Tag-Check.outputs.release_id }}
+          image: public.ecr.aws/i9y2d4u3/user-analytics-dev-uat:${{ needs.Github-ECR-Tag-Check.outputs.release_name }}_${{ needs.Github-ECR-Tag-Check.outputs.release_id }}
 
 
 
