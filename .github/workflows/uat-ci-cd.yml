@@ -1,12 +1,23 @@
+# This workflow will trigger pull requests and apply a label based on the
+# paths that are modified in the pull request.
+#
+# To use this workflow, you will need to set up a .github/labeler.yml
+# file with configuration.  For more information, see:
+# https://github.com/actions/labeler
+
 name: UAT-CI-CD
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push events for the release branches, excluding release/aha branches
+  # Triggers the workflow on push events but only for the develop branch
+  
+  # pull_request:
+  #  branches: main
+  
   push:
     branches:
       - 'release/**'
-      - '!release/aha**'
+      - '!release/aha**'   # excludes master
 
 jobs:
   CodeScan-ESLint:
@@ -26,7 +37,7 @@ jobs:
           VALIDATE_TYPESCRIPT_ES: true
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
-
+          
   Label_Checks:
     runs-on: ubuntu-latest
     steps:
@@ -62,11 +73,11 @@ jobs:
         id: vars
         shell: bash
         run: |
-          echo "branch=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\\//-/g')" >> $GITHUB_OUTPUT
+          echo "branch=$(echo ${GITHUB_REF#refs/heads/} | sed "s/\\//-/g")" >> $GITHUB_OUTPUT
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "repo_name=$(echo \"$GITHUB_REPOSITORY\" | awk -F / '{print $2}')" >> $GITHUB_OUTPUT
+          echo "repo_name=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}')" >> $GITHUB_OUTPUT
 
-      - name: Print Variables
+      - name: Another step
         run: |
           echo "Branch: ${{ steps.vars.outputs.branch }}"
           echo "Sha: ${{ steps.vars.outputs.sha_short }}"
@@ -83,18 +94,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ steps.vars.outputs.branch }}-${{ steps.vars.outputs.sha_short }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Copy env file
-        run: aws s3 cp s3://${{ secrets.ENV_FILE_BUCKET_PATH }}/.env ./.env
-
-      - name: Build and push Docker image
+      - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v3
         with:
-          context: ./
+          context: ./ 
           file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
@@ -102,29 +110,42 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      - name: Image Digest
+      - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
 
       - name: Download task definition
         run: |
-          aws ecs describe-task-definition --task-definition ${{ secrets.TASK_DEFINITION_NAME }} \
-          > task-definition.json
+          aws ecs describe-task-definition --task-definition ${{ secrets.TASK_DEFINTION_NAME }} \
+          --query taskDefinition > task-definition.json
 
-      - name: Update ECS task definition
-        run: |
-          sed -i 's|<IMAGE>|${{ steps.login-ecr.outputs.registry }}/user-analytics-dev-uat:${{ steps.vars.outputs.branch }}_${{ steps.vars.outputs.sha_short }}|' task-definition.json
+      - name: New image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: default
+          image: ${{ steps.login-ecr.outputs.registry }}/user-analytics-dev-uat:${{ steps.vars.outputs.branch }}_${{ steps.vars.outputs.sha_short }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: task-definition.json
-          service: ${{ secrets.SERVICE_NAME }}
-          cluster: ${{ secrets.CLUSTER_NAME }}
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
           wait-for-service-stability: true
 
-      - name: Update ECS Service
+      - name: Task Definition Variable
+        id: taskdefintionvar
+        shell: bash
         run: |
-          curl -X POST \
-          -H "Authorization: Bearer ${{ secrets.DUPLOCLOUD_TOKEN }}" \
-          -d '{"TaskDefinition":"${{ steps.docker_build.outputs.digest }}","Name":"${{ secrets.SERVICE_NAME }}","Replicas":1,"HealthCheckGracePeriodSeconds":1200,"DnsPrfx":""}' \
-          'https://reanfoundation.duplocloud.net/subscriptions/${{ secrets.DUPLO_ID }}/UpdateEcsService'
+          echo "task_definition_arn=$(aws ecs describe-task-definition --task-definition ${{ secrets.TASK_DEFINTION_NAME }} | jq '.[] | .taskDefinitionArn')" >> $GITHUB_OUTPUT
+
+      - name: Task Definition ARN
+        run: |
+          echo "Task Definition: ${{ steps.taskdefintionvar.outputs.task_definition_arn }}"
+
+      - name: Deploy Amazon ECS task definition using Duplo API
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: 'https://reanfoundation.duplocloud.net/subscriptions/${{ secrets.DUPLO_ID }}/UpdateEcsService'
+          method: 'POST'
+          data: '{"TaskDefinition":${{ steps.taskdefintionvar.outputs.task_definition_arn }},"Name": "${{ secrets.SERVICE_NAME }}","Replicas":1, "HealthCheckGracePeriodSeconds": 1200, "DnsPrfx": ""}'
+          bearerToken: ${{ secrets.DUPLOCLOUD_TOKEN }}
