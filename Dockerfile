@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.13
 
 # Install dependencies including pandoc
 RUN apt-get update && \
