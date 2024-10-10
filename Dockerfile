@@ -9,6 +9,7 @@ RUN apt-get update && \
     texlive-fonts-recommended \
     texlive-plain-generic \
     texlive-latex-extra \
+    minizip \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
