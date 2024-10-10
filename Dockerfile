@@ -1,4 +1,4 @@
-FROM python:3.12.7-bookworm
+FROM python:3.10
 
 # Install dependencies including pandoc
 RUN apt-get update && \
@@ -9,7 +9,6 @@ RUN apt-get update && \
     texlive-fonts-recommended \
     texlive-plain-generic \
     texlive-latex-extra \
-    zlib1g \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
