@@ -2,6 +2,7 @@ FROM python:3.12.7-bookworm
 
 # Install dependencies including pandoc
 RUN apt-get update && \
+    apt-get upgrade && \
     apt-get install -y --no-install-recommends \
     pandoc \
     libexpat1 \
