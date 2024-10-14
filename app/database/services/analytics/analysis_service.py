@@ -106,8 +106,8 @@ async def calculate(
         saved_analytics = await save_analytics(analysis_code, metrics)
         print(f"Saved analytics -> {analysis_code}")
 
-        # await generate_reports(analysis_code, metrics)
-        # print(f"Generated reports -> {analysis_code}")
+        await generate_reports(analysis_code, metrics)
+        print(f"Generated reports -> {analysis_code}")
 
         return metrics
 
