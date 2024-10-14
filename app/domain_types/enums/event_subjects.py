@@ -20,7 +20,7 @@ class EventSubject(str, Enum):
     MedicationSchedule = "medication-schedule"
     UserTask           = "user-task"
     CareplanEnrollment = "careplan-enrollment"
-
+    CareplanStop = "careplan-stop"
     VitalsCholesterol           = "vitals-cholesterol"
     VitalsPulse                 = "vitals-pulse"
     VitalsBodyTemperature       = "vitals-body-temperature"
@@ -47,7 +47,8 @@ class EventSubject(str, Enum):
     Step       = "step"
     Sleep      = "sleep"
     Stand      = "stand",
-    Nutrition  = "nutrition"
+    Nutrition  = "nutrition",
+    Food       = "food",
     Mood       = "mood"
     Meditation = "meditation"
     Goal       = "goal"

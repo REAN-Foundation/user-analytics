@@ -50,8 +50,8 @@ class MeditationEventsSynchronizer:
     def add_analytics_meditation_start_event(meditation):
         try:
             event_name = EventType.MeditationStart.value
-            event_category = EventCategory.Meditation.value
-            event_subject = EventSubject.Meditation.value
+            event_category = EventCategory.Exercise.value
+            event_subject = EventSubject.Exercise.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -163,8 +163,8 @@ class MeditationEventsSynchronizer:
     def add_analytics_meditation_complete_event(meditation):
         try:
             event_name = EventType.MeditationComplete.value
-            event_category = EventCategory.Meditation.value
-            event_subject = EventSubject.Meditation.value
+            event_category = EventCategory.Exercise.value
+            event_subject = EventSubject.Exercise.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")

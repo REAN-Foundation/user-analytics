@@ -57,7 +57,7 @@ class CareplanEventsSynchronizer:
         try:
             event_name = EventType.CareplanEnrollment.value
             event_category = EventCategory.Careplan.value
-            event_subject = EventSubject.CareplanEnrollment.value
+            event_subject = EventSubject.CareplanEnrollment.value + '-' + careplan_enrollment['PlanCode']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -822,7 +822,7 @@ class CareplanEventsSynchronizer:
     @staticmethod
     def get_reancare_careplan_stop_events(filters: DataSyncSearchFilter):
         try:
-            selection_condition = f"AND careplanEnrollment.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
+            selection_condition = f"AND careplanEnrollment.StoppedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
             rean_db_connector = get_reancare_db_connector()
             query = f"""
             SELECT
@@ -835,6 +835,7 @@ class CareplanEventsSynchronizer:
                 careplanEnrollment.PlanName,
                 careplanEnrollment.StartDate,
                 careplanEnrollment.EndDate,
+                careplanEnrollment.StoppedAt,
                 careplanEnrollment.IsActive,
                 careplanEnrollment.Name,
                 careplanEnrollment.HasHighRisk,
@@ -852,7 +853,7 @@ class CareplanEventsSynchronizer:
             WHERE
                 user.IsTestUser = 0
                 AND
-                careplanEnrollment.DeletedAt IS NOT null;
+                careplanEnrollment.StoppedAt IS NOT null;
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -862,23 +863,23 @@ class CareplanEventsSynchronizer:
             return None
 
     @staticmethod
-    def add_analytics_careplan_stop_event(careplan_task):
+    def add_analytics_careplan_stop_event(careplan_enrollment):
         try:
             event_name = EventType.CareplanStop.value
             event_category = EventCategory.Careplan.value
-            event_subject = EventSubject.CareplanEnrollment.value
+            event_subject = EventSubject.CareplanStop.value + '-' + careplan_enrollment['PlanCode'],
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
             #     return None
             attributes = {
-                'PatientUserId' : careplan_task['UserId'],
-                'Provider'      : careplan_task['Provider'],
-                'PlanName'      : careplan_task['PlanName'],
-                'PlanCode'      : careplan_task['PlanCode'],
-                'StartDate'     : careplan_task['StartedAt'],
-                'EndDate'       : careplan_task['EndDate'],
-                'StoppedAt'     : careplan_task['DeletedAt']
+                'PatientUserId' : careplan_enrollment['UserId'],
+                'Provider'      : careplan_enrollment['Provider'],
+                'PlanName'      : careplan_enrollment['PlanName'],
+                'PlanCode'      : careplan_enrollment['PlanCode'],
+                'StartDate'     : careplan_enrollment['StartedAt'],
+                'EndDate'       : careplan_enrollment['EndDate'],
+                'StoppedAt'     : careplan_enrollment['DeletedAt']
                 # 'UserTaskId': careplan_task['UserTaskId'],
                 # 'ProviderActionId': careplan_task['ProviderActionId'],
                 # 'EnrollmentId': careplan_task['EnrollmentId'],
@@ -902,24 +903,24 @@ class CareplanEventsSynchronizer:
                 # 'UserResponse': careplan_task['UserResponse'],
                 # 'RawContent': careplan_task['RawContent'],
             }
-            careplan_task = {
-                'UserId': careplan_task['UserId'],
-                'TenantId': careplan_task['TenantId'],
+            careplan_enrollment = {
+                'UserId': careplan_enrollment['UserId'],
+                'TenantId': careplan_enrollment['TenantId'],
                 'SessionId': None,
-                'ResourceId': careplan_task['id'],
-                'ResourceType': "careplan-enrollment",
+                'ResourceId': careplan_enrollment['id'],
+                'ResourceType': "careplan-stop",
                 'SourceName': "ReanCare",
                 'SourceVersion': "Unknown",
                 'EventName': event_name,
                 'EventSubject': event_subject,
                 'EventCategory': event_category,
                 'ActionType': "User-Action",
-                'ActionStatement': "User cancel careplan activity.",
+                'ActionStatement': "User stopped careplan.",
                 'Attributes': str(attributes),
-                'Timestamp': careplan_task['CancelledAt'],
-                'UserRegistrationDate': careplan_task['UserRegistrationDate']
+                'Timestamp': careplan_enrollment['CancelledAt'],
+                'UserRegistrationDate': careplan_enrollment['UserRegistrationDate']
             }
-            new_event_added = DataSynchronizer.add_event(careplan_task)
+            new_event_added = DataSynchronizer.add_event(careplan_enrollment)
             if not new_event_added:
                 print(f"Not inserted data.")
                 return None
