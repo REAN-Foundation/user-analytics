@@ -61,7 +61,7 @@ def sync_symptom_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting symptom events synchronization...")
         SymptomEventsSynchronizer.sync_symptom_create_events(filters)
-        SymptomEventsSynchronizer.sync_symptom_update_events(filters)
+        # SymptomEventsSynchronizer.sync_symptom_update_events(filters)
         SymptomEventsSynchronizer.sync_symptom_delete_events(filters)
 
         print("Symptom events synchronization completed.")
@@ -164,11 +164,11 @@ def sync_nutrition_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting nutrition events synchronization...")
         NutritionEventsSynchronizer.sync_nutrition_start_events(filters)
-        NutritionEventsSynchronizer.sync_nutrition_update_events(filters)
+        # NutritionEventsSynchronizer.sync_nutrition_update_events(filters)
         NutritionEventsSynchronizer.sync_nutrition_complete_events(filters)
         NutritionEventsSynchronizer.sync_nutrition_cancel_events(filters)
         NutritionEventsSynchronizer.sync_water_intake_create_events(filters)
-        NutritionEventsSynchronizer.sync_water_intake_update_events(filters)
+        # NutritionEventsSynchronizer.sync_water_intake_update_events(filters)
         NutritionEventsSynchronizer.sync_water_intake_delete_events(filters)
         print("Nutrition events synchronization completed.")
     except Exception as e:
@@ -188,7 +188,7 @@ def sync_mood_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting mood events synchronization...")
         MoodEventsSynchronizer.sync_mood_create_events(filters)
-        MoodEventsSynchronizer.sync_mood_update_events(filters)
+        # MoodEventsSynchronizer.sync_mood_update_events(filters)
         MoodEventsSynchronizer.sync_mood_delete_events(filters)
         print("Mood events synchronization completed.")
     except Exception as e:
@@ -210,7 +210,7 @@ def sync_goal_events_(filters: DataSyncSearchFilter):
         print("Starting goal events synchronization...")
         GoalEventsSynchronizer.sync_goal_create_events(filters),
         GoalEventsSynchronizer.sync_goal_start_events(filters),
-        GoalEventsSynchronizer.sync_goal_update_events(filters),
+        # GoalEventsSynchronizer.sync_goal_update_events(filters),
         GoalEventsSynchronizer.sync_goal_complete_events(filters),
         GoalEventsSynchronizer.sync_goal_cancel_events(filters),
         print("Goal events synchronization completed.")
@@ -222,7 +222,7 @@ def sync_exercise_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting exercise events synchronization...")
         ExerciseEventsSynchronizer.sync_exercise_start_events(filters),
-        ExerciseEventsSynchronizer.sync_exercise_update_events(filters),
+        # ExerciseEventsSynchronizer.sync_exercise_update_events(filters),
         ExerciseEventsSynchronizer.sync_exercise_complete_events(filters),
         ExerciseEventsSynchronizer.sync_exercise_cancel_events(filters),
         print("Exercise events synchronization completed.")
