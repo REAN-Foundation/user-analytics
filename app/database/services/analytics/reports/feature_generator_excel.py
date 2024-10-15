@@ -9,7 +9,7 @@ from app.domain_types.schemas.analytics import FeatureEngagementMetrics
 
 ####################################################################################
 
-async def feature_engagement(feature_feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str):
+async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str):
     try:      
         start_row = 1
         start_col = 1
@@ -35,8 +35,8 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
             workbook = writer.book,
         )
             
-        if feature_feature_engagement_metrics.AccessFrequency:
-            access_frequency_df = pd.DataFrame(feature_feature_engagement_metrics.AccessFrequency) 
+        if len(feature_engagement_metrics.AccessFrequency) > 0:
+            access_frequency_df = pd.DataFrame(feature_engagement_metrics.AccessFrequency) 
             access_frequency_reindex = reindex_dataframe_to_all_missing_dates(
                     data_frame = access_frequency_df,
                     date_col = 'month',
@@ -52,22 +52,20 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                 rename_columns = {'month': 'Month', 'access_frequency': 'Access Frequency'},
                 description = 'The number of times users access a particular feature over time. This metric helps identify the popularity and utility of features among users.'
             )
-            
-            if not access_frequency_reindex.empty:
-                access_frequency_chart = create_chart(
-                    workbook = writer.book, 
-                    chart_type = 'column', 
-                    series_name = 'Access Frequency', 
-                    sheet_name = sheet_name, 
-                    start_row = current_row + 2,
-                    start_col = start_col, 
-                    df_len = len(access_frequency_df_), 
-                    value_col = start_col + 1)
-                worksheet.insert_chart(current_row + 2, graph_pos, access_frequency_chart)
-                current_row = current_row + len(access_frequency_df_) + 6
+            access_frequency_chart = create_chart(
+                workbook = writer.book, 
+                chart_type = 'column', 
+                series_name = 'Access Frequency', 
+                sheet_name = sheet_name, 
+                start_row = current_row + 2,
+                start_col = start_col, 
+                df_len = len(access_frequency_df_), 
+                value_col = start_col + 1)
+            worksheet.insert_chart(current_row + 2, graph_pos, access_frequency_chart)
+            current_row = current_row + len(access_frequency_df_) + 12
                 
-        if feature_feature_engagement_metrics.EngagementRate:
-                engagement_rate_df= pd.DataFrame(feature_feature_engagement_metrics.EngagementRate)
+        if len(feature_engagement_metrics.EngagementRate) > 0:
+                engagement_rate_df= pd.DataFrame(feature_engagement_metrics.EngagementRate)
                 engagement_rate_df['engagement_rate'] = pd.to_numeric(engagement_rate_df['engagement_rate'], errors='coerce')
                 engagement_rate_df_ = reindex_dataframe_to_all_missing_dates(
                     data_frame = engagement_rate_df,
@@ -96,10 +94,10 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
                         value_col = start_col + 2
                     )
                     worksheet.insert_chart(current_row + 2, graph_pos, engagement_rate_chart)
-                    current_row = current_row + len(engagement_rate_df) + 6
+                    current_row = current_row + len(engagement_rate_df) + 12
 
-        if feature_feature_engagement_metrics.RetentionRateOnSpecificDays:
-            retention_specific_days = feature_feature_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
+        if len(feature_engagement_metrics.RetentionRateOnSpecificDays) > 0:
+            retention_specific_days = feature_engagement_metrics.RetentionRateOnSpecificDays['retention_on_specific_days']
             retention_days_df= pd.DataFrame(retention_specific_days)
             retention_days_df_ = write_data_to_excel(
                 data_frame = retention_days_df,
@@ -125,8 +123,8 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
             worksheet.insert_chart(current_row + 2, graph_pos, retention_days_chart)
             current_row = current_row + len(retention_days_df_) + 12
 
-        if feature_feature_engagement_metrics.RetentionRateInSpecificIntervals:
-            retention_intervals = feature_feature_engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']
+        if len(feature_engagement_metrics.RetentionRateInSpecificIntervals) > 0:
+            retention_intervals = feature_engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']
             retention_intervals_df = pd.DataFrame(retention_intervals)
 
             retention_intervals_df_ = write_data_to_excel(
@@ -153,8 +151,8 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
             worksheet.insert_chart(current_row + 2, graph_pos, retention_intervals_chart)
             current_row = current_row + len(retention_intervals_df_) + 12
 
-        if feature_feature_engagement_metrics.DropOffPoints:
-            drop_off_points_df = pd.DataFrame(feature_feature_engagement_metrics.DropOffPoints)
+        if feature_engagement_metrics.DropOffPoints:
+            drop_off_points_df = pd.DataFrame(feature_engagement_metrics.DropOffPoints)
             drop_off_points_df['dropoff_rate'] = pd.to_numeric(drop_off_points_df['dropoff_rate'], errors='coerce')
             drop_off_points_df['dropoff_count'] = pd.to_numeric(drop_off_points_df['dropoff_count'], errors='coerce')
             drop_off_points_df_ = write_data_to_excel(
@@ -179,7 +177,7 @@ async def feature_engagement(feature_feature_engagement_metrics: FeatureEngageme
             # )
             # worksheet.insert_chart(current_row + 2, graph_pos, drop_off_points_chart)
     except Exception as e:
-        print(f"Error generating report: {e}")
+        print(f"Error generating feature engagement excel report: {e}")
         return ""
     
   ##################################################################################

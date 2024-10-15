@@ -1,0 +1,16 @@
+meta {
+  name: Download excel report
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{BASE_URL}}/analytics/download/2024-09-22-3/formats/excel
+  body: none
+  auth: none
+}
+
+headers {
+  content-type: application/json
+  x-api-key: {{API_KEY}}
+}

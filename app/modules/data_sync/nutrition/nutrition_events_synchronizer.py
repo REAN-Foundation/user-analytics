@@ -59,7 +59,7 @@ class NutritionEventsSynchronizer:
         try:
             event_name = EventType.NutritionStart.value
             event_category = EventCategory.Nutrition.value
-            event_subject = EventSubject.Nutrition.value
+            event_subject = EventSubject.Food.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -189,7 +189,7 @@ class NutritionEventsSynchronizer:
         try:
             event_name = EventType.NutritionUpdate.value
             event_category = EventCategory.Nutrition.value
-            event_subject = EventSubject.Nutrition.value
+            event_subject = EventSubject.Food.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -446,7 +446,7 @@ class NutritionEventsSynchronizer:
         try:
             event_name = EventType.NutritionCancel.value
             event_category = EventCategory.Nutrition.value
-            event_subject = EventSubject.Nutrition.value
+            event_subject = EventSubject.Food.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -781,7 +781,7 @@ class NutritionEventsSynchronizer:
         try:
             event_name = EventType.WaterIntakeDelete.value
             event_category = EventCategory.WaterIntake.value
-            event_subject = EventSubject.WaterIntake.value
+            event_subject = EventSubject.Water.value
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")

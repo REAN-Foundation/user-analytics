@@ -1,3 +1,4 @@
+from app.common.utils import print_exception
 from app.domain_types.schemas.data_sync import DataSyncSearchFilter
 from app.modules.data_sync.assessments.assessment_events_synchronizer import AssessmentEventsSynchronizer
 from app.modules.data_sync.careplans.careplan_events_synchronizer import CareplanEventsSynchronizer
@@ -36,14 +37,14 @@ def sync_users_():
         # So such users are not synched.
         DataSynchronizer.sync_users()
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_user_login_session_events")
 def sync_user_login_session_events_():
     try:
         LoginEventsSynchronizer.sync_user_login_events()
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_medication_events")
 def sync_medication_events_(filters: DataSyncSearchFilter):
@@ -53,19 +54,19 @@ def sync_medication_events_(filters: DataSyncSearchFilter):
         MedicationEventsSynchronizer.sync_medication_schedule_taken_events(filters)
         MedicationEventsSynchronizer.sync_medication_schedule_missed_events(filters)
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_symptom_events")
 def sync_symptom_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting symptom events synchronization...")
-        SymptomEventsSynchronizer.sync_symptom_create_events(filters),
-        SymptomEventsSynchronizer.sync_symptom_update_events(filters),
+        SymptomEventsSynchronizer.sync_symptom_create_events(filters)
+        # SymptomEventsSynchronizer.sync_symptom_update_events(filters)
         SymptomEventsSynchronizer.sync_symptom_delete_events(filters)
 
         print("Symptom events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_lab_record_events")
 def sync_lab_record_events_(filters: DataSyncSearchFilter):
@@ -75,7 +76,7 @@ def sync_lab_record_events_(filters: DataSyncSearchFilter):
         LabRecordEventsSynchronizer.sync_lab_record_delete_events(filters)
         print("Lab record events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_biometric_events")
 def sync_biometric_events_(filters: DataSyncSearchFilter):
@@ -99,7 +100,7 @@ def sync_biometric_events_(filters: DataSyncSearchFilter):
         CholesterolEventsSynchronizer.sync_cholesterol_delete_events(filters)
         print("Biometric events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_assessment_events")
 def sync_assessment_events_(filters: DataSyncSearchFilter):
@@ -112,7 +113,7 @@ def sync_assessment_events_(filters: DataSyncSearchFilter):
         AssessmentEventsSynchronizer.sync_assessment_question_answered_events(filters)
         print("Assessment events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_careplan_events")
 def sync_careplan_events_(filters: DataSyncSearchFilter):
@@ -121,13 +122,13 @@ def sync_careplan_events_(filters: DataSyncSearchFilter):
         CareplanEventsSynchronizer.sync_careplan_enroll_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_start_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_stop_events(filters)
-        CareplanEventsSynchronizer.sync_careplan_complete_events(filters)
+        # CareplanEventsSynchronizer.sync_careplan_complete_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_task_start_events(filters)
         # CareplanEventsSynchronizer.sync_careplan_task_complete_events(filters)
         CareplanEventsSynchronizer.sync_careplan_stop_events(filters)
         print("Careplan events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_user_task_events")
 def sync_user_task_events_(filters: DataSyncSearchFilter):
@@ -138,7 +139,7 @@ def sync_user_task_events_(filters: DataSyncSearchFilter):
         UserTaskEventsSynchronizer.sync_user_task_cancel_events(filters)
         print("User task events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_step_events")
 def sync_step_events_(filters: DataSyncSearchFilter):
@@ -147,7 +148,7 @@ def sync_step_events_(filters: DataSyncSearchFilter):
         StepEventsSynchronizer.sync_step_create_events(filters),
         print("Step events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_sleep_events")
 def sync_sleep_events_(filters: DataSyncSearchFilter):
@@ -156,22 +157,22 @@ def sync_sleep_events_(filters: DataSyncSearchFilter):
         SleepEventsSynchronizer.sync_sleep_create_events(filters),
         print("Step events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_nutrition_events")
 def sync_nutrition_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting nutrition events synchronization...")
-        NutritionEventsSynchronizer.sync_nutrition_start_events(filters),
-        NutritionEventsSynchronizer.sync_nutrition_update_events(filters),
-        NutritionEventsSynchronizer.sync_nutrition_complete_events(filters),
+        NutritionEventsSynchronizer.sync_nutrition_start_events(filters)
+        # NutritionEventsSynchronizer.sync_nutrition_update_events(filters)
+        NutritionEventsSynchronizer.sync_nutrition_complete_events(filters)
         NutritionEventsSynchronizer.sync_nutrition_cancel_events(filters)
         NutritionEventsSynchronizer.sync_water_intake_create_events(filters)
-        NutritionEventsSynchronizer.sync_water_intake_update_events(filters)
+        # NutritionEventsSynchronizer.sync_water_intake_update_events(filters)
         NutritionEventsSynchronizer.sync_water_intake_delete_events(filters)
         print("Nutrition events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_stand_events")
 def sync_stand_events_(filters: DataSyncSearchFilter):
@@ -180,16 +181,18 @@ def sync_stand_events_(filters: DataSyncSearchFilter):
         StandEventsSynchronizer.sync_stand_create_events(filters),
         print("Stand events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_mood_events")
 def sync_mood_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting mood events synchronization...")
-        MoodEventsSynchronizer.sync_mood_create_events(filters),
+        MoodEventsSynchronizer.sync_mood_create_events(filters)
+        # MoodEventsSynchronizer.sync_mood_update_events(filters)
+        MoodEventsSynchronizer.sync_mood_delete_events(filters)
         print("Mood events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_meditation_events")
 def sync_meditation_events_(filters: DataSyncSearchFilter):
@@ -199,7 +202,7 @@ def sync_meditation_events_(filters: DataSyncSearchFilter):
         MeditationEventsSynchronizer.sync_meditation_complete_events(filters),
         print("Meditation events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_goal_events")
 def sync_goal_events_(filters: DataSyncSearchFilter):
@@ -207,21 +210,21 @@ def sync_goal_events_(filters: DataSyncSearchFilter):
         print("Starting goal events synchronization...")
         GoalEventsSynchronizer.sync_goal_create_events(filters),
         GoalEventsSynchronizer.sync_goal_start_events(filters),
-        GoalEventsSynchronizer.sync_goal_update_events(filters),
+        # GoalEventsSynchronizer.sync_goal_update_events(filters),
         GoalEventsSynchronizer.sync_goal_complete_events(filters),
         GoalEventsSynchronizer.sync_goal_cancel_events(filters),
         print("Goal events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)
 
 @trace_span("handler: sync_exercise_events")
 def sync_exercise_events_(filters: DataSyncSearchFilter):
     try:
         print("Starting exercise events synchronization...")
         ExerciseEventsSynchronizer.sync_exercise_start_events(filters),
-        ExerciseEventsSynchronizer.sync_exercise_update_events(filters),
+        # ExerciseEventsSynchronizer.sync_exercise_update_events(filters),
         ExerciseEventsSynchronizer.sync_exercise_complete_events(filters),
         ExerciseEventsSynchronizer.sync_exercise_cancel_events(filters),
         print("Exercise events synchronization completed.")
     except Exception as e:
-        print(e)
+        print_exception(e)

@@ -1,3 +1,4 @@
+import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,6 +6,7 @@ from app.domain_types.miscellaneous.exceptions import add_exception_handlers
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
 from app.startup.client_auth_middleware import ClientAuthMiddleware
 from app.startup.router import router
+from app.startup.scheduler.job_scheduler import JobScheduler
 
 #################################################################
 
@@ -27,6 +29,9 @@ def start():
 
     server.add_middleware(ClientAuthMiddleware)
     server.include_router(router)
+
+    scheduler_thread = threading.Thread(target=JobScheduler.start_scheduler)
+    scheduler_thread.start()
 
     return server
 
