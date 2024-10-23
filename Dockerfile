@@ -20,6 +20,11 @@ RUN pip install setuptools wheel
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
-EXPOSE 3000
+
+# Make sure entrypoint.sh is executable
 RUN chmod +x /app/entrypoint.sh
-ENTRYPOINT ["/bin/bash", "-c", "/app/entrypoint.sh"]
+
+EXPOSE 3000
+
+# Set the entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
