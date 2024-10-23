@@ -171,7 +171,7 @@ class LoginEventsSynchronizer:
                 'ActionType': "user-action",
                 'ActionStatement': "Otp generated.",
                 'Attributes': str(attributes),
-                'Timestamp': otp['ValidFrom'],
+                'Timestamp': otp['CreatedAt'],
                 'UserRegistrationDate': otp['UserRegistrationDate']
             }
             new_event_added = DataSynchronizer.add_event(otp)
