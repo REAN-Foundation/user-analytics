@@ -1,7 +1,7 @@
 FROM python:3.10
 ADD . /app
 
-# Install dependencies including pandoc
+# Install dependencies including pandoc and AWS CLI
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     pandoc \
@@ -10,6 +10,10 @@ RUN apt-get update && \
     texlive-fonts-recommended \
     texlive-plain-generic \
     texlive-latex-extra \
+    python3 \
+    python3-pip \
+    && pip3 install --upgrade pip \
+    && pip3 install awscli \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
