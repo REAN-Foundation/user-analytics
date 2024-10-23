@@ -1,4 +1,5 @@
 FROM python:3.10
+ADD . /app
 
 # Install dependencies including pandoc
 RUN apt-get update && \
@@ -17,9 +18,7 @@ RUN python -m venv venv
 RUN . venv/bin/activate
 RUN pip install --upgrade pip
 RUN pip install setuptools wheel
-COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
-COPY . /app
 
 # Make sure entrypoint.sh is executable
 RUN chmod +x /app/entrypoint.sh
