@@ -21,4 +21,5 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
 EXPOSE 3000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]
+RUN chmod +x /app/entrypoint.sh
+ENTRYPOINT ["/bin/bash", "-c", "/app/entrypoint.sh"]
