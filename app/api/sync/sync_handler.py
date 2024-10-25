@@ -65,6 +65,8 @@ def sync_medication_events_(filters: DataSyncSearchFilter):
         MedicationEventsSynchronizer.sync_medication_delete_events(filters)
         MedicationEventsSynchronizer.sync_medication_schedule_taken_events(filters)
         MedicationEventsSynchronizer.sync_medication_schedule_missed_events(filters)
+        # MedicationEventsSynchronizer.sync_medication_consumption_create_events(filters)
+        # MedicationEventsSynchronizer.sync_medication_consumption_delete_events(filters)
     except Exception as e:
         print_exception(e)
 

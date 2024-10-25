@@ -499,4 +499,255 @@ class MedicationEventsSynchronizer:
         except Exception as error:
             print(f"Error syncing User Medication Schedule Missed Events: {error}")
 
+    #region Medication Consumption Create events
+
+    @staticmethod
+    def get_reancare_medication_consumption_create_events(filters: DataSyncSearchFilter):
+        try:
+            selection_condition = f"AND medication_consumption.CreatedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
+            rean_db_connector = get_reancare_db_connector()
+            query = f"""
+            SELECT
+                medication_consumption.id,
+                medication_consumption.EhrId,
+                medication_consumption.PatientUserId,
+                medication_consumption.MedicationId,
+                medication_consumption.DrugName,
+                medication_consumption.DrugId,
+                medication_consumption.Dose,
+                medication_consumption.Details,
+                medication_consumption.TimeScheduleStart,
+                medication_consumption.TimeScheduleEnd,
+                medication_consumption.TakenAt,
+                medication_consumption.IsTaken,
+                medication_consumption.IsMissed,
+                medication_consumption.IsCancelled,
+                medication_consumption.CancelledOn,
+                medication_consumption.Note,
+                medication_consumption.CreatedAt,
+                medication_consumption.UpdatedAt,
+                medication_consumption.DeletedAt,
+                user.id as UserId,
+                user.TenantId,
+                user.CreatedAt as UserRegistrationDate
+            FROM medication_consumptions as medication_consumption
+            JOIN users user on medication_consumption.PatientUserId = user.id
+            WHERE 
+                user.IsTestUser = 0
+                {selection_condition}
+            """
+            rows = rean_db_connector.execute_read_query(query)
+            return rows
+        except Exception as error:
+            print("Error retrieving User Medication Consumption Create Events:", error)
+            return None
+
+    @staticmethod
+    def add_analytics_medication_consumption_create_event(medication):
+        try:
+            event_name = EventType.MedicationConsumptionCreate.value
+            event_category = EventCategory.Medication.value
+            event_subject = f"{medication['DrugName']}"
+
+            # user = DataSynchronizer.get_user(medication['UserId'])
+            # if not user:
+            #     print(f"User not found for the event: {medication}")
+            #     return None
+
+            attributes = {
+                'DrugName': medication['DrugName'],
+                'DrugId': medication['DrugId'],
+                'Dose': medication['Dose'],
+                'Details': medication['Details'],
+                'TimeScheduleStart': medication['TimeScheduleStart'],
+                'TimeScheduleEnd': medication['TimeScheduleEnd'],
+                'TakenAt': medication['TakenAt'],
+                'IsTaken': medication['IsTaken'],
+                'IsMissed': medication['IsMissed'],
+                'IsCancelled': medication['IsCancelled'],
+                'CancelledOn': medication['CancelledOn'],
+                'Note': medication['Note']
+            }
+            medication = {
+                'UserId': medication['UserId'],
+                'TenantId': medication['TenantId'],
+                'SessionId': None,
+                'ResourceId': medication['id'],
+                'ResourceType': "medication",
+                'SourceName': "ReanCare",
+                'SourceVersion': "Unknown",
+                'EventName': event_name,
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
+                'ActionType': "user-action",
+                'ActionStatement': "medication-consumption record is created.",
+                'Attributes': str(attributes),
+                'Timestamp': medication['CreatedAt'],
+                'UserRegistrationDate': medication['UserRegistrationDate']
+            }
+            new_event_added = DataSynchronizer.add_event(medication)
+            if not new_event_added:
+                print(f"Not inserted data.")
+                return None
+            else:
+                # print(f"Inserted row into the user_medication_create_events table.")
+                return new_event_added
+        except mysql.connector.Error as error:
+            print(f"Failed to insert records: {error}")
+            return None
+
+    @staticmethod
+    def sync_medication_consumption_create_events(filters: DataSyncSearchFilter):
+        try:
+            existing_event_count = 0
+            synched_event_count = 0
+            event_not_synched = []
+            meds = MedicationEventsSynchronizer.get_reancare_medication_consumption_create_events(filters)
+            if meds:
+                for med in meds:
+                    existing_event = DataSynchronizer.get_existing_event(
+                        med['UserId'], med['id'], EventType.MedicationConsumptionCreate)
+                    if existing_event is not None:
+                        existing_event_count += 1
+                    else:
+                        new_event = MedicationEventsSynchronizer.add_analytics_medication_consumption_create_event(med)
+                        if new_event:
+                            synched_event_count += 1
+                        else:
+                            event_not_synched.append(med)
+                print(f"Existing Event Count: {existing_event_count}")
+                print(f"Synched Event Count: {synched_event_count}")
+                print(f"Event Not Synched: {event_not_synched}")
+            else:
+                print(f"No User Medication Consumption Create Events found.")
+        except Exception as error:
+            print(f"Error syncing User Medication Consumption Create Events: {error}")
+
+    #endregion
+
+#region Medication Consumption Delete events
+
+    @staticmethod
+    def get_reancare_medication_consumption_delete_events(filters: DataSyncSearchFilter):
+        try:
+            selection_condition = f"AND medication_consumption.DeletedAt between '{filters.StartDate}' AND '{filters.EndDate}'" if filters is not None else ''
+            rean_db_connector = get_reancare_db_connector()
+            query = f"""
+            SELECT
+                medication_consumption.id,
+                medication_consumption.EhrId,
+                medication_consumption.PatientUserId,
+                medication_consumption.MedicationId,
+                medication_consumption.DrugName,
+                medication_consumption.DrugId,
+                medication_consumption.Dose,
+                medication_consumption.Details,
+                medication_consumption.TimeScheduleStart,
+                medication_consumption.TimeScheduleEnd,
+                medication_consumption.TakenAt,
+                medication_consumption.IsTaken,
+                medication_consumption.IsMissed,
+                medication_consumption.IsCancelled,
+                medication_consumption.CancelledOn,
+                medication_consumption.Note,
+                medication_consumption.CreatedAt,
+                medication_consumption.UpdatedAt,
+                medication_consumption.DeletedAt,
+                user.id as UserId,
+                user.TenantId,
+                user.CreatedAt as UserRegistrationDate
+            FROM medication_consumptions as medication_consumption
+            JOIN users user on medication_consumption.PatientUserId = user.id
+            WHERE 
+                user.IsTestUser = 0
+                AND
+                medication_consumption.DeletedAt is not null
+                {selection_condition}
+            """
+            rows = rean_db_connector.execute_read_query(query)
+            return rows
+        except Exception as error:
+            print("Error retrieving User Medication Consumption Delete Events:", error)
+            return None
+
+    @staticmethod
+    def add_analytics_medication_consumption_delete_event(medication):
+        try:
+            event_name = EventType.MedicationConsumptionDelete.value
+            event_category = EventCategory.Medication.value
+            event_subject = f"{medication['DrugName']}"
+
+            # user = DataSynchronizer.get_user(medication['UserId'])
+            # if not user:
+            #     print(f"User not found for the event: {medication}")
+            #     return None
+
+            attributes = {
+                'DrugName': medication['DrugName'],
+                'DrugId': medication['DrugId'],
+                'Dose': medication['Dose'],
+                'Details': medication['Details'],
+                'TimeScheduleStart': medication['TimeScheduleStart'],
+                'TimeScheduleEnd': medication['TimeScheduleEnd'],
+                'TakenAt': medication['TakenAt'],
+                'IsTaken': medication['IsTaken'],
+                'IsMissed': medication['IsMissed'],
+                'IsCancelled': medication['IsCancelled'],
+                'CancelledOn': medication['CancelledOn'],
+                'Note': medication['Note']
+            }
+            medication = {
+                'UserId': medication['UserId'],
+                'TenantId': medication['TenantId'],
+                'SessionId': None,
+                'ResourceId': medication['id'],
+                'ResourceType': "medication",
+                'SourceName': "ReanCare",
+                'SourceVersion': "Unknown",
+                'EventName': event_name,
+                'EventSubject': event_subject,
+                'EventCategory': event_category,
+                'ActionType': "user-action",
+                'ActionStatement': "medication-consumption record is deleted.",
+                'Attributes': str(attributes),
+                'Timestamp': medication['DeletedAt'],
+                'UserRegistrationDate': medication['UserRegistrationDate']
+            }
+            new_event_added = DataSynchronizer.add_event(medication)
+            if not new_event_added:
+                print(f"Not inserted data.")
+                return None
+            else:
+                return new_event_added
+        except mysql.connector.Error as error:
+            print(f"Failed to insert records: {error}")
+            return None
+
+    @staticmethod
+    def sync_medication_consumption_delete_events(filters: DataSyncSearchFilter):
+        try:
+            existing_event_count = 0
+            synched_event_count = 0
+            event_not_synched = []
+            meds = MedicationEventsSynchronizer.get_reancare_medication_consumption_delete_events(filters)
+            if meds:
+                for med in meds:
+                    existing_event = DataSynchronizer.get_existing_event(
+                        med['UserId'], med['id'], EventType.MedicationConsumptionDelete)
+                    if existing_event is not None:
+                        existing_event_count += 1
+                    else:
+                        new_event = MedicationEventsSynchronizer.add_analytics_medication_consumption_delete_event(med)
+                        if new_event:
+                            synched_event_count += 1
+                        else:
+                            event_not_synched.append(med)
+                print(f"Existing Event Count: {existing_event_count}")
+                print(f"Synched Event Count: {synched_event_count}")
+                print(f"Event Not Synched: {event_not_synched}")
+            else:
+                print(f"No User Medication Consumption Delete Events found.")
+        except Exception as error:
+            print(f"Error syncing User Medication Consumption Delete Events: {error}")
+
     #endregion
