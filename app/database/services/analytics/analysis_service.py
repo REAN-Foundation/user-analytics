@@ -47,6 +47,7 @@ from app.database.services.analytics.feature_engagement import (
     get_feature_retention_rate_in_specific_intervals,
     get_feature_average_usage_duration_minutes,
     get_feature_drop_off_points,
+    get_medication_management_matrix,
 )
 from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
 from app.database.services.analytics.reports.report_generator_json import generate_report_json
@@ -254,7 +255,8 @@ async def calculate_feature_engagement_metrics(
             get_feature_engagement_rate(feature, filters),
             get_feature_retention_rate_on_specific_days(feature, filters),
             get_feature_retention_rate_in_specific_intervals(feature, filters),
-            get_feature_drop_off_points(feature, filters)
+            get_feature_drop_off_points(feature, filters),
+            get_medication_management_matrix(feature, filters)
         )
 
         access_frequency = results[0]
@@ -263,6 +265,7 @@ async def calculate_feature_engagement_metrics(
         retention_rate_on_specific_days = results[3]
         retention_rate_in_specific_intervals = results[4]
         drop_off_points = results[5]
+        medication_management_matrix = results[6]
 
         feature_engagement_metrics = FeatureEngagementMetrics(
             Feature                          = feature,
@@ -275,7 +278,8 @@ async def calculate_feature_engagement_metrics(
             EngagementRate                   = engagement_rate,
             RetentionRateOnSpecificDays      = retention_rate_on_specific_days,
             RetentionRateInSpecificIntervals = retention_rate_in_specific_intervals,
-            DropOffPoints                    = drop_off_points
+            DropOffPoints                    = drop_off_points,
+            MedicationManagementMatrix       = medication_management_matrix
         )
 
         return feature_engagement_metrics

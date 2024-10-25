@@ -1,7 +1,8 @@
 from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
+from app.domain_types.enums.event_types import EventType
 from app.domain_types.schemas.analytics import AnalyticsFilters
-from app.modules.data_sync.connectors import get_analytics_db_connector
+from app.modules.data_sync.connectors import get_analytics_db_connector, get_reancare_db_connector
 from app.telemetry.tracing import trace_span
 
 ###############################################################################
@@ -654,3 +655,82 @@ async def get_feature_drop_off_points(feature: str, filters: AnalyticsFilters):
     except Exception as e:
         print_exception(e)
         return 0
+
+@trace_span("service: analytics: feature engagement: get_medication_management_matrix")
+async def get_medication_management_matrix(feature: str, filters: AnalyticsFilters):
+    try:
+        if not feature or len(feature) == 0:
+            return None
+
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+                SELECT 
+
+                    COUNT(
+                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END) AS total_medications,
+                    
+                    COUNT(
+                    CASE WHEN medication_consumption.DeletedAt IS NOT NULL THEN 1 END) AS total_deleted_medications,
+                    
+                    COUNT(
+                    CASE WHEN medication_consumption.IsTaken = 1 
+                    AND medication_consumption.TakenAt IS NOT NULL 
+                    AND medication_consumption.DeletedAt IS NULL 
+                    AND medication_consumption.IsMissed = 0 THEN 1 END) AS medication_taken_count,
+                    
+                    COUNT(
+                    CASE WHEN medication_consumption.IsMissed = 1 
+                    AND medication_consumption.IsTaken = 0 
+                    AND medication_consumption.TakenAt IS null 
+                    AND medication_consumption.DeletedAt IS NULL THEN 1 END) AS medication_missed_count,
+
+                    COUNT(
+                    CASE WHEN medication_consumption.IsMissed = 0 
+                    AND medication_consumption.IsTaken = 0 
+                    AND medication_consumption.TakenAt IS null 
+                    AND medication_consumption.DeletedAt IS NULL THEN 1 END) AS medication_not_answered_count,
+                    
+                    (COUNT(
+                    CASE WHEN medication_consumption.IsTaken = 1 
+                    AND medication_consumption.TakenAt IS NOT NULL 
+                    AND medication_consumption.DeletedAt IS NULL 
+                    AND medication_consumption.IsMissed = 0 THEN 1 END) * 100.0 / 
+                    COUNT(
+                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END)) AS medication_taken_percentage,
+                    
+                    (COUNT(
+                    CASE WHEN medication_consumption.IsMissed = 1 
+                    AND medication_consumption.IsTaken = 0 
+                    AND medication_consumption.TakenAt IS null 
+                    AND medication_consumption.DeletedAt IS NULL THEN 1 END) * 100.0 / 
+                    COUNT(
+                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END)) AS medication_missed_percentage
+                
+                FROM medication_consumptions AS medication_consumption
+                JOIN users user ON user.id = medication_consumption.PatientUserId
+                WHERE
+                    user.IsTestUser = 0
+                    AND
+                    medication_consumption.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+                    __CHECKS__
+                """
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
+        result = connector.execute_read_query(query)
+
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return 0
+
