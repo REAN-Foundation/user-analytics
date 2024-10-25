@@ -80,7 +80,6 @@ class FeatureEngagementMetrics(BaseModel):
     RetentionRateOnSpecificDays      : list|dict|None = Field(description="Percentage of users who return to the feature after their first use.")
     RetentionRateInSpecificIntervals : list|dict|None = Field(description="Percentage of users who return to the feature after their first use.")
     DropOffPoints                    : list|dict|None = Field(description="Most common points where users drop off after using the feature.")
-    MedicationManagementMatrix      : list|dict|None = Field(description="User medication management matrix")
 
 class EngagementMetrics(BaseModel):
       TenantId        : UUID4|None                          = Field(description="Tenant ID")
@@ -89,7 +88,8 @@ class EngagementMetrics(BaseModel):
       EndDate         : datetime                            = Field(description="End date for analytics")
       BasicStatistics : BasicAnalyticsStatistics|None       = Field(description="Basic analytics statistics")
       GenericMetrics  : GenericEngagementMetrics|None       = Field(description="User engagement metrics")
-      FeatureMetrics  : List[FeatureEngagementMetrics]|None = Field(description="Feature engagement metrics")
+      FeatureMetrics  : List[FeatureEngagementMetrics]|None = Field(description="Feature engagement metrics"),
+      MedicationManagementMetrics: list|None                 = Field(description="Medication management metrics")
 
 ###############################################################################
 

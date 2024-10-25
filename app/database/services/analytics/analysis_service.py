@@ -94,6 +94,9 @@ async def calculate(
             print(f"Calculated metrics for {feature}")
             metrics_by_feature.append(engament)
 
+        medication_management_matrix = await calculate_medication_management_matrix(filters)
+        print("Calculated medication management matrix")
+
         metrics = EngagementMetrics(
             TenantId        = filters.TenantId,
             TenantName      = filters.TenantName if filters.TenantName != None else 'Unspecified',
@@ -101,7 +104,8 @@ async def calculate(
             EndDate         = str(filters.EndDate) if filters.EndDate else 'Unspecified',
             BasicStatistics = basic_stats,
             GenericMetrics  = generic_metrics,
-            FeatureMetrics  = metrics_by_feature
+            FeatureMetrics  = metrics_by_feature,
+            MedicationManagementMetrics = medication_management_matrix
         )
 
         saved_analytics = await save_analytics(analysis_code, metrics)
@@ -256,7 +260,6 @@ async def calculate_feature_engagement_metrics(
             get_feature_retention_rate_on_specific_days(feature, filters),
             get_feature_retention_rate_in_specific_intervals(feature, filters),
             get_feature_drop_off_points(feature, filters),
-            get_medication_management_matrix(feature, filters)
         )
 
         access_frequency = results[0]
@@ -265,7 +268,6 @@ async def calculate_feature_engagement_metrics(
         retention_rate_on_specific_days = results[3]
         retention_rate_in_specific_intervals = results[4]
         drop_off_points = results[5]
-        medication_management_matrix = results[6]
 
         feature_engagement_metrics = FeatureEngagementMetrics(
             Feature                          = feature,
@@ -279,13 +281,28 @@ async def calculate_feature_engagement_metrics(
             RetentionRateOnSpecificDays      = retention_rate_on_specific_days,
             RetentionRateInSpecificIntervals = retention_rate_in_specific_intervals,
             DropOffPoints                    = drop_off_points,
-            MedicationManagementMatrix       = medication_management_matrix
         )
 
         return feature_engagement_metrics
 
     except Exception as e:
         print_exception(e)
+
+async def calculate_medication_management_matrix(filters):
+    try:
+        filters = check_filter_params(filters)
+
+        results = await asyncio.gather(
+            get_medication_management_matrix(filters)
+        )
+
+        medication_management_matrix = results[0]
+
+        return medication_management_matrix
+
+    except Exception as e:
+        print_exception(e)
+
 
 ###############################################################################
 
