@@ -1,6 +1,5 @@
 from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
-from app.domain_types.enums.event_types import EventType
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector, get_reancare_db_connector
 from app.telemetry.tracing import trace_span
@@ -656,12 +655,9 @@ async def get_feature_drop_off_points(feature: str, filters: AnalyticsFilters):
         print_exception(e)
         return 0
 
-@trace_span("service: analytics: feature engagement: get_medication_management_matrix")
-async def get_medication_management_matrix(feature: str, filters: AnalyticsFilters):
+@trace_span("service: analytics: medication management matrix: get_medication_management_matrix")
+async def get_medication_management_matrix(filters: AnalyticsFilters):
     try:
-        if not feature or len(feature) == 0:
-            return None
-
         tenant_id  = filters.TenantId
         start_date = filters.StartDate
         end_date   = filters.EndDate
