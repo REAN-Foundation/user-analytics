@@ -65,7 +65,7 @@ class UserTaskEventsSynchronizer:
         try:
             event_name = EventType.UserTaskStart.value
             event_category = EventCategory.UserTask.value
-            event_subject = user_task['Category']
+            event_subject = user_task['ActionType']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -202,7 +202,7 @@ class UserTaskEventsSynchronizer:
         try:
             event_name = EventType.UserTaskComplete.value
             event_category = EventCategory.UserTask.value
-            event_subject = user_task['Category']
+            event_subject = user_task['ActionType']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
@@ -339,7 +339,7 @@ class UserTaskEventsSynchronizer:
         try:
             event_name = EventType.UserTaskCancel.value
             event_category = EventCategory.UserTask.value
-            event_subject = user_task['Category']
+            event_subject = user_task['ActionType']
             # user = DataSynchronizer.get_user(medication['UserId'])
             # if not user:
             #     print(f"User not found for the event: {medication}")
