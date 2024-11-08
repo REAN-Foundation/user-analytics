@@ -25,7 +25,7 @@ def generate_report_images(
 
     generated_stats_images = generate_basic_statistics_images(report_folder_path, metrics.BasicStatistics)
     generated_generic_metrics_images = generate_generic_engagement_images(report_folder_path, metrics.GenericMetrics)
-    generated_feature_metrics_images = generate_feature_engagement_images(report_folder_path, metrics.FeatureMetrics)
+    generated_feature_metrics_images = generate_feature_engagement_images(report_folder_path, metrics.FeatureMetrics, metrics.MedicationManagementMetrics)
 
     return generated_stats_images or generated_generic_metrics_images or generated_feature_metrics_images
 
@@ -299,13 +299,15 @@ def generate_generic_engagement_images(
 
 def generate_feature_engagement_images(
         report_folder_path: str,
-        feature_engagements: List[FeatureEngagementMetrics]|None) -> bool:
+        feature_engagements: List[FeatureEngagementMetrics]|None,
+        medication_management_metrics) -> bool:
     for fe in feature_engagements:
-        feature_metrics_images(report_folder_path, fe)
+        feature_metrics_images(report_folder_path, fe, medication_management_metrics=medication_management_metrics)
 
 def feature_metrics_images(
         location: str,
-        feature: FeatureEngagementMetrics) -> bool:
+        feature: FeatureEngagementMetrics,
+        medication_management_metrics) -> bool:
 
     try:
 
@@ -394,6 +396,29 @@ def feature_metrics_images(
         #         y_label       = 'Drop-Off Rate',
         #         color_palette = 'Purples_d',
         #         file_path     = os.path.join(location, f'{feature}_retention_in_specific_intervals'))
+        
+        if featureName.lower() == 'medication':
+            medication_data = medication_management_metrics[0]
+            if medication_data:
+                medication_labels = ['Taken', 'Not Taken', 'Not Specified']
+                medication_values = [
+                    medication_data['medication_taken_count'],
+                    medication_data['medication_missed_count'],
+                    medication_data['medication_not_answered_count']
+                ]
+
+                medication_df = pd.DataFrame({
+                    'Status': medication_labels,
+                    'Count': medication_values
+                })
+
+                plot_pie_chart(
+                    data_frame=medication_df,
+                    labels_column='Status',
+                    values_column='Count',
+                    title='Medication Management',
+                    file_path=os.path.join(location, f'{featureName}_medication_management')
+                )
 
     except Exception as e:
         print(f"Error generating feature engagement images: {e}")

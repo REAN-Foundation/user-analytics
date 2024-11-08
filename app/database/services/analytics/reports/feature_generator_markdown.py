@@ -5,13 +5,13 @@ from app.database.services.analytics.reports.report_utilities import add_table_t
 from app.domain_types.schemas.analytics import EngagementMetrics, FeatureEngagementMetrics
 
 def generate_all_feature_engagement_markdown(
-        feature_engagements: List[FeatureEngagementMetrics]) -> str:
+        feature_engagements: List[FeatureEngagementMetrics], medication_management_metrics) -> str:
     all_feature_engagement_str = ""
     for feature in feature_engagements:
-        all_feature_engagement_str += feature_metrics_markdown(feature)
+        all_feature_engagement_str += feature_metrics_markdown(feature, medication_management_metrics)
     return all_feature_engagement_str
 
-def feature_metrics_markdown(feature: FeatureEngagementMetrics) -> str:
+def feature_metrics_markdown(feature: FeatureEngagementMetrics, medication_management_metrics) -> str:
     image_width = 1300
     access_frequency_table = ""
     access_frequency_chart_str = ""
@@ -89,6 +89,30 @@ def feature_metrics_markdown(feature: FeatureEngagementMetrics) -> str:
     else:
         drop_off_points_table = "Data Not Available" 
         
+    if feature.Feature == 'medication':
+        medication_data = medication_management_metrics[0]
+        if medication_data:
+            medication_labels = ['Taken', 'Not Taken', 'Not Specified']
+            medication_values = [
+                medication_data['medication_taken_count'],
+                medication_data['medication_missed_count'],
+                medication_data['medication_not_answered_count']
+            ]
+            medication_df = pd.DataFrame({
+                'Status': medication_labels,
+                'Count': medication_values
+            })
+
+            medication_management_table = add_table_to_markdown(
+                data_frame = medication_df,
+                rename_columns = {'Status': 'Medication Status', 'Count': 'Count'}
+            )
+
+            medication_management_chart_str = f"""<img src="./{feature_name}_medication_management.png" width="{image_width}">"""
+        else:
+           medication_management_table = "Data Not Available"
+           
+        
     feature_engagement_str = f"""
 ### {feature_name_title} Engagement Metrics
 
@@ -110,6 +134,13 @@ def feature_metrics_markdown(feature: FeatureEngagementMetrics) -> str:
 
 #### {feature_name_title} Feature Drop-Off Points
 {drop_off_points_table}\n
+"""
+
+    if feature_name.lower() == 'medication':
+        feature_engagement_str += f"""
+#### {feature_name_title} Medication Status Distribution
+{medication_management_table}\n
+{medication_management_chart_str}\n
 """
     return feature_engagement_str
 
