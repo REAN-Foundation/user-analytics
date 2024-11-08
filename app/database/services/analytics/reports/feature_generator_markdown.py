@@ -105,7 +105,7 @@ def feature_metrics_markdown(feature: FeatureEngagementMetrics, medication_manag
 
             medication_management_table = add_table_to_markdown(
                 data_frame = medication_df,
-                rename_columns = {'Status': 'Medication Status', 'Count': 'Count'}
+                rename_columns = {'Status': 'Status', 'Count': 'Count'}
             )
 
             medication_management_chart_str = f"""<img src="./{feature_name}_medication_management.png" width="{image_width}">"""
@@ -138,13 +138,14 @@ def feature_metrics_markdown(feature: FeatureEngagementMetrics, medication_manag
 
     if feature_name.lower() == 'medication':
         feature_engagement_str += f"""
-#### {feature_name_title} Medication Status Distribution
+#### {feature_name_title} Management
 {medication_management_table}\n
 {medication_management_chart_str}\n
 """
     return feature_engagement_str
 
 def generate_engagement_metrics_table_content(metrics: EngagementMetrics) -> str:
+    
     all_features_table_content = '' 
     for feature in metrics.FeatureMetrics:
         feature_name = feature.Feature
@@ -159,6 +160,11 @@ def generate_engagement_metrics_table_content(metrics: EngagementMetrics) -> str
     - [{feature_name_title} Feature Retention during specific intervals](#{feature_name}-feature-retention-during-specific-intervals)
     - [{feature_name_title} Feature Drop-Off Points](#{feature_name}-feature-drop-off-points)
 """
+        if feature_name.lower() == "medication":
+            medication_specific_content = f"""
+    - [{feature_name_title} Management](#{feature_name}-management)
+"""
+            feature_table_content += medication_specific_content
         all_features_table_content += feature_table_content
     
     return all_features_table_content

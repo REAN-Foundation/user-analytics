@@ -8,7 +8,7 @@ from app.modules.storage.providers.local_storage_service import LocalStorageServ
 
 class StorageService:
 
-    def __init__(self, provider: str = 'aws'):
+    def __init__(self, provider: str = 'local'):
         self.provider = provider
         if self.provider == 'aws':
             self.storage = AwsS3StorageService()
