@@ -417,6 +417,7 @@ def feature_metrics_images(
                     label_column='Status',
                     value_column='Count',
                     title='Medication Management',
+                    color_palette = 'Set2',
                     file_path=os.path.join(location, f'{featureName}_medication_management')
                 )
 
