@@ -397,7 +397,7 @@ def feature_metrics_images(
         #         color_palette = 'Purples_d',
         #         file_path     = os.path.join(location, f'{feature}_retention_in_specific_intervals'))
         
-        if featureName.lower() == 'medication':
+        if feature.Feature == 'medication' and medication_management_metrics:
             medication_data = medication_management_metrics[0]
             if medication_data:
                 medication_labels = ['Taken', 'Not Taken', 'Not Specified']
@@ -414,8 +414,8 @@ def feature_metrics_images(
 
                 plot_pie_chart(
                     data_frame=medication_df,
-                    labels_column='Status',
-                    values_column='Count',
+                    label_column='Status',
+                    value_column='Count',
                     title='Medication Management',
                     file_path=os.path.join(location, f'{featureName}_medication_management')
                 )
