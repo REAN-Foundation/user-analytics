@@ -9,7 +9,7 @@ from app.domain_types.schemas.analytics import FeatureEngagementMetrics
 
 ####################################################################################
 
-async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str):
+async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str, medication_management_metrics):
     try:      
         start_row = 1
         start_col = 1
@@ -176,6 +176,45 @@ async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetric
             #     value_col = start_col + 1
             # )
             # worksheet.insert_chart(current_row + 2, graph_pos, drop_off_points_chart)
+         
+        if feature_engagement_metrics.Feature == 'medication' and medication_management_metrics:
+            medication_data = medication_management_metrics[0]
+            medication_labels = ['Taken', 'Not Taken', 'Not Specified']
+            medication_values = [
+                medication_data['medication_taken_count'],
+                medication_data['medication_missed_count'],
+                medication_data['medication_not_answered_count']
+            ]
+
+            medication_df = pd.DataFrame({
+                'Status': medication_labels,
+                'Count': medication_values
+            })
+
+            medication_df_ = write_data_to_excel(
+                data_frame=medication_df,
+                sheet_name=sheet_name,
+                start_row=current_row,
+                start_col=start_col,
+                writer=writer,
+                title='Medication Managemnent',
+                description='The medication adherence showing the percentage of scheduled doses taken on time, alongside the number and percentage of missed doses.'
+            )
+
+            if not medication_df.empty:
+                medication_chart = create_chart(
+                    workbook=writer.book,
+                    chart_type='pie',
+                    series_name='Medication Managemnent',
+                    sheet_name=sheet_name,
+                    start_row=current_row + 2,
+                    start_col=start_col,
+                    df_len=len(medication_df_),
+                    value_col=start_col + 1
+                )
+                worksheet.insert_chart(current_row + 2, graph_pos, medication_chart)
+                current_row += len(medication_df_) + 12
+                    
     except Exception as e:
         print(f"Error generating feature engagement excel report: {e}")
         return ""

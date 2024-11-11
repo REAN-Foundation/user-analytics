@@ -89,7 +89,7 @@ class EngagementMetrics(BaseModel):
       BasicStatistics : BasicAnalyticsStatistics|None       = Field(description="Basic analytics statistics")
       GenericMetrics  : GenericEngagementMetrics|None       = Field(description="User engagement metrics")
       FeatureMetrics  : List[FeatureEngagementMetrics]|None = Field(description="Feature engagement metrics"),
-      MedicationManagementMetrics: list|None                 = Field(description="Medication management metrics")
+      MedicationManagementMetrics: list|None                = Field(description="Medication management metrics")
 
 ###############################################################################
 
