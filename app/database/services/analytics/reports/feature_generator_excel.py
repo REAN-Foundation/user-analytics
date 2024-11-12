@@ -165,6 +165,7 @@ async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetric
                 rename_columns = {'event_name': 'Event Name', 'dropoff_count':'Dropoff Count','total_users':'Total Users', 'dropoff_rate': 'Dropoff Rate'},
                 description = 'Points in the user flow where users most frequently stop using a feature. Identifying drop-off points helps in optimizing the user journey and addressing usability challenges to improve feature completion rates.These are found by identifying the most common sequences of events that lead to users dropping off from a feature.'
             )  
+            current_row += len(drop_off_points_df) + 6
             # drop_off_points_chart = create_chart(
             #     workbook = writer.book,
             #     chart_type = 'pie',
@@ -213,7 +214,7 @@ async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetric
                     value_col=start_col + 1
                 )
                 worksheet.insert_chart(current_row + 2, graph_pos, medication_chart)
-                current_row += len(medication_df_) + 12
+                # current_row += len(medication_df_) + 12
                     
     except Exception as e:
         print(f"Error generating feature engagement excel report: {e}")
