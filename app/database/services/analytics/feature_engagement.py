@@ -730,3 +730,345 @@ async def get_medication_management_matrix(filters: AnalyticsFilters):
         print_exception(e)
         return 0
 
+@trace_span("service: analytics: health journey: get_health_journey_completed_task_count")
+async def get_health_journey_completed_task_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+            SELECT count(*) as health_journey_completed_task_count
+            FROM user_tasks AS userTask
+            JOIN users u ON u.id = userTask.UserId
+            JOIN careplan_activities careplanActivity ON userTask.ActionId = careplanActivity.id
+            WHERE 
+                userTask.ActionType = 'Careplan' 
+                AND
+                userTask.StartedAt IS NOT NULL
+                AND
+                userTask.FinishedAt IS NOT NULL
+                AND
+                u.IsTestUser = 0
+                AND
+                u.RoleId = '{role_id}'
+                AND
+                userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+                AND
+                userTask.ScheduledEndTime BETWEEN '{start_date}' and now();
+            """
+
+        result = connector.execute_read_query(query)
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return 0
+
+@trace_span("service: analytics: health journey: get_health_journey_specific_completed_task_count")    
+async def get_health_journey_specific_completed_task_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT 
+            careplanActivity.PlanCode AS careplan_code, 
+            count(*) as careplan_completed_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        JOIN careplan_activities careplanActivity ON userTask.ActionId = careplanActivity.id
+        WHERE 
+            userTask.ActionType = 'Careplan' 
+            AND
+            userTask.StartedAt IS NOT NULL
+            AND
+            userTask.FinishedAt IS NOT NULL
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        GROUP BY
+            careplanActivity.PlanCode;
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return 0
+
+@trace_span("service: analytics: health journey: get_health_journey_specific_completed_task_count")
+async def get_health_journey_specific_completed_task_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT 
+            careplanActivity.PlanCode AS careplan_code, 
+            count(*) as careplan_completed_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        JOIN careplan_activities careplanActivity ON userTask.ActionId = careplanActivity.id
+        WHERE 
+            userTask.ActionType = 'Careplan' 
+            AND
+            userTask.StartedAt IS NOT NULL
+            AND
+            userTask.FinishedAt IS NOT NULL
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        GROUP BY
+            careplanActivity.PlanCode;
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return 0
+
+@trace_span("service: analytics: health journey: get_user_wise_health_journey_completed_task_count")
+async def get_user_wise_health_journey_completed_task_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT careplanActivity.PatientUserId, userTask.Category, careplanActivity.PlanCode AS careplan_code, count(*) as careplan_completed_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        JOIN careplan_activities careplanActivity ON userTask.ActionId = careplanActivity.id
+        WHERE 
+            userTask.ActionType = 'Careplan' 
+            AND
+            userTask.StartedAt IS NOT NULL
+            AND
+            userTask.FinishedAt IS NOT NULL
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        GROUP BY
+            careplanActivity.PatientUserId,
+            userTask.Category,
+            careplanActivity.PlanCode;
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return 0
+
+@trace_span("service: analytics: health journey: get_category_wise_health_journey_task_count")
+async def get_category_wise_health_journey_task_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT careplanActivity.PatientUserId ,careplanActivity.Category, careplanActivity.PlanCode, count(*) as careplan_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        JOIN careplan_activities careplanActivity ON userTask.ActionId = careplanActivity.id
+        WHERE 
+            userTask.ActionType = 'Careplan' 
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        GROUP BY
+            careplanActivity.PatientUserId,
+            userTask.Category,
+            careplanActivity.PlanCode
+        """
+        
+        result = connector.execute_read_query(query)
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return 0
+
+@trace_span("service: analytics: health journey: get_health_journey_custom_assessment_completed_task_count")
+async def get_health_journey_custom_assessment_completed_task_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT count(*) as custom_assessment_careplan_completed_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        JOIN assessments assessment ON assessment.id = userTask.ActionId
+        WHERE 
+            userTask.ActionType = 'Careplan' 
+            AND
+            userTask.StartedAt IS NOT NULL
+            AND
+            userTask.FinishedAt IS NOT NULL
+            AND
+            assessment.FinishedAt IS NOT NULL
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now();
+        """
+        
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:  
+        print_exception(e)
+        return 0
+
+@trace_span("service: analytics: health journey: get_health_journey_task_count") 
+async def get_health_journey_task_count(filters: AnalyticsFilters):
+    try:
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT count(*) as careplan_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        JOIN careplan_activities careplanActivity ON userTask.ActionId = careplanActivity.id
+        WHERE 
+            userTask.ActionType = 'Careplan' 
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now();
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None
+
+@trace_span("service: analytics: health journey: get_health_journey_specific_task_count")
+async def get_health_journey_specific_task_count(filters: AnalyticsFilters):
+    try:
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT careplanActivity.PlanCode, count(*) as careplan_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        JOIN careplan_activities careplanActivity ON userTask.ActionId = careplanActivity.id
+        WHERE 
+            userTask.ActionType = 'Careplan' 
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        GROUP BY
+            careplanActivity.PlanCode
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None
+
+
+@trace_span("service: analytics: health journey: get_health_journey_custom_assessment_task_count")  
+async def get_health_journey_custom_assessment_task_count(filters: AnalyticsFilters):
+    try:
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT count(*) as custom_assessment_careplan_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        JOIN assessments assessment ON assessment.id = userTask.ActionId
+        WHERE 
+            userTask.ActionType = 'Careplan' 
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now();
+        """
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None

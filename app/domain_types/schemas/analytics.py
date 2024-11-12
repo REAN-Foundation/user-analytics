@@ -81,15 +81,26 @@ class FeatureEngagementMetrics(BaseModel):
     RetentionRateInSpecificIntervals : list|dict|None = Field(description="Percentage of users who return to the feature after their first use.")
     DropOffPoints                    : list|dict|None = Field(description="Most common points where users drop off after using the feature.")
 
+class HealthJourneySpecificMetrics(BaseModel):
+    HealthJourneyWiseCompletedTask: list|None = Field(description="Completed task")
+    HealthJourneyWiseTask : list|None = Field(description="Health Journey Wise task")
+    UserWiseHealthJourneyCompletedTask : list|None = Field(description="User wise completed task")
+    CategoryWiseHealthJourneyTask : list|None = Field(description="Category wise Health Journey task")
+    
+class HealthJourneyEngagementMetrics(BaseModel):
+    Overall  : dict|None = Field(description="Overall Health Journey tasks metrics")
+    CareplanSpecific : HealthJourneySpecificMetrics |None = Field(description="Careplan Specific Health Journey tasks metrics")
+
 class EngagementMetrics(BaseModel):
-      TenantId        : UUID4|None                          = Field(description="Tenant ID")
-      TenantName      : str|None                            = Field(description="Tenant Name")
-      StartDate       : datetime                            = Field(description="Start date for analytics")
-      EndDate         : datetime                            = Field(description="End date for analytics")
-      BasicStatistics : BasicAnalyticsStatistics|None       = Field(description="Basic analytics statistics")
-      GenericMetrics  : GenericEngagementMetrics|None       = Field(description="User engagement metrics")
-      FeatureMetrics  : List[FeatureEngagementMetrics]|None = Field(description="Feature engagement metrics"),
-      MedicationManagementMetrics: list|None                = Field(description="Medication management metrics")
+      TenantId        : UUID4|None                              = Field(description="Tenant ID")
+      TenantName      : str|None                                = Field(description="Tenant Name")
+      StartDate       : datetime                                = Field(description="Start date for analytics")
+      EndDate         : datetime                                = Field(description="End date for analytics")
+      BasicStatistics : BasicAnalyticsStatistics|None           = Field(description="Basic analytics statistics")
+      GenericMetrics  : GenericEngagementMetrics|None           = Field(description="User engagement metrics")
+      FeatureMetrics  : List[FeatureEngagementMetrics]|None     = Field(description="Feature engagement metrics"),
+      MedicationManagementMetrics: list|None                    = Field(description="Medication management metrics")
+      HealthJourneyMetrics: HealthJourneyEngagementMetrics|None = Field(description="Health Journey tasks metrics")
 
 ###############################################################################
 
