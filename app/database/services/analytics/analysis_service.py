@@ -41,13 +41,21 @@ from app.database.services.analytics.generic_engagement import (
     get_most_fired_events
 )
 from app.database.services.analytics.feature_engagement import (
+    get_category_wise_health_journey_task_count,
     get_feature_access_frequency,
     get_feature_engagement_rate,
     get_feature_retention_rate_on_specific_days,
     get_feature_retention_rate_in_specific_intervals,
     get_feature_average_usage_duration_minutes,
     get_feature_drop_off_points,
+    get_health_journey_completed_task_count,
+    get_health_journey_custom_assessment_completed_task_count,
+    get_health_journey_custom_assessment_task_count,
+    get_health_journey_specific_completed_task_count,
+    get_health_journey_specific_task_count,
+    get_health_journey_task_count,
     get_medication_management_matrix,
+    get_user_wise_health_journey_completed_task_count,
 )
 from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
 from app.database.services.analytics.reports.report_generator_json import generate_report_json
@@ -59,7 +67,8 @@ from app.domain_types.schemas.analytics import (
     Demographics,
     FeatureEngagementMetrics,
     EngagementMetrics,
-    GenericEngagementMetrics
+    GenericEngagementMetrics,
+    HealthJourneyEngagementMetrics
 )
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
@@ -97,6 +106,9 @@ async def calculate(
         medication_management_matrix = await calculate_medication_management_matrix(filters)
         print("Calculated medication management matrix")
 
+        health_journey_matrix = await calculate_health_journey_task_matrix(filters)
+        print("Calculated health journey task matrix")
+
         metrics = EngagementMetrics(
             TenantId        = filters.TenantId,
             TenantName      = filters.TenantName if filters.TenantName != None else 'Unspecified',
@@ -105,7 +117,8 @@ async def calculate(
             BasicStatistics = basic_stats,
             GenericMetrics  = generic_metrics,
             FeatureMetrics  = metrics_by_feature,
-            MedicationManagementMetrics = medication_management_matrix
+            MedicationManagementMetrics = medication_management_matrix,
+            HealthJourneyMetrics = health_journey_matrix
         )
 
         saved_analytics = await save_analytics(analysis_code, metrics)
@@ -303,7 +316,55 @@ async def calculate_medication_management_matrix(filters):
     except Exception as e:
         print_exception(e)
 
+async def calculate_health_journey_task_matrix(filters):
+    try:
+        filters = check_filter_params(filters)
 
+        results = await asyncio.gather(
+            get_health_journey_completed_task_count(filters),
+            get_health_journey_task_count(filters),
+            get_health_journey_custom_assessment_completed_task_count(filters),
+            get_health_journey_custom_assessment_task_count(filters),
+
+            get_health_journey_specific_completed_task_count(filters),
+            get_health_journey_specific_task_count(filters),
+
+            get_user_wise_health_journey_completed_task_count(filters),
+            get_category_wise_health_journey_task_count(filters),
+        )
+
+        health_journey_completed_task_count = results[0]
+        health_journey_task_count = results[1]
+        health_journey_custom_assessment_completed_task_count = results[2]
+        health_journey_custom_assessment_task_count = results[3]
+
+        health_journey_specific_completed_task_matrix = results[4]
+        health_journey_specific_task_matrix = results[5]
+
+        user_wise_health_journey_completed_task_count = results[6]
+        category_wise_health_journey_task_count = results[7]
+
+        health_journey_task_matrix = overall_health_journey_task_matrix(
+            health_journey_completed_task_count,
+            health_journey_task_count,
+            health_journey_custom_assessment_completed_task_count,
+            health_journey_custom_assessment_task_count
+        )
+
+        health_journey_matrix:HealthJourneyEngagementMetrics = {
+            "Overall": health_journey_task_matrix,
+            "CareplanSpecific": {
+                "HealthJourneyWiseCompletedTask": health_journey_specific_completed_task_matrix,
+                "HealthJourneyWiseTask": health_journey_specific_task_matrix,
+                "UserWiseHealthJourneyCompletedTask": user_wise_health_journey_completed_task_count,
+                "CategoryWiseHealthJourneyTask": category_wise_health_journey_task_count
+            }
+        }
+            
+        return health_journey_matrix
+
+    except Exception as e:
+        print_exception(e)
 ###############################################################################
 
 def check_filter_params(filters: AnalyticsFilters | None = None) -> AnalyticsFilters:
@@ -485,3 +546,28 @@ async def generate_daily_analytics():
         print_exception(e)
     finally:
         session.close()
+
+def overall_health_journey_task_matrix(
+            health_journey_completed_task_count,
+            health_journey_task_count,
+            health_journey_custom_assessment_completed_task_count,
+            health_journey_custom_assessment_task_count):
+    try:
+        result_dict = {}
+        if health_journey_completed_task_count is not None and len(health_journey_completed_task_count) > 0:
+             result_dict["health_journey_completed_task_count"] = health_journey_completed_task_count[0]['health_journey_completed_task_count']
+
+        if health_journey_task_count is not None and len(health_journey_task_count) > 0:
+            result_dict["health_journey_task_count"] = health_journey_task_count[0]['careplan_task_count']
+        
+        if health_journey_custom_assessment_completed_task_count is not None and len(health_journey_custom_assessment_completed_task_count) > 0:
+            result_dict["health_journey_custom_assessment_completed_task_count"] = health_journey_custom_assessment_completed_task_count[0]['custom_assessment_careplan_completed_task_count']
+
+        if health_journey_custom_assessment_task_count is not None and len(health_journey_custom_assessment_task_count) > 0:
+            result_dict["health_journey_custom_assessment_task_count"] = health_journey_custom_assessment_task_count[0]['custom_assessment_careplan_task_count']
+
+        return result_dict
+    except Exception as e:
+        print_exception(e)
+        return None
+
