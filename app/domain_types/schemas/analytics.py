@@ -91,6 +91,10 @@ class HealthJourneyEngagementMetrics(BaseModel):
     Overall  : dict|None = Field(description="Overall Health Journey tasks metrics")
     CareplanSpecific : HealthJourneySpecificMetrics |None = Field(description="Careplan Specific Health Journey tasks metrics")
 
+class PatientTaskEngagementMetrics(BaseModel):
+    Overall  : dict|None = Field(description="Overall Patient tasks metrics")
+    CategorySpecific : list|None = Field(description="Category Specific Patient tasks metrics")    
+
 class EngagementMetrics(BaseModel):
       TenantId        : UUID4|None                              = Field(description="Tenant ID")
       TenantName      : str|None                                = Field(description="Tenant Name")
@@ -101,6 +105,7 @@ class EngagementMetrics(BaseModel):
       FeatureMetrics  : List[FeatureEngagementMetrics]|None     = Field(description="Feature engagement metrics"),
       MedicationManagementMetrics: list|None                    = Field(description="Medication management metrics")
       HealthJourneyMetrics: HealthJourneyEngagementMetrics|None = Field(description="Health Journey tasks metrics")
+      PatientTaskMetrics: PatientTaskEngagementMetrics|None     = Field(description="Patient tasks metrics")
 
 ###############################################################################
 

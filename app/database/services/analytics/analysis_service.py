@@ -42,6 +42,8 @@ from app.database.services.analytics.generic_engagement import (
 )
 from app.database.services.analytics.feature_engagement import (
     get_category_wise_health_journey_task_count,
+    get_category_wise_patient_completed_task_count,
+    get_category_wise_patient_task_count,
     get_feature_access_frequency,
     get_feature_engagement_rate,
     get_feature_retention_rate_on_specific_days,
@@ -55,6 +57,8 @@ from app.database.services.analytics.feature_engagement import (
     get_health_journey_specific_task_count,
     get_health_journey_task_count,
     get_medication_management_matrix,
+    get_patient_completed_task_count,
+    get_patient_task_count,
     get_user_wise_health_journey_completed_task_count,
 )
 from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
@@ -68,7 +72,8 @@ from app.domain_types.schemas.analytics import (
     FeatureEngagementMetrics,
     EngagementMetrics,
     GenericEngagementMetrics,
-    HealthJourneyEngagementMetrics
+    HealthJourneyEngagementMetrics,
+    PatientTaskEngagementMetrics
 )
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
@@ -109,6 +114,9 @@ async def calculate(
         health_journey_matrix = await calculate_health_journey_task_matrix(filters)
         print("Calculated health journey task matrix")
 
+        patient_task_matrix = await calculate_patient_task_matrix(filters)
+        print("Calculated patient task matrix")
+
         metrics = EngagementMetrics(
             TenantId        = filters.TenantId,
             TenantName      = filters.TenantName if filters.TenantName != None else 'Unspecified',
@@ -118,7 +126,8 @@ async def calculate(
             GenericMetrics  = generic_metrics,
             FeatureMetrics  = metrics_by_feature,
             MedicationManagementMetrics = medication_management_matrix,
-            HealthJourneyMetrics = health_journey_matrix
+            HealthJourneyMetrics = health_journey_matrix,
+            PatientTaskMetrics = patient_task_matrix
         )
 
         saved_analytics = await save_analytics(analysis_code, metrics)
@@ -301,7 +310,7 @@ async def calculate_feature_engagement_metrics(
     except Exception as e:
         print_exception(e)
 
-async def calculate_medication_management_matrix(filters):
+async def calculate_medication_management_matrix(filters: AnalyticsFilters):
     try:
         filters = check_filter_params(filters)
 
@@ -316,7 +325,7 @@ async def calculate_medication_management_matrix(filters):
     except Exception as e:
         print_exception(e)
 
-async def calculate_health_journey_task_matrix(filters):
+async def calculate_health_journey_task_matrix(filters: AnalyticsFilters):
     try:
         filters = check_filter_params(filters)
 
@@ -365,7 +374,45 @@ async def calculate_health_journey_task_matrix(filters):
 
     except Exception as e:
         print_exception(e)
+        return None
 ###############################################################################
+
+async def calculate_patient_task_matrix(filters: AnalyticsFilters):
+    try:
+        filters = check_filter_params(filters)
+
+        results = await asyncio.gather(
+            get_patient_completed_task_count(filters),
+            get_patient_task_count(filters),
+            get_category_wise_patient_completed_task_count(filters),
+            get_category_wise_patient_task_count(filters), 
+        )
+
+        patient_completed_task_count = results[0]
+        patient_task_count = results[1]
+        category_wise_patient_completed_task_count = results[2]
+        category_wise_patient_task_count = results[3]
+
+        patient_task_matrix = overall_patient_task_matrix(
+            patient_completed_task_count,
+            patient_task_count,
+        )
+
+        category_wise_task_matrix = combine_category_wise_task_counts(
+            category_wise_patient_completed_task_count, 
+            category_wise_patient_task_count
+            )
+        
+        patient_matrix:PatientTaskEngagementMetrics = {
+            "Overall": patient_task_matrix,
+            "CategorySpecific": category_wise_task_matrix
+        }
+            
+        return patient_matrix
+
+    except Exception as e:
+        print_exception(e)
+        return None
 
 def check_filter_params(filters: AnalyticsFilters | None = None) -> AnalyticsFilters:
 
@@ -571,3 +618,37 @@ def overall_health_journey_task_matrix(
         print_exception(e)
         return None
 
+def overall_patient_task_matrix(
+            patient_completed_task_count,
+            patient_task_count
+            ):
+    try:
+        result_dict = {}
+        if patient_completed_task_count is not None and len(patient_completed_task_count) > 0:
+             result_dict["patient_completed_task_count"] = patient_completed_task_count[0]['patient_completed_task_count']
+
+        if patient_task_count is not None and len(patient_task_count) > 0:
+            result_dict["patient_task_count"] = patient_task_count[0]['patient_task_count']
+
+        return result_dict
+    except Exception as e:
+        print_exception(e)
+        return None
+
+def combine_category_wise_task_counts(category_wise_patient_completed_task_count, category_wise_patient_task_count):
+    try:
+        completed_task = {item["task_category"]: item["patient_completed_task_count"] for item in category_wise_patient_completed_task_count}
+
+        combined_list = []
+        for item in category_wise_patient_task_count:
+            category = item["task_category"]
+            combined_list.append({
+                "task_category": category,
+                "patient_completed_task_count": completed_task.get(category, 0),
+                "task_count": item["user_task_count"]
+            })
+
+        return combined_list
+    except Exception as e:
+        print_exception(e)
+        return []   
