@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 from app.database.services.analytics.reports.report_utilities import(
   add_title_and_description,
@@ -5,11 +6,11 @@ from app.database.services.analytics.reports.report_utilities import(
   reindex_dataframe_to_all_missing_dates,
   write_data_to_excel
   )
-from app.domain_types.schemas.analytics import FeatureEngagementMetrics
+from app.domain_types.schemas.analytics import FeatureEngagementMetrics, HealthJourneyEngagementMetrics
 
 ####################################################################################
 
-async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str, medication_management_metrics):
+async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str, medication_management_metrics, health_journey_metrics:HealthJourneyEngagementMetrics):
     try:      
         start_row = 1
         start_col = 1
@@ -126,7 +127,6 @@ async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetric
         if len(feature_engagement_metrics.RetentionRateInSpecificIntervals) > 0:
             retention_intervals = feature_engagement_metrics.RetentionRateInSpecificIntervals['retention_in_specific_interval']
             retention_intervals_df = pd.DataFrame(retention_intervals)
-
             retention_intervals_df_ = write_data_to_excel(
                 data_frame = retention_intervals_df,
                 sheet_name = sheet_name,
@@ -214,7 +214,85 @@ async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetric
                     value_col=start_col + 1
                 )
                 worksheet.insert_chart(current_row + 2, graph_pos, medication_chart)
-                # current_row += len(medication_df_) + 12
+            
+        if feature_engagement_metrics.Feature == 'careplan' and health_journey_metrics:
+            overall_health_journey_data = health_journey_metrics.Overall
+            overall_completed_tasks = overall_health_journey_data['health_journey_completed_task_count']
+            overall_not_completed_tasks = overall_health_journey_data['health_journey_task_count'] - overall_completed_tasks
+            health_journey_labels = ['Completed', 'Not Completed']
+            overall_health_journey_values = [
+                overall_completed_tasks,
+                overall_not_completed_tasks
+            ]
+
+            overall_task_df = pd.DataFrame({
+                'Status': health_journey_labels,
+                'Count': overall_health_journey_values
+            })
+            
+            overall_task_df = write_data_to_excel(
+                data_frame=overall_task_df,
+                sheet_name=sheet_name,
+                start_row=current_row,
+                start_col=start_col,
+                writer=writer,
+                title=f'Overall health journey task metrics',
+                description='The health journey tasks showing the number of completed and not completed tasks for the care plan.'
+            )
+
+            if not overall_task_df.empty:
+                overall_health_journey_chart = create_chart(
+                    workbook=writer.book,
+                    chart_type='pie',
+                    series_name=f'Overall health journey task metrics',
+                    sheet_name=sheet_name,
+                    start_row=current_row + 2,
+                    start_col=start_col,
+                    df_len=len(overall_task_df),
+                    value_col=start_col + 1
+                )
+
+                worksheet.insert_chart(current_row + 2, graph_pos, overall_health_journey_chart)
+                current_row += len(overall_task_df) + 18
+    
+            health_journey_tasks_data, unique_careplan_codes = health_journey_tasks(health_journey_metrics)
+            for plan_code in unique_careplan_codes:
+                specific_careplan_data = [task for task in health_journey_tasks_data if task['PlanCode'] == plan_code]
+                
+                if specific_careplan_data:
+                    completed_count = specific_careplan_data[0].get('careplan_completed_task_count', 0)
+                    not_completed_count = specific_careplan_data[0].get('careplan_not_completed_task_count', 0)
+
+                    health_journey_df = pd.DataFrame({
+                        'Status': health_journey_labels,
+                        'Count': [completed_count, not_completed_count]
+                    })
+
+                    health_journey_df_ = write_data_to_excel(
+                        data_frame=health_journey_df,
+                        sheet_name=sheet_name,
+                        start_row=current_row,
+                        start_col=start_col,
+                        writer=writer,
+                        title=f'Health journey task metrics for {plan_code}',
+                        description='The health journey tasks showing the number of completed and not completed tasks for the care plan.'
+                    )
+
+                    if not health_journey_df_.empty:
+                        health_journey_chart = create_chart(
+                            workbook=writer.book,
+                            chart_type='pie',
+                            series_name=f'Health journey task metrics for {plan_code}',
+                            sheet_name=sheet_name,
+                            start_row=current_row + 2,
+                            start_col=start_col,
+                            df_len=len(health_journey_df_),
+                            value_col=start_col + 1
+                        )
+
+                        worksheet.insert_chart(current_row + 2, graph_pos, health_journey_chart)
+                
+                current_row += len(health_journey_df) + 18
                     
     except Exception as e:
         print(f"Error generating feature engagement excel report: {e}")
@@ -225,3 +303,26 @@ async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetric
 def format_sheet_name(feature_name):
     formatted_name = feature_name.replace('-', ' ').title()
     return formatted_name  
+
+def health_journey_tasks(health_journey_metrics: HealthJourneyEngagementMetrics):
+    health_journey_tasks_data = health_journey_metrics.CareplanSpecific.HealthJourneyWiseTask
+    health_journey_completed_task =health_journey_metrics.CareplanSpecific.HealthJourneyWiseCompletedTask
+    for task in health_journey_tasks_data:
+        completed_task = next(
+            (completed for completed in health_journey_completed_task if completed['careplan_code'] == task['PlanCode']),
+            None
+        )
+        
+        completed_count = completed_task['careplan_completed_task_count'] if completed_task else 0
+        total_task_count = task['careplan_task_count']
+        not_completed_count = total_task_count - completed_count
+  
+        task['careplan_completed_task_count'] = completed_count
+        task['careplan_not_completed_task_count'] = not_completed_count
+        
+        unique_careplan_codes = list(set(
+        [task['PlanCode'] for task in health_journey_tasks_data] + 
+        [completed['careplan_code'] for completed in health_journey_completed_task]
+    ))
+
+    return health_journey_tasks_data, unique_careplan_codes

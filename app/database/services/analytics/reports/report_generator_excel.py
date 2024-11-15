@@ -15,7 +15,8 @@ from app.domain_types.schemas.analytics import (
     BasicAnalyticsStatistics,
     EngagementMetrics,
     FeatureEngagementMetrics,
-    GenericEngagementMetrics
+    GenericEngagementMetrics,
+    HealthJourneyEngagementMetrics
 )
 
 from app.modules.storage.storage_service import StorageService
@@ -36,7 +37,7 @@ async def generate_report_excel(
                 await add_active_users_data(metrics.GenericMetrics, writer)
                 await add_generic_engagement_data(metrics.GenericMetrics, writer)
                 await add_most_visited_feature(metrics.GenericMetrics, writer)
-                await add_feature_engagement_data(metrics.FeatureMetrics, metrics.MedicationManagementMetrics, writer)
+                await add_feature_engagement_data(metrics.FeatureMetrics, metrics.MedicationManagementMetrics, metrics.HealthJourneyMetrics, writer)
 
             excel_buffer.seek(0)
             storage = StorageService()
@@ -750,7 +751,7 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
 
 ################################################################################################
 
-async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagementMetrics, medication_management_metrics, writer) -> bool:
+async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagementMetrics, medication_management_metrics, health_journey_metrics:HealthJourneyEngagementMetrics, writer) -> bool:
     try:
         for metrics in feature_engagement_metrics:
             sheet_name = metrics.Feature
@@ -758,7 +759,8 @@ async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagem
                 feature_engagement_metrics = metrics,
                 writer = writer,
                 sheet_name = sheet_name,
-                medication_management_metrics = medication_management_metrics
+                medication_management_metrics = medication_management_metrics,
+                health_journey_metrics = health_journey_metrics
             )
     except Exception as e:
         print(f"Error generating feature engagement excel report: {e}")
