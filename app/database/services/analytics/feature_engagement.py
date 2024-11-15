@@ -768,6 +768,82 @@ async def get_health_journey_completed_task_count(filters: AnalyticsFilters):
         print_exception(e)
         return 0
 
+@trace_span("service: analytics: patient task: get_patient_completed_task_count")
+async def get_patient_completed_task_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT count(*) as patient_completed_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        WHERE 
+            userTask.StartedAt IS NOT NULL
+            AND
+            userTask.FinishedAt IS NOT NULL
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.DeletedAt IS NULL
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now();
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return 0
+
+@trace_span("service: analytics: patient task: get_category_wise_patient_completed_task_count")
+async def get_category_wise_patient_completed_task_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT userTask.Category AS task_category, count(*) as patient_completed_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        WHERE 
+            userTask.StartedAt IS NOT NULL
+            AND
+            userTask.FinishedAt IS NOT NULL
+            AND
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.DeletedAt IS NULL
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        GROUP BY
+            userTask.Category;
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return 0
+     
 @trace_span("service: analytics: health journey: get_health_journey_specific_completed_task_count")    
 async def get_health_journey_specific_completed_task_count(filters: AnalyticsFilters):
     try:
@@ -1005,6 +1081,72 @@ async def get_health_journey_task_count(filters: AnalyticsFilters):
         print_exception(e)
         return None
 
+@trace_span("service: analytics: patient task: get_patient_task_count") 
+async def get_patient_task_count(filters: AnalyticsFilters):
+    try:
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT count(*) as patient_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        WHERE 
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+			userTask.DeletedAt IS NULL
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now();
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None
+    
+@trace_span("service: analytics: patient task: get_category_wise_patient_task_count") 
+async def get_category_wise_patient_task_count(filters: AnalyticsFilters):
+    try:
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT userTask.Category AS task_category, count(*) as user_task_count
+        FROM user_tasks AS userTask
+        JOIN users u ON u.id = userTask.UserId
+        WHERE 
+            u.IsTestUser = 0
+            AND
+            u.RoleId = '{role_id}'
+            AND
+            userTask.DeletedAt IS NULL
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        GROUP BY
+            userTask.Category
+        """
+
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None
+    
 @trace_span("service: analytics: health journey: get_health_journey_specific_task_count")
 async def get_health_journey_specific_task_count(filters: AnalyticsFilters):
     try:
