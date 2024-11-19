@@ -6,11 +6,11 @@ from app.database.services.analytics.reports.report_utilities import(
   reindex_dataframe_to_all_missing_dates,
   write_data_to_excel
   )
-from app.domain_types.schemas.analytics import FeatureEngagementMetrics, HealthJourneyEngagementMetrics
+from app.domain_types.schemas.analytics import FeatureEngagementMetrics, HealthJourneyEngagementMetrics, PatientTaskEngagementMetrics
 
 ####################################################################################
 
-async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str, medication_management_metrics, health_journey_metrics:HealthJourneyEngagementMetrics):
+async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str, medication_management_metrics, health_journey_metrics:HealthJourneyEngagementMetrics, patient_task_metrics:PatientTaskEngagementMetrics):
     try:      
         start_row = 1
         start_col = 1
@@ -293,6 +293,86 @@ async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetric
                         worksheet.insert_chart(current_row + 2, graph_pos, health_journey_chart)
                 
                 current_row += len(health_journey_df) + 18
+                
+        if feature_engagement_metrics.Feature == 'user-task' and patient_task_metrics:
+            overall_patient_task_metrics = patient_task_metrics.Overall
+            category_specific_data = patient_task_metrics.CategorySpecific
+            overall_completed_tasks = overall_patient_task_metrics['patient_completed_task_count']
+            overall_not_completed_tasks = overall_patient_task_metrics['patient_task_count'] - overall_completed_tasks
+            patient_task_metrics_labels = ['Completed', 'Not Completed']
+            overall_patient_task_metrics_values = [
+                overall_completed_tasks,
+                overall_not_completed_tasks
+            ]
+
+            overall_task_df = pd.DataFrame({
+                'Status': patient_task_metrics_labels,
+                'Count': overall_patient_task_metrics_values
+            })
+            
+            overall_task_df = write_data_to_excel(
+                data_frame=overall_task_df,
+                sheet_name=sheet_name,
+                start_row=current_row,
+                start_col=start_col,
+                writer=writer,
+                title=f'Overall patient task metrics',
+                description='The patient tasks metrics showing the number of completed and not completed tasks.'
+            )
+
+            if not overall_task_df.empty:
+                overall_health_journey_chart = create_chart(
+                    workbook=writer.book,
+                    chart_type='pie',
+                    series_name=f'Overall patient task metrics',
+                    sheet_name=sheet_name,
+                    start_row=current_row + 2,
+                    start_col=start_col,
+                    df_len=len(overall_task_df),
+                    value_col=start_col + 1
+                )
+
+                worksheet.insert_chart(current_row + 2, graph_pos, overall_health_journey_chart)
+                current_row += len(overall_task_df) + 18
+            
+            for category in category_specific_data:
+                task_category = category['task_category']
+                completed = category.get('patient_completed_task_count', 0)
+                total_tasks = category.get('task_count', 0)
+                not_completed = total_tasks - completed
+
+                category_task_df = pd.DataFrame({
+                    "Status": ["Completed", "Not Completed"],
+                    "Count": [completed, not_completed]
+                })
+
+                category_task_df = write_data_to_excel(
+                    data_frame=category_task_df,
+                    sheet_name=sheet_name,
+                    start_row=current_row,
+                    start_col=start_col,
+                    writer=writer,
+                    title=f'{task_category} task metrics',
+                    description=f'The patient tasks metrics showing the number of completed and not completed tasks for {task_category}.'
+                )
+
+                if not category_task_df.empty:
+                    category_pie_chart = create_chart(
+                        workbook=writer.book,
+                        chart_type='pie',
+                        series_name=f'{task_category} task metrics',
+                        sheet_name=sheet_name,
+                        start_row=current_row + 2, 
+                        start_col=start_col,
+                        df_len=len(category_task_df),
+                        value_col=start_col + 1
+                    )
+
+                    worksheet.insert_chart(current_row + 2, graph_pos, category_pie_chart)
+
+                
+                    current_row += len(category_task_df) + 18 
+        
                     
     except Exception as e:
         print(f"Error generating feature engagement excel report: {e}")
@@ -326,3 +406,4 @@ def health_journey_tasks(health_journey_metrics: HealthJourneyEngagementMetrics)
     ))
 
     return health_journey_tasks_data, unique_careplan_codes
+
