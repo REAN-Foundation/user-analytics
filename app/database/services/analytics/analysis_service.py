@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 import asyncio
 import os
+import ast
 
 from pydantic import UUID4
 
@@ -41,9 +42,12 @@ from app.database.services.analytics.generic_engagement import (
     get_most_fired_events
 )
 from app.database.services.analytics.feature_engagement import (
+    get_assessment_query_response_details,
+    get_care_plan_wise_assessment_completion_count,
     get_category_wise_health_journey_task_count,
     get_category_wise_patient_completed_task_count,
     get_category_wise_patient_task_count,
+    get_custom_assessment_completion_count,
     get_feature_access_frequency,
     get_feature_engagement_rate,
     get_feature_retention_rate_on_specific_days,
@@ -57,16 +61,21 @@ from app.database.services.analytics.feature_engagement import (
     get_health_journey_specific_task_count,
     get_health_journey_task_count,
     get_medication_management_matrix,
+    get_multiple_choice_response_option_text,
     get_patient_completed_task_count,
     get_patient_task_count,
     get_user_wise_health_journey_completed_task_count,
+    get_vitals_manual_add_entry_count,
+    get_vitals_manual_and_device_add_entry_count,
 )
 from app.database.services.analytics.reports.report_generator_excel import generate_report_excel
 from app.database.services.analytics.reports.report_generator_json import generate_report_json
 from app.database.services.analytics.reports.report_generator_pdf import generate_report_pdf
 from app.domain_types.enums.event_categories import EventCategory
+from app.domain_types.enums.vital_types import VitalType
 from app.domain_types.schemas.analytics import (
     AnalyticsFilters,
+    AssessmentEngagementMetrics,
     BasicAnalyticsStatistics,
     Demographics,
     FeatureEngagementMetrics,
@@ -117,6 +126,12 @@ async def calculate(
         patient_task_matrix = await calculate_patient_task_matrix(filters)
         print("Calculated patient task matrix")
 
+        vital_matrix = await calculate_vital_matrix(filters)
+        print("Calculated vital metrics")
+
+        assessment_matrix = await calculate_assessment_matrix(filters)
+        print("Calculated assessment metrics")
+
         metrics = EngagementMetrics(
             TenantId        = filters.TenantId,
             TenantName      = filters.TenantName if filters.TenantName != None else 'Unspecified',
@@ -127,7 +142,9 @@ async def calculate(
             FeatureMetrics  = metrics_by_feature,
             MedicationManagementMetrics = medication_management_matrix,
             HealthJourneyMetrics = health_journey_matrix,
-            PatientTaskMetrics = patient_task_matrix
+            PatientTaskMetrics = patient_task_matrix,
+            VitalMetrics = vital_matrix,
+            AssessmentMetrics = assessment_matrix
         )
 
         saved_analytics = await save_analytics(analysis_code, metrics)
@@ -414,6 +431,67 @@ async def calculate_patient_task_matrix(filters: AnalyticsFilters):
         print_exception(e)
         return None
 
+async def calculate_vital_matrix(filters: AnalyticsFilters):
+    try:
+        filters = check_filter_params(filters)
+
+        results = await asyncio.gather(
+            get_vitals_manual_and_device_add_entry_count(filters, VitalType.BloodGlucose),
+            get_vitals_manual_and_device_add_entry_count(filters, VitalType.BloodOxygenSaturation),
+            get_vitals_manual_and_device_add_entry_count(filters, VitalType.BloodPressure),
+            get_vitals_manual_and_device_add_entry_count(filters, VitalType.BodyTemperature),
+            get_vitals_manual_and_device_add_entry_count(filters, VitalType.Pulse),
+            get_vitals_manual_add_entry_count(filters, VitalType.BodyHeight),
+            get_vitals_manual_add_entry_count(filters, VitalType.BodyWeight),
+        )
+
+        vitals = combine_vitals_device_and_manual_add_entry_count(
+            results[0],
+            results[1],
+            results[2],
+            results[3],
+            results[4],
+            results[5],
+            results[6],
+        )
+
+        return vitals
+
+    except Exception as e:
+        print_exception(e)
+        return None
+
+async def calculate_assessment_matrix(filters: AnalyticsFilters):
+    try:
+        filters = check_filter_params(filters)
+
+        results = await asyncio.gather(
+            get_custom_assessment_completion_count(filters),
+            get_care_plan_wise_assessment_completion_count(filters),
+            get_assessment_query_response_details(filters),
+            get_multiple_choice_response_option_text(filters),
+        )
+        custom_assessment_completion_count = results[0]
+        care_plan_wise_assessment_completion_count = results[1]
+        assessment_query_response_details = results[2]
+        multiple_choice_response_option_text = results[3]
+        assessment_query_response_details = update_response_option_text(assessment_query_response_details, multiple_choice_response_option_text)        
+
+        assessment_matrix: AssessmentEngagementMetrics = {
+            "CustomAssessmentCompletionCount": custom_assessment_completion_count,
+            "CareplanWiseAssessmentCompletionCount": care_plan_wise_assessment_completion_count,
+            "AssessmentQueryResponseDetails": assessment_query_response_details,
+            "MultipleChoiceResponseOptionDetails": multiple_choice_response_option_text
+        }  
+        return assessment_matrix
+
+    except Exception as e: 
+        print_exception(e)
+        return None
+
+
+
+
 def check_filter_params(filters: AnalyticsFilters | None = None) -> AnalyticsFilters:
 
     tenant_name = "unspecified"
@@ -652,3 +730,83 @@ def combine_category_wise_task_counts(category_wise_patient_completed_task_count
     except Exception as e:
         print_exception(e)
         return []   
+
+def combine_vitals_device_and_manual_add_entry_count(
+            blood_glucose,
+            blood_oxygen_saturation,
+            blood_pressure,
+            body_temperature,
+            pulse,
+            body_height,
+            body_weight,
+            ):
+        try:
+            result = []
+            if blood_glucose is not None:
+                result.append(blood_glucose)
+
+            if blood_oxygen_saturation is not None:
+                result.append(blood_oxygen_saturation)
+
+            if blood_pressure is not None:
+                result.append(blood_pressure)
+
+            if body_temperature is not None:
+                result.append(body_temperature)
+
+            if pulse is not None:
+                result.append(pulse)
+
+            if body_height is not None:
+                result.append(body_height)
+
+            if body_weight is not None:
+                result.append(body_weight)
+
+            return result
+        except Exception as e:
+            print_exception(e)
+            return None
+
+def update_response_option_text(assessment_query_response_details, multiple_choice_response_option_text):
+    try:
+        option_lookup = {}
+        
+        for option in multiple_choice_response_option_text:
+            key = (option['node_id'], option['assessment_template_title'], option['node_title'])
+            if key not in option_lookup:
+                option_lookup[key] = {}
+            option_lookup[key][option['option_sequence']] = option['option_text']
+        
+        for response_detail in assessment_query_response_details:
+            query_type = response_detail['query_response_type']
+            
+            if query_type == 'Multi Choice Selection':
+                node_id = response_detail['node_id']
+                template_title = response_detail['assessment_template_title']
+                node_title = response_detail['node_title']
+                
+                response_sequence_list = response_detail['response']
+                if isinstance(response_sequence_list, str):
+                    try:
+                        response_sequence_list = ast.literal_eval(response_sequence_list)
+                    except (ValueError, SyntaxError):
+                        response_sequence_list = []
+
+                key = (node_id, template_title, node_title)
+                option_texts = []
+                
+                for sequence_number in response_sequence_list:
+                    option_text = option_lookup.get(key, {}).get(int(sequence_number), f'Unknown Option {sequence_number}')
+                    option_texts.append(option_text)
+                
+                response_detail['response_option_text'] = ', '.join(option_texts) 
+
+            elif query_type == 'Text':
+                response_detail['response_option_text'] = response_detail['response']
+
+        return assessment_query_response_details
+
+    except Exception as e:
+        print_exception(e)
+        return None

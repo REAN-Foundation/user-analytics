@@ -1214,3 +1214,300 @@ async def get_health_journey_custom_assessment_task_count(filters: AnalyticsFilt
     except Exception as e:
         print_exception(e)
         return None
+
+@trace_span("service: analytics: vital matrix: get_vitals_manual_and_device_add_entry_count")
+async def get_vitals_manual_and_device_add_entry_count(filters: AnalyticsFilters, vital_name: str):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+
+        query = f"""
+        SELECT 
+            COUNT(*) AS add_event_count,
+            COUNT(CASE WHEN Attributes LIKE "%'Provider': None%" THEN 1 END) AS manual_entry_add_event_count,
+            COUNT(CASE WHEN Attributes NOT LIKE "%'Provider': None%" THEN 1 END) AS device_entry_add_event_count
+        FROM events e
+        JOIN users user ON e.UserId = user.id
+        WHERE
+            e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+            __CHECKS__
+            AND
+            ResourceType = 'biometric'
+            AND EventName = 'vitals-add'
+            AND EventCategory = 'vitals'
+            AND EventSubject = 'vitals-{vital_name}';
+        """
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+        
+        result = connector.execute_read_query(query)
+        if result is not None or len(result) > 0:
+            features = {
+                'vital_name': vital_name,
+            }
+            features = {**features, **result[0]}
+            return features
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return None
+
+@trace_span("service: analytics: vital matrix: get_vitals_manual_add_entry_count")
+async def get_vitals_manual_add_entry_count(filters: AnalyticsFilters, vital_name: str):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_analytics_db_connector()
+
+        query = f"""
+        SELECT 
+            COUNT(*) AS add_event_count
+        FROM events e
+        JOIN users user ON e.UserId = user.id
+        WHERE
+            e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
+            __CHECKS__
+            AND
+            ResourceType = 'biometric'
+            AND EventName = 'vitals-add'
+            AND EventCategory = 'vitals'
+            AND EventSubject = 'vitals-{vital_name}';
+        """
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+        
+        result = connector.execute_read_query(query)
+        if result is not None or len(result) > 0:
+            features = {
+                'vital_name': vital_name,
+                'manual_entry_add_event_count' : result[0]['add_event_count'],
+                'device_entry_add_event_count' : 0
+            }
+            features = {**features, **result[0]}
+            return features
+        return result
+    
+    except Exception as e:  
+        print_exception(e)
+        return None
+    
+@trace_span("service: analytics: assessment matrix: get_custom_assessment_completion_count")
+async def get_custom_assessment_completion_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+        SELECT 
+            ActionType AS action_type,
+            COUNT(*) AS assessment_count,
+            COUNT(CASE WHEN userTask.StartedAt IS NOT NULL AND userTask.FinishedAt IS NULL THEN 1 END) AS in_progress_assessment_count,
+            COUNT(CASE WHEN userTask.StartedAt IS NOT NULL AND userTask.FinishedAt IS NOT NULL THEN 1 END) AS completed_assessment_count,
+            COUNT(CASE WHEN userTask.StartedAt IS NULL AND userTask.FinishedAt IS NULL THEN 1 END) AS assessment_not_started_count
+        FROM 
+            user_tasks userTask
+        JOIN users user ON user.id = userTask.UserId
+        JOIN assessments assessment ON assessment.id = userTask.ActionId
+        WHERE 
+            userTask.Category = 'Assessment'
+            AND
+            user.IsTestUser = 0 
+            AND
+            userTask.ScheduledEndTime < now()
+            AND
+            userTask.DeletedAt IS NULL
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        __CHECKS__
+        GROUP BY 
+            userTask.ActionType;
+        """
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None
+    
+@trace_span("service: analytics: assessment matrix: get_care_plan_wise_assessment_completion_count")
+async def get_care_plan_wise_assessment_completion_count(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+       SELECT 
+            ActionType AS action_type ,
+            careplanActivity.PlanCode AS care_plan_code,
+            COUNT(*) AS assessment_count,
+            COUNT(CASE WHEN userTask.StartedAt IS NOT NULL AND userTask.FinishedAt IS NULL THEN 1 END) AS in_progress_assessment_count,
+            COUNT(CASE WHEN userTask.StartedAt IS NOT NULL AND userTask.FinishedAt IS NOT NULL THEN 1 END) AS completed_assessment_count,
+            COUNT(CASE WHEN userTask.StartedAt IS NULL AND userTask.FinishedAt IS NULL THEN 1 END) AS assessment_not_started_count
+        FROM 
+            user_tasks userTask
+        JOIN users user ON user.id = userTask.UserId
+        JOIN careplan_activities careplanActivity ON careplanActivity.id = userTask.ActionId
+        WHERE 
+            userTask.Category = 'Assessment'
+            AND
+            user.IsTestUser = 0 
+            AND
+            userTask.ScheduledEndTime < now()
+            AND
+            userTask.DeletedAt IS NULL
+            AND
+            userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+            AND
+            userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
+        __CHECKS__
+        GROUP BY 
+            userTask.ActionType,
+            careplanActivity.PlanCode;
+        """
+
+        checks_str = add_common_checks(tenant_id, role_id)
+        if len(checks_str) > 0:
+            checks_str = "AND " + checks_str
+        query = query.replace("__CHECKS__", checks_str)
+
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None
+
+@trace_span("service: analytics: assessment matrix: get_assessment_query_response_details")
+async def get_assessment_query_response_details(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+                SELECT
+                    at.id AS assessment_template_id,
+                    an.id AS node_id,
+                    at.Title AS assessment_template_title,
+                    an.Title AS node_title,
+                    aqr.Type AS query_response_type,
+                    -- Use CASE to select the appropriate response column
+                    CASE 
+                        WHEN aqr.Type = 'Single Choice Selection' THEN CAST(aqr.IntegerValue AS CHAR) 
+                        WHEN aqr.Type IN ('Text', 'Multi Choice Selection') THEN aqr.TextValue
+                        ELSE NULL
+                    END AS response,
+                    COUNT(*) AS response_count,
+                    aqo.Text AS response_option_text
+                FROM 
+                    assessment_templates at
+                LEFT JOIN 
+                    assessment_nodes an ON at.id = an.TemplateId
+                LEFT JOIN 
+                    assessment_query_responses aqr ON an.id = aqr.NodeId
+                LEFT JOIN 
+                    assessment_query_options aqo ON an.id = aqo.NodeId 
+                    AND (
+                        (aqr.Type = 'Single Choice Selection' AND aqo.Sequence = aqr.IntegerValue) 
+                        OR 
+                        (aqr.Type IN ('Text', 'Multi Choice Selection') AND aqo.Sequence = CAST(aqr.TextValue AS UNSIGNED))
+                    )
+                WHERE
+                    an.NodeType <> 'Node list'
+                    AND 
+                    aqr.Type IS NOT NULL
+                    AND 
+                    at.DeletedAt IS NULL
+                GROUP BY 
+                    at.id, 
+                    an.id, 
+                    aqr.Type, 
+                    response, 
+                    aqo.Text
+                ORDER BY 
+                    at.id, 
+                    an.id, 
+                    response_count DESC;
+                """
+
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None
+
+@trace_span("service: analytics: assessment matrix: get_multiple_choice_response_option_text")     
+async def get_multiple_choice_response_option_text(filters: AnalyticsFilters):
+    try:
+        tenant_id  = filters.TenantId
+        start_date = filters.StartDate
+        end_date   = filters.EndDate    
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+                SELECT
+                    aqo.NodeId AS node_id,
+                    at.Title AS assessment_template_title,
+                    an.Title AS node_title,
+                    an.Sequence AS node_sequence,
+                    an.QueryResponseType AS query_response_type,
+                    aqo.Text AS option_text,
+                    aqo.Sequence AS option_sequence
+                FROM 
+                    assessment_templates at
+                LEFT JOIN 
+                    assessment_nodes an ON at.id = an.TemplateId
+                LEFT JOIN 
+                    assessment_query_options aqo ON an.id = aqo.NodeId
+                WHERE 
+                    an.QueryResponseType = 'Multi Choice Selection'
+                    AND at.DeletedAt IS NULL
+                    AND an.DeletedAt IS NULL
+                ORDER BY 
+                    at.id, 
+                    an.Sequence, 
+                    aqo.Sequence;
+                """
+
+        result = connector.execute_read_query(query)
+        return result
+
+    except Exception as e:
+        print_exception(e)
+        return None
