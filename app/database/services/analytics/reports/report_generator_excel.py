@@ -38,7 +38,7 @@ async def generate_report_excel(
                 await add_active_users_data(metrics.GenericMetrics, writer)
                 await add_generic_engagement_data(metrics.GenericMetrics, writer)
                 await add_most_visited_feature(metrics.GenericMetrics, writer)
-                await add_feature_engagement_data(metrics.FeatureMetrics, metrics.MedicationManagementMetrics, metrics.HealthJourneyMetrics, metrics.PatientTaskMetrics, writer)
+                await add_feature_engagement_data(metrics.FeatureMetrics, metrics.MedicationManagementMetrics, metrics.HealthJourneyMetrics, metrics.PatientTaskMetrics,metrics.VitalMetrics, writer)
 
             excel_buffer.seek(0)
             storage = StorageService()
@@ -752,7 +752,13 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
 
 ################################################################################################
 
-async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagementMetrics, medication_management_metrics, health_journey_metrics:HealthJourneyEngagementMetrics, patient_task_metrics:PatientTaskEngagementMetrics, writer) -> bool:
+async def add_feature_engagement_data(
+    feature_engagement_metrics: FeatureEngagementMetrics,
+    medication_management_metrics,
+    health_journey_metrics:HealthJourneyEngagementMetrics,
+    patient_task_metrics:PatientTaskEngagementMetrics,
+    vitals_task_metrics : list | None,
+    writer) -> bool:
     try:
         for metrics in feature_engagement_metrics:
             sheet_name = metrics.Feature
@@ -762,7 +768,8 @@ async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagem
                 sheet_name = sheet_name,
                 medication_management_metrics = medication_management_metrics,
                 health_journey_metrics = health_journey_metrics,
-                patient_task_metrics = patient_task_metrics
+                patient_task_metrics = patient_task_metrics,
+                vitals_task_metrics = vitals_task_metrics   
             )
     except Exception as e:
         print(f"Error generating feature engagement excel report: {e}")
