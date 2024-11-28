@@ -10,7 +10,14 @@ from app.domain_types.schemas.analytics import FeatureEngagementMetrics, HealthJ
 
 ####################################################################################
 
-async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetrics, writer, sheet_name:str, medication_management_metrics, health_journey_metrics:HealthJourneyEngagementMetrics, patient_task_metrics:PatientTaskEngagementMetrics):
+async def feature_engagement(
+    feature_engagement_metrics: FeatureEngagementMetrics,
+    writer, sheet_name:str,
+    medication_management_metrics:list | None,
+    health_journey_metrics:HealthJourneyEngagementMetrics,
+    patient_task_metrics:PatientTaskEngagementMetrics,
+    vitals_task_metrics:list | None
+    ) -> bool:
     try:      
         start_row = 1
         start_col = 1
@@ -347,32 +354,69 @@ async def feature_engagement(feature_engagement_metrics: FeatureEngagementMetric
                 })
 
                 category_task_df = write_data_to_excel(
-                    data_frame=category_task_df,
-                    sheet_name=sheet_name,
-                    start_row=current_row,
-                    start_col=start_col,
-                    writer=writer,
-                    title=f'{task_category} task metrics',
-                    description=f'The patient tasks metrics showing the number of completed and not completed tasks for {task_category}.'
+                    data_frame = category_task_df,
+                    sheet_name = sheet_name,
+                    start_row = current_row,
+                    start_col = start_col,
+                    writer = writer,
+                    title = f'{task_category} task metrics',
+                    description = f'The patient tasks metrics showing the number of completed and not completed tasks for {task_category}.'
                 )
 
                 if not category_task_df.empty:
                     category_pie_chart = create_chart(
-                        workbook=writer.book,
-                        chart_type='pie',
-                        series_name=f'{task_category} task metrics',
-                        sheet_name=sheet_name,
-                        start_row=current_row + 2, 
-                        start_col=start_col,
-                        df_len=len(category_task_df),
-                        value_col=start_col + 1
+                        workbook = writer.book,
+                        chart_type = 'pie',
+                        series_name = f'{task_category} task metrics',
+                        sheet_name = sheet_name,
+                        start_row = current_row + 2, 
+                        start_col = start_col,
+                        df_len = len(category_task_df),
+                        value_col = start_col + 1
                     )
 
                     worksheet.insert_chart(current_row + 2, graph_pos, category_pie_chart)
 
                 
                     current_row += len(category_task_df) + 18 
-        
+                    
+        if feature_engagement_metrics.Feature == 'vitals' and vitals_task_metrics:
+            # vitals_task_data = vitals_task_metrics[0]
+            for vital_task in vitals_task_metrics:
+                vital_name_ = vital_task['vital_name'].value
+                vital_name = vital_name_.replace('-', ' ').title()
+                manual_entry_count = vital_task.get('manual_entry_add_event_count', 0)
+                device_entry_count = vital_task.get('device_entry_add_event_count', 0)
+                vital_task_df = pd.DataFrame({
+                    "Status": ["Manual Entry Count", "Device Entry Count"],
+                    "Count": [manual_entry_count, device_entry_count]
+                })
+                
+                vital_task_df = write_data_to_excel(
+                    data_frame = vital_task_df,
+                    sheet_name = sheet_name,
+                    start_row = current_row,
+                    start_col = start_col,
+                    writer = writer,
+                    title = f'{vital_name} task metrics',
+                    description = f'This shows the addition rate of vital metrics, comparing the total events logged for each vital metric and their breakdown into manual entries and device-based entries.'
+                )
+
+                if not vital_task_df.empty:
+                    vital_pie_chart = create_chart(
+                        workbook = writer.book,
+                        chart_type = 'pie',
+                        series_name = f'{vital_name} task metrics',
+                        sheet_name = sheet_name,
+                        start_row = current_row + 2, 
+                        start_col = start_col,
+                        df_len = len(vital_task_df),
+                        value_col = start_col + 1
+                    )
+
+                    worksheet.insert_chart(current_row + 2, graph_pos, vital_pie_chart)
+
+                    current_row += len(vital_task_df) + 18 
                     
     except Exception as e:
         print(f"Error generating feature engagement excel report: {e}")
@@ -386,7 +430,7 @@ def format_sheet_name(feature_name):
 
 def health_journey_tasks(health_journey_metrics: HealthJourneyEngagementMetrics):
     health_journey_tasks_data = health_journey_metrics.CareplanSpecific.HealthJourneyWiseTask
-    health_journey_completed_task =health_journey_metrics.CareplanSpecific.HealthJourneyWiseCompletedTask
+    health_journey_completed_task = health_journey_metrics.CareplanSpecific.HealthJourneyWiseCompletedTask
     for task in health_journey_tasks_data:
         completed_task = next(
             (completed for completed in health_journey_completed_task if completed['careplan_code'] == task['PlanCode']),
