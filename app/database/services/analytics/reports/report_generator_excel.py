@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from app.common.utils import print_exception
 from app.database.services.analytics.common import get_current_report_folder_temp_path, get_storage_key_path
+from app.database.services.analytics.reports.assessment_generator_excel import assessment_engagement
 from app.database.services.analytics.reports.feature_generator_excel import feature_engagement
 from app.database.services.analytics.reports.report_utilities import(
     create_chart,
@@ -12,6 +13,7 @@ from app.database.services.analytics.reports.report_utilities import(
     write_grouped_data_to_excel
 )
 from app.domain_types.schemas.analytics import (
+    AssessmentEngagementMetrics,
     BasicAnalyticsStatistics,
     EngagementMetrics,
     FeatureEngagementMetrics,
@@ -39,6 +41,7 @@ async def generate_report_excel(
                 await add_generic_engagement_data(metrics.GenericMetrics, writer)
                 await add_most_visited_feature(metrics.GenericMetrics, writer)
                 await add_feature_engagement_data(metrics.FeatureMetrics, metrics.MedicationManagementMetrics, metrics.HealthJourneyMetrics, metrics.PatientTaskMetrics,metrics.VitalMetrics, writer)
+                await add_assessments_engagement_data(metrics.AssessmentMetrics, writer)
 
             excel_buffer.seek(0)
             storage = StorageService()
@@ -777,3 +780,16 @@ async def add_feature_engagement_data(
     return True
 
 ##################################################################################
+
+async def add_assessments_engagement_data(
+    assessment_metrics: AssessmentEngagementMetrics,
+    writer) -> bool:
+    try:
+        await assessment_engagement(
+            assessment_metrics = assessment_metrics,
+            writer = writer,  
+        )
+    except Exception as e:
+        print(f"Error generating assessment engagement excel report: {e}")
+        return False
+    return True
