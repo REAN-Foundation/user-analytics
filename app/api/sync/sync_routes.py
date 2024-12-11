@@ -15,6 +15,7 @@ from app.api.sync.sync_handler import (
     sync_stand_events_,
     sync_step_events_,
     sync_symptom_events_,
+    sync_user_account_events_,
     sync_user_login_session_events_,
     sync_user_task_events_,
     sync_users_,
@@ -38,9 +39,22 @@ async def sync_users(background_tasks: BackgroundTasks):
     resp = ResponseModel[bool](Message=message, Data=True)
     return resp
 
+@router.post("/events/user-accounts", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
+async def sync_user_account_events(background_tasks: BackgroundTasks,
+                                start_date: Optional[str]  = Query(None, alias="StartDate"),
+                                end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_user_account_events_, filters)
+    message = "User account events synchronization has started."
+    resp = ResponseModel[bool](Message=message, Data=True)
+    return resp
+
 @router.post("/events/logins", status_code=status.HTTP_200_OK, response_model=ResponseModel[bool|None])
-async def sync_user_login_session_events(background_tasks: BackgroundTasks):
-    background_tasks.add_task(sync_user_login_session_events_)
+async def sync_user_login_session_events(background_tasks: BackgroundTasks,
+                                    start_date: Optional[str]  = Query(None, alias="StartDate"),
+                                    end_date: Optional[str]  = Query(None, alias="EndDate")):
+    filters = validate_data_sync_search_filter(start_date, end_date)
+    background_tasks.add_task(sync_user_login_session_events_, filters)
     message = "User login session events synchronization has started."
     resp = ResponseModel[bool](Message=message, Data=True)
     return resp

@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from app.common.utils import print_exception
 from app.database.services.analytics.common import get_current_report_folder_temp_path, get_storage_key_path
+from app.database.services.analytics.reports.assessment_generator_excel import assessment_engagement
 from app.database.services.analytics.reports.feature_generator_excel import feature_engagement
 from app.database.services.analytics.reports.report_utilities import(
     create_chart,
@@ -12,10 +13,13 @@ from app.database.services.analytics.reports.report_utilities import(
     write_grouped_data_to_excel
 )
 from app.domain_types.schemas.analytics import (
+    AssessmentEngagementMetrics,
     BasicAnalyticsStatistics,
     EngagementMetrics,
     FeatureEngagementMetrics,
-    GenericEngagementMetrics
+    GenericEngagementMetrics,
+    HealthJourneyEngagementMetrics,
+    PatientTaskEngagementMetrics
 )
 
 from app.modules.storage.storage_service import StorageService
@@ -36,7 +40,8 @@ async def generate_report_excel(
                 await add_active_users_data(metrics.GenericMetrics, writer)
                 await add_generic_engagement_data(metrics.GenericMetrics, writer)
                 await add_most_visited_feature(metrics.GenericMetrics, writer)
-                await add_feature_engagement_data(metrics.FeatureMetrics, writer)
+                await add_feature_engagement_data(metrics.FeatureMetrics, metrics.MedicationManagementMetrics, metrics.HealthJourneyMetrics, metrics.PatientTaskMetrics,metrics.VitalMetrics, writer)
+                await add_assessments_engagement_data(metrics.AssessmentMetrics, writer)
 
             excel_buffer.seek(0)
             storage = StorageService()
@@ -750,14 +755,24 @@ async def add_most_visited_feature(generic_engagement_metrics: GenericEngagement
 
 ################################################################################################
 
-async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagementMetrics, writer) -> bool:
+async def add_feature_engagement_data(
+    feature_engagement_metrics: FeatureEngagementMetrics,
+    medication_management_metrics,
+    health_journey_metrics:HealthJourneyEngagementMetrics,
+    patient_task_metrics:PatientTaskEngagementMetrics,
+    vitals_task_metrics : list | None,
+    writer) -> bool:
     try:
         for metrics in feature_engagement_metrics:
             sheet_name = metrics.Feature
             await feature_engagement(
                 feature_engagement_metrics = metrics,
                 writer = writer,
-                sheet_name = sheet_name
+                sheet_name = sheet_name,
+                medication_management_metrics = medication_management_metrics,
+                health_journey_metrics = health_journey_metrics,
+                patient_task_metrics = patient_task_metrics,
+                vitals_task_metrics = vitals_task_metrics   
             )
     except Exception as e:
         print(f"Error generating feature engagement excel report: {e}")
@@ -765,3 +780,16 @@ async def add_feature_engagement_data(feature_engagement_metrics: FeatureEngagem
     return True
 
 ##################################################################################
+
+async def add_assessments_engagement_data(
+    assessment_metrics: AssessmentEngagementMetrics,
+    writer) -> bool:
+    try:
+        await assessment_engagement(
+            assessment_metrics = assessment_metrics,
+            writer = writer,  
+        )
+    except Exception as e:
+        print(f"Error generating assessment engagement excel report: {e}")
+        return False
+    return True

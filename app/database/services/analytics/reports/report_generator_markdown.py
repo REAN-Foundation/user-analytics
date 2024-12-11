@@ -130,7 +130,7 @@ async def generate_report_markdown(
         feature_engagement_table_content_str = generate_engagement_metrics_table_content(metrics)
         template_str = template_str.replace("{{feature_engagement_table_content}}", feature_engagement_table_content_str)
         
-        all_features_engagement_str = generate_all_feature_engagement_markdown(metrics.FeatureMetrics)
+        all_features_engagement_str = generate_all_feature_engagement_markdown(metrics.FeatureMetrics, metrics.MedicationManagementMetrics)
         template_str = template_str.replace("{{all_features_data}}", all_features_engagement_str)
         
         average_session_length_str = str(int(metrics.GenericMetrics.AverageSessionLengthMinutes))

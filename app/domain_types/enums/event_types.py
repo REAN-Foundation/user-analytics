@@ -37,6 +37,8 @@ class EventType(str, Enum):
     MedicationCreate = "medication-create"
     MedicationUpdate = "medication-update"
     MedicationDelete = "medication-delete"
+    MedicationConsumptionCreate = "medication-consumption-create"
+    MedicationConsumptionDelete = "medication-consumption-delete"
     # Medication schedule events
     MedicationScheduleTaken = "medication-schedule-taken"
     MedicationScheduleMissed = "medication-schedule-missed"

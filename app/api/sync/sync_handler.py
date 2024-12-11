@@ -12,6 +12,7 @@ from app.modules.data_sync.sleep.sleep_events_synchronizer import SleepEventsSyn
 from app.modules.data_sync.stand.stand_events_synchronizer import StandEventsSynchronizer
 from app.modules.data_sync.steps.step_events_synchronizer import StepEventsSynchronizer
 from app.modules.data_sync.symptoms.symptom_events_synchronizer import SymptomEventsSynchronizer
+from app.modules.data_sync.user_accounts.user_account_events_synchronizer import UserAccountEventSynchronizer
 from app.modules.data_sync.user_tasks.user_task_events_synchronizer import UserTaskEventsSynchronizer
 from app.modules.data_sync.vitals.blood_glucose_events_synchronizer import BloodGlucoseEventsSynchronizer
 from app.modules.data_sync.vitals.cholesterol_events_synchronizer import CholesterolEventsSynchronizer
@@ -39,10 +40,21 @@ def sync_users_():
     except Exception as e:
         print_exception(e)
 
+@trace_span("handler: sync_users_account_events")
+def sync_user_account_events_(filters: DataSyncSearchFilter):
+    try:
+        UserAccountEventSynchronizer.sync_user_create_events(filters)
+        UserAccountEventSynchronizer.sync_user_delete_events(filters)
+        UserAccountEventSynchronizer.sync_user_password_reset_code_events(filters)
+    except Exception as e:
+        print_exception(e)
+
 @trace_span("handler: sync_user_login_session_events")
-def sync_user_login_session_events_():
+def sync_user_login_session_events_(filters: DataSyncSearchFilter):
     try:
         LoginEventsSynchronizer.sync_user_login_events()
+        LoginEventsSynchronizer.sync_generate_otp_events(filters)
+        LoginEventsSynchronizer.sync_user_logout_events(filters)
     except Exception as e:
         print_exception(e)
 
@@ -53,6 +65,8 @@ def sync_medication_events_(filters: DataSyncSearchFilter):
         MedicationEventsSynchronizer.sync_medication_delete_events(filters)
         MedicationEventsSynchronizer.sync_medication_schedule_taken_events(filters)
         MedicationEventsSynchronizer.sync_medication_schedule_missed_events(filters)
+        # MedicationEventsSynchronizer.sync_medication_consumption_create_events(filters)
+        # MedicationEventsSynchronizer.sync_medication_consumption_delete_events(filters)
     except Exception as e:
         print_exception(e)
 
