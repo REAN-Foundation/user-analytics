@@ -1319,9 +1319,9 @@ async def get_custom_assessment_completion_count(filters: AnalyticsFilters):
         SELECT 
             ActionType AS action_type,
             COUNT(*) AS assessment_count,
-            COUNT(CASE WHEN userTask.StartedAt IS NOT NULL AND userTask.FinishedAt IS NULL THEN 1 END) AS in_progress_assessment_count,
-            COUNT(CASE WHEN userTask.StartedAt IS NOT NULL AND userTask.FinishedAt IS NOT NULL THEN 1 END) AS completed_assessment_count,
-            COUNT(CASE WHEN userTask.StartedAt IS NULL AND userTask.FinishedAt IS NULL THEN 1 END) AS assessment_not_started_count
+            COUNT(CASE WHEN assessment.StartedAt IS NOT NULL AND assessment.FinishedAt IS NULL THEN 1 END) AS in_progress_assessment_count,
+            COUNT(CASE WHEN assessment.StartedAt IS NOT NULL AND assessment.FinishedAt IS NOT NULL THEN 1 END) AS completed_assessment_count,
+            COUNT(CASE WHEN assessment.StartedAt IS NULL AND assessment.FinishedAt IS NULL THEN 1 END) AS assessment_not_started_count
         FROM 
             user_tasks userTask
         JOIN users user ON user.id = userTask.UserId
@@ -1370,13 +1370,14 @@ async def get_care_plan_wise_assessment_completion_count(filters: AnalyticsFilte
             ActionType AS action_type ,
             careplanActivity.PlanCode AS care_plan_code,
             COUNT(*) AS assessment_count,
-            COUNT(CASE WHEN userTask.StartedAt IS NOT NULL AND userTask.FinishedAt IS NULL THEN 1 END) AS in_progress_assessment_count,
+            COUNT(CASE WHEN assessment.StartedAt IS NOT NULL AND assessment.FinishedAt IS NULL THEN 1 END) AS in_progress_assessment_count,
             COUNT(CASE WHEN userTask.StartedAt IS NOT NULL AND userTask.FinishedAt IS NOT NULL THEN 1 END) AS completed_assessment_count,
             COUNT(CASE WHEN userTask.StartedAt IS NULL AND userTask.FinishedAt IS NULL THEN 1 END) AS assessment_not_started_count
         FROM 
             user_tasks userTask
         JOIN users user ON user.id = userTask.UserId
         JOIN careplan_activities careplanActivity ON careplanActivity.id = userTask.ActionId
+        JOIN assessments assessment ON assessment.UserTaskId = userTask.id
         WHERE 
             userTask.Category = 'Assessment'
             AND
