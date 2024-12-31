@@ -17,6 +17,7 @@ RUN apt-get update && \
     python3-venv \
     libmariadb-dev \
     pkg-config \
+    curl \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -53,6 +54,7 @@ RUN apt-get update && \
     fontconfig \
     libmagic1 \
     bash \
+    curl \
     mariadb-client \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/*
@@ -79,11 +81,11 @@ RUN chmod -R 755 /app && \
 USER appuser
 
 # Add health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1
 
 # Expose the application port
 EXPOSE 3000
 
 # Set the entrypoint
-ENTRYPOINT ["/bin/bash", "-c", "/app/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]
