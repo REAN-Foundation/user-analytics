@@ -1,33 +1,40 @@
-FROM python:3.10
-ADD . /app
+# Use the latest stable Python 3.10 and Alpine image
+FROM python:3.10-alpine3.19
 
-# Install dependencies including pandoc and AWS CLI
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+# Set environment variables to avoid writing bytecode and unbuffered output
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Install dependencies and upgrade vulnerable packages
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache \
     pandoc \
-    libexpat1 \
     texlive-xetex \
-    texlive-fonts-recommended \
-    texlive-plain-generic \
-    texlive-latex-extra \
-    python3 \
-    python3-pip \
-    && pip3 install --upgrade pip \
-    && pip3 install awscli \
-    && apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    bash \
+    build-base \
+    mariadb-dev && \
+    python3 -m ensurepip --upgrade && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install awscli
 
+# Set the working directory for the application
 WORKDIR /app
-RUN python -m venv venv
-RUN . venv/bin/activate
-RUN pip install --upgrade pip
-RUN pip install setuptools wheel
+
+# Copy requirements file first to install dependencies separately
+COPY requirements.txt /app/
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make sure entrypoint.sh is executable
+# Copy the rest of the application files
+COPY . /app/
+
+# Ensure that entrypoint.sh has executable permissions
 RUN chmod +x /app/entrypoint.sh
 
+# Expose the application port
 EXPOSE 3000
 
-# Set the entrypoint
+# Use a command to keep the container running or start the app
 ENTRYPOINT ["/bin/bash", "-c", "/app/entrypoint.sh"]
