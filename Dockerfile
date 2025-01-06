@@ -18,16 +18,12 @@ RUN apk update && \
     pip install --no-cache-dir --upgrade pip && \
     pip install awscli
 
-# Set the working directory for the application
 WORKDIR /app
 
-# Copy requirements file first to install dependencies separately
 COPY requirements.txt /app/
 
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application files
 COPY . /app/
 
 # Ensure that entrypoint.sh has executable permissions
