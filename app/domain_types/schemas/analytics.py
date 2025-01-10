@@ -99,7 +99,8 @@ class AssessmentEngagementMetrics(BaseModel):
     
 class PatientTaskEngagementMetrics(BaseModel):
     Overall  : dict|None = Field(description="Overall Patient tasks metrics")
-    CategorySpecific : list|None = Field(description="Category Specific Patient tasks metrics")    
+    CategorySpecific : list|None = Field(description="Category Specific Patient tasks metrics")   
+    QuarterWiseTaskCompletionMetrics: list|None = Field(description="Quarter wise metrics representing the count of users grouped by task completion percentage ranges (e.g., 0-25%, 26-50%, 51-75%, 76-100%)") 
 
 class EngagementMetrics(BaseModel):
       TenantId        : UUID4|None                              = Field(description="Tenant ID")
