@@ -1512,3 +1512,49 @@ async def get_multiple_choice_response_option_text(filters: AnalyticsFilters):
     except Exception as e:
         print_exception(e)
         return None
+    
+@trace_span("service: analytics: patient task: get_quarter_wise_task_completion_metrics")
+async def get_quarter_wise_task_completion_metrics(filters: AnalyticsFilters):
+    try:
+        start_date = filters.StartDate
+        end_date   = filters.EndDate
+        role_id    = filters.RoleId
+
+        connector = get_reancare_db_connector()
+
+        query = f"""
+                SELECT 
+                    UserId as user_id,
+                    ROUND((SUM(CASE WHEN Finished = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) AS task_completion_percentage
+                FROM 
+                    user_tasks userTask
+                JOIN
+                    users user ON user.id = userTask.UserId
+                WHERE 
+                    user.IsTestUser = 0
+                    AND user.RoleId = '{role_id}'
+                    AND userTask.DeletedAt IS NULL
+                    AND userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
+                    AND userTask.ScheduledEndTime BETWEEN '{start_date}' AND NOW()
+                GROUP BY 
+                    userTask.UserId;
+                """
+        result = connector.execute_read_query(query)
+        ranges = {'0-25%': 0, '25-50%': 0, '50-75%': 0, '75-100%': 0}
+        for row in result:
+            percentage = row['task_completion_percentage']
+            if 0 <= percentage <= 25:
+                ranges['0-25%'] += 1
+            elif 25 < percentage <= 50:
+                ranges['25-50%'] += 1
+            elif 50 < percentage <= 75:
+                ranges['50-75%'] += 1
+            elif 75< percentage <= 100:
+                ranges['75-100%'] += 1
+
+        filteredData = [{'percentage_range': key, 'user_count': value} for key, value in ranges.items()]
+        return filteredData
+
+    except Exception as e:
+        print_exception(e)
+        return None

@@ -57,6 +57,7 @@ from app.database.services.analytics.feature_engagement import (
     get_health_journey_completed_task_count,
     get_health_journey_custom_assessment_completed_task_count,
     get_health_journey_custom_assessment_task_count,
+    get_quarter_wise_task_completion_metrics,
     get_health_journey_specific_completed_task_count,
     get_health_journey_specific_task_count,
     get_health_journey_task_count,
@@ -356,7 +357,7 @@ async def calculate_health_journey_task_matrix(filters: AnalyticsFilters):
             get_health_journey_specific_task_count(filters),
 
             get_user_wise_health_journey_completed_task_count(filters),
-            get_category_wise_health_journey_task_count(filters),
+            get_category_wise_health_journey_task_count(filters),     
         )
 
         health_journey_completed_task_count = results[0]
@@ -384,7 +385,7 @@ async def calculate_health_journey_task_matrix(filters: AnalyticsFilters):
                 "HealthJourneyWiseTask": health_journey_specific_task_matrix,
                 "UserWiseHealthJourneyCompletedTask": user_wise_health_journey_completed_task_count,
                 "CategoryWiseHealthJourneyTask": category_wise_health_journey_task_count
-            }
+            }    
         }
             
         return health_journey_matrix
@@ -403,6 +404,7 @@ async def calculate_patient_task_matrix(filters: AnalyticsFilters):
             get_patient_task_count(filters),
             get_category_wise_patient_completed_task_count(filters),
             get_category_wise_patient_task_count(filters), 
+            get_quarter_wise_task_completion_metrics(filters)
         )
 
         patient_completed_task_count = results[0]
@@ -419,10 +421,12 @@ async def calculate_patient_task_matrix(filters: AnalyticsFilters):
             category_wise_patient_completed_task_count, 
             category_wise_patient_task_count
             )
-        
+        quarter_wise_task_completion_metrics = results[4]
+   
         patient_matrix:PatientTaskEngagementMetrics = {
             "Overall": patient_task_matrix,
-            "CategorySpecific": category_wise_task_matrix
+            "CategorySpecific": category_wise_task_matrix,
+            "QuarterWiseTaskCompletionMetrics": quarter_wise_task_completion_metrics
         }
             
         return patient_matrix

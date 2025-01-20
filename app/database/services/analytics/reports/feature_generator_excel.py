@@ -380,6 +380,19 @@ async def feature_engagement(
                 
                     current_row += len(category_task_df) + 18 
                     
+            if len(feature_engagement_metrics.Feature == 'user-task' and patient_task_metrics.QuarterWiseTaskCompletionMetrics):
+                quarterwise_task_completion_df = pd.DataFrame(patient_task_metrics.QuarterWiseTaskCompletionMetrics)
+                write_data_to_excel(
+                    data_frame = quarterwise_task_completion_df,
+                    sheet_name = sheet_name,
+                    start_row = current_row,
+                    start_col = start_col,
+                    writer = writer,
+                    title = 'Quarterwise Task Completion Metrics',
+                    rename_columns = {'percentage_range': 'Percentage Range', 'user_count': 'User Count'},
+                    description = 'This shows the count of users grouped by task completion percentage ranges.'
+                )
+                    
         if feature_engagement_metrics.Feature == 'vitals' and vitals_task_metrics:
             # vitals_task_data = vitals_task_metrics[0]
             for vital_task in vitals_task_metrics:
