@@ -40,6 +40,7 @@ class EventCategory(str, Enum):
     Feedback        = "feedback"
     Support         = "support"
     Meditation      = 'meditation'
+    KnowledgeNugget = 'knowledge-nugget'
 
 
 
