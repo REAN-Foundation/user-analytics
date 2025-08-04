@@ -5,17 +5,25 @@ from app.domain_types.miscellaneous.response_model import ResponseModel
 from app.domain_types.schemas.base_types import SuccessResponseModel
 from app.domain_types.schemas.event import EventResponseModel, EventSearchResults
 from app.telemetry.tracing import trace_span
+from app.common.logger import logger
 
 ###############################################################################
 
 @trace_span("handler: create_event")
 async def create_event_(model):
     tracemalloc.start()
-    await event_service.create_event(model)
-    message = "Event created successfully"
-    resp = ResponseModel[SuccessResponseModel](Message=message, Data=SuccessResponseModel())
-    tracemalloc.stop()
-    return resp
+    try:
+        logger.info(f"Creating event: UserId={model.UserId}, EventName={model.EventName}, EventCategory={model.EventCategory}")
+        await event_service.create_event(model)
+        message = "Event created successfully"
+        resp = ResponseModel[SuccessResponseModel](Message=message, Data=SuccessResponseModel())
+        logger.info(f"Event created successfully: UserId={model.UserId}, EventName={model.EventName}")
+        return resp
+    except Exception as e:
+        logger.error(f"Failed to create event: UserId={model.UserId}, EventName={model.EventName}, Error={str(e)}")
+        raise e
+    finally:
+        tracemalloc.stop()
 
 @trace_span("handler: get_event_by_id")
 def get_event_by_id_(id, db_session):
