@@ -1,6 +1,8 @@
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy.exc import SQLAlchemyError
 import traceback2 as traceback
 from fastapi import Request, status
@@ -143,6 +145,68 @@ def add_exception_handlers(app):
             },
         )
 
+    # Pydantic Validation Errors
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_exception_handler(request: Request, exc: RequestValidationError):
+
+        err_obj = ServiceError(exc)
+        print_colorized_json(err_obj)
+
+        # Extract detailed validation errors
+        validation_errors = []
+        for error in exc.errors():
+            field_path = " -> ".join(str(loc) for loc in error["loc"])
+            validation_errors.append({
+                "field": field_path,
+                "message": error["msg"],
+                "type": error["type"],
+                "input": error.get("input")
+            })
+
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=jsonable_encoder(
+                {
+                    "Message": "Request Validation Error",
+                    "Status": "Failure",
+                    "Errors": validation_errors,
+                    "RequestPath": str(request.url.path),
+                    "RequestMethod": request.method
+                }
+            ),
+        )
+
+    # Pydantic Model Validation Errors
+    @app.exception_handler(PydanticValidationError)
+    async def pydantic_validation_exception_handler(request: Request, exc: PydanticValidationError):
+
+        err_obj = ServiceError(exc)
+        print_colorized_json(err_obj)
+
+        # Extract detailed validation errors
+        validation_errors = []
+        for error in exc.errors():
+            field_path = " -> ".join(str(loc) for loc in error["loc"])
+            validation_errors.append({
+                "field": field_path,
+                "message": error["msg"],
+                "type": error["type"],
+                "input": error.get("input")
+            })
+
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=jsonable_encoder(
+                {
+                    "Message": "Model Validation Error",
+                    "Status": "Failure",
+                    "Errors": validation_errors,
+                    "RequestPath": str(request.url.path),
+                    "RequestMethod": request.method
+                }
+            ),
+        )
+
     # Validation Errors
 
     @app.exception_handler(ValidationError)
@@ -167,7 +231,7 @@ def add_exception_handlers(app):
 
     @app.exception_handler(SQLAlchemyError)
     async def database_exception_handler(request: Request, exc: SQLAlchemyError):
-        
+
         err_obj = ServiceError(exc)
         print_colorized_json(err_obj)
 
