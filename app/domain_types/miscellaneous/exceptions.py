@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 import traceback2 as traceback
 from fastapi import Request, status
 from app.common.logger import logger
-from app.common.utils import print_colorized_json
+from app.common.utils import print_colorized_json, print_clean_json
 
 ###############################################################################
 
@@ -120,6 +120,7 @@ class ServiceError:
         self.traces = traces
         self.status_code = status_code
 
+
     def get_traces(self, exc:Exception, depth: int = 3, offset: int = 0):
         traces = traceback.format_exception(type(exc), exc, exc.__traceback__)
         traces.reverse()
@@ -150,7 +151,9 @@ def add_exception_handlers(app):
     async def request_validation_exception_handler(request: Request, exc: RequestValidationError):
 
         err_obj = ServiceError(exc)
-        print_colorized_json(err_obj)
+        body = exc.body if hasattr(exc, 'body') else None
+        err_obj.body = body
+        print_clean_json(err_obj)
 
         # Extract detailed validation errors
         validation_errors = []
@@ -181,7 +184,7 @@ def add_exception_handlers(app):
     async def pydantic_validation_exception_handler(request: Request, exc: PydanticValidationError):
 
         err_obj = ServiceError(exc)
-        print_colorized_json(err_obj)
+        print_clean_json(err_obj)
 
         # Extract detailed validation errors
         validation_errors = []
