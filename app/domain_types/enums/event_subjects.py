@@ -56,3 +56,5 @@ class EventSubject(str, Enum):
     Water      = "water"
 
     PhysicalActivity = "physical-activity"
+
+    BotMessage      = "bot-message"
