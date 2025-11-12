@@ -1,119 +1,244 @@
+# annotated-types==0.7.0
+# anyio==4.4.0
+# APScheduler==3.10.4
+# asgiref==3.8.1
+# asyncio==3.4.3
+# attrs==18.2.0
+# azure-identity==1.18.0
+# azure-storage-blob==12.23.0
+# boto3==1.35.22
+# botocore==1.35.22
+# cachetools==5.5.0
+# certifi==2024.7.4
+# charset-normalizer==3.3.2
+# click==8.1.7
+# colorama==0.4.6
+# coloredlogs==15.0.1
+# contourpy==1.3.0
+# cycler==0.12.1
+# Deprecated==1.2.14
+# dnspython==2.6.1
+# email_validator==2.2.0
+# fastapi==0.112.2
+# fastapi-cli==0.0.5
+# fonttools==4.53.1
+# google-api-core==2.20.0
+# google-auth==2.35.0
+# google-cloud-core==2.4.1
+# google-cloud-storage==2.18.2
+# google-crc32c==1.6.0
+# google-resumable-media==2.7.2
+# googleapis-common-protos==1.59.1
+# greenlet
+# grpcio
+# h11==0.16.0
+# httpcore==1.0.9
+# httptools==0.6.1
+# httpx==0.27.2
+# humanfriendly==10.0
+# idna==3.8
+# importlib_metadata==8.4.0
+# itsdangerous==2.2.0
+# Jinja2==3.1.4
+# jmespath==1.0.1
+# kiwisolver==1.4.7
+# linecache2==1.0.0
+# markdown-it-py==3.0.0
+# MarkupSafe==2.1.5
+# matplotlib
+# mdurl==0.1.2
+# mysql==0.0.3
+# mysql-connector-python==9.0.0
+# mysqlclient==2.2.4
+# numpy==2.1.1
+# opentelemetry-api==1.27.0
+# opentelemetry-distro==0.48b0
+# opentelemetry-exporter-jaeger-proto-grpc==1.21.0
+# opentelemetry-exporter-jaeger-thrift==1.21.0
+# opentelemetry-exporter-otlp==1.27.0
+# opentelemetry-exporter-otlp-proto-common==1.27.0
+# opentelemetry-exporter-otlp-proto-grpc==1.27.0
+# opentelemetry-exporter-otlp-proto-http==1.27.0
+# opentelemetry-exporter-zipkin-json==1.27.0
+# opentelemetry-instrumentation==0.48b0
+# opentelemetry-instrumentation-asgi==0.48b0
+# opentelemetry-instrumentation-fastapi==0.48b0
+# opentelemetry-instrumentation-sqlalchemy==0.48b0
+# opentelemetry-proto==1.27.0
+# opentelemetry-sdk==1.27.0
+# opentelemetry-semantic-conventions==0.48b0
+# opentelemetry-util-http==0.48b0
+# orjson==3.10.7
+# packaging==24.1
+# pandas
+# pdflatex==0.1.3
+# pillow==10.4.0
+# proto-plus==1.24.0
+# protobuf==4.25.8
+# pyasn1==0.6.1
+# pyasn1_modules==0.4.1
+# pydantic==2.8.2
+# pydantic-extra-types==2.9.0
+# pydantic-settings==2.4.0
+# pydantic_core==2.20.1
+# Pygments==2.18.0
+# PyMySQL==1.1.1
+# pypandoc==1.13
+# pyparsing==3.1.4
+# pyreadline3==3.4.1
+# python-dateutil==2.9.0.post0
+# python-dotenv==1.0.1
+# python-multipart==0.0.9
+# pytz==2024.1
+# PyYAML==6.0.2
+# requests==2.32.3
+# rich==13.8.0
+# rsa==4.9
+# s3transfer==0.10.2
+# seaborn==0.13.2
+# setuptools==78.1.1
+# shellingham==1.5.4
+# six==1.16.0
+# sniffio==1.3.1
+# SQLAlchemy==2.0.32
+# starlette==0.38.2
+# tabulate==0.9.0
+# thrift==0.20.0
+# traceback2==1.4.0
+# typer==0.12.5
+# typing_extensions==4.12.2
+# tzdata==2024.1
+# tzlocal==5.2
+# ujson==5.10.0
+# urllib3==2.2.2
+# uvicorn==0.30.6
+# watchfiles==0.24.0
+# websockets==13.0.1
+# wrapt==1.16.0
+# XlsxWriter==3.2.0
+# zipp==3.20.1
+
+# Core async + framework
 annotated-types==0.7.0
 anyio==4.4.0
 APScheduler==3.10.4
 asgiref==3.8.1
 asyncio==3.4.3
 attrs==18.2.0
-azure-identity==1.18.0
-azure-storage-blob==12.23.0
-boto3==1.35.22
-botocore==1.35.22
-cachetools==5.5.0
-certifi==2024.7.4
-charset-normalizer==3.3.2
-click==8.1.7
+fastapi==0.115.5
+fastapi-cli==0.0.7
+starlette==0.40.0
+uvicorn==0.31.1
+httptools==0.7.1
+websockets==13.0.1
+watchfiles==0.24.0
+
+# Typing / validation
+pydantic==2.9.2
+pydantic-core==2.23.4
+pydantic-extra-types==2.10.0
+pydantic-settings==2.5.0
+typing_extensions==4.12.2
+
+# Logging / CLI / Utilities
 colorama==0.4.6
 coloredlogs==15.0.1
-contourpy==1.3.0
-cycler==0.12.1
-Deprecated==1.2.14
-dnspython==2.6.1
-email_validator==2.2.0
-fastapi==0.112.2
-fastapi-cli==0.0.5
-fonttools==4.53.1
-google-api-core==2.20.0
-google-auth==2.35.0
-google-cloud-core==2.4.1
-google-cloud-storage==2.18.2
-google-crc32c==1.6.0
+humanfriendly==10.0
+click==8.1.7
+typer==0.12.5
+tabulate==0.9.0
+rich==14.0.0
+
+# Azure SDKs
+azure-identity==1.18.0
+azure-storage-blob==12.23.0  # stable for 3.13
+
+# AWS SDKs
+boto3==1.35.22
+botocore==1.35.22
+s3transfer==0.10.0
+jmespath==1.0.1
+
+# Google Cloud SDKs (resolved conflicts)
+google-api-core==2.21.0
+google-auth==2.38.0
+google-cloud-core==2.5.0
+google-cloud-storage==3.0.0
+google-crc32c==1.7.0
 google-resumable-media==2.7.2
 googleapis-common-protos==1.59.1
-greenlet==3.0.3
-grpcio==1.66.1
+proto-plus==1.26.0
+protobuf==4.25.3
+
+# OpenTelemetry
+opentelemetry-api==1.28.0
+opentelemetry-sdk==1.28.0
+opentelemetry-instrumentation==0.49b0
+opentelemetry-exporter-jaeger-proto-grpc==1.21.0
+opentelemetry-instrumentation-fastapi
+
+# Web + parsing + networking
+requests==2.32.3
+urllib3==2.3.0
+charset-normalizer==3.4.2
+idna==3.8
 h11==0.16.0
 httpcore==1.0.9
-httptools==0.6.1
 httpx==0.27.2
-humanfriendly==10.0
-idna==3.8
-importlib_metadata==8.4.0
-itsdangerous==2.2.0
-Jinja2==3.1.4
-jmespath==1.0.1
-kiwisolver==1.4.7
-linecache2==1.0.0
-markdown-it-py==3.0.0
-MarkupSafe==2.1.5
-matplotlib==3.9.2
-mdurl==0.1.2
-mysql==0.0.3
-mysql-connector-python==9.0.0
-mysqlclient==2.2.4
-numpy==2.1.1
-opentelemetry-api==1.27.0
-opentelemetry-distro==0.48b0
-opentelemetry-exporter-jaeger-proto-grpc==1.21.0
-opentelemetry-exporter-jaeger-thrift==1.21.0
-opentelemetry-exporter-otlp==1.27.0
-opentelemetry-exporter-otlp-proto-common==1.27.0
-opentelemetry-exporter-otlp-proto-grpc==1.27.0
-opentelemetry-exporter-otlp-proto-http==1.27.0
-opentelemetry-exporter-zipkin-json==1.27.0
-opentelemetry-instrumentation==0.48b0
-opentelemetry-instrumentation-asgi==0.48b0
-opentelemetry-instrumentation-fastapi==0.48b0
-opentelemetry-instrumentation-sqlalchemy==0.48b0
-opentelemetry-proto==1.27.0
-opentelemetry-sdk==1.27.0
-opentelemetry-semantic-conventions==0.48b0
-opentelemetry-util-http==0.48b0
-orjson==3.10.7
-packaging==24.1
-pandas==2.2.2
-pdflatex==0.1.3
-pillow==10.4.0
-proto-plus==1.24.0
-protobuf==4.25.8
+sniffio==1.3.0
+
+# Security / encoding / auth
+rsa==4.9
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
-pydantic==2.8.2
-pydantic-extra-types==2.9.0
-pydantic-settings==2.4.0
-pydantic_core==2.20.1
-Pygments==2.18.0
+itsdangerous==2.2.0
+
+# Database
+mysql-connector-python==9.1.0
+mysqlclient==2.2.6
 PyMySQL==1.1.1
-pypandoc==1.13
-pyparsing==3.1.4
-pyreadline3==3.4.1
-python-dateutil==2.9.0.post0
-python-dotenv==1.0.1
-python-multipart==0.0.9
-pytz==2024.1
-PyYAML==6.0.2
-requests==2.32.3
-rich==13.8.0
-rsa==4.9
-s3transfer==0.10.2
+SQLAlchemy==2.0.44
+
+# Data processing / analytics
+numpy==2.1.3
+pandas==2.2.3
 seaborn==0.13.2
-setuptools==78.1.1
-shellingham==1.5.4
-six==1.16.0
-sniffio==1.3.1
-SQLAlchemy==2.0.32
-starlette==0.38.2
-tabulate==0.9.0
-thrift==0.20.0
-traceback2==1.4.0
-typer==0.12.5
-typing_extensions==4.12.2
+matplotlib==3.9.3
+contourpy==1.3.1
+cycler==0.12.1
+kiwisolver==1.4.7
+fonttools==4.55.0
+pillow==10.4.0
+
+# PDF / File utilities
+# pdflatex removed (too old, conflicts with attrs). Use reportlab instead:
+reportlab==4.2.5
+pypandoc==1.13
+XlsxWriter==3.2.0
+
+# YAML, env, timezone, misc
+python-dotenv==1.0.1
+PyYAML==6.0.2
+pytz==2024.1
 tzdata==2024.1
 tzlocal==5.2
+packaging==24.1
+setuptools==80.6.0
+six==1.16.0
+zipp==3.20.2
+importlib_metadata==8.4.0  # ✅ compatible with OpenTelemetry
+Deprecated==1.2.14
+wrapt==1.17.0
+markdown-it-py==3.0.0
+mdurl==0.1.2
+Pygments==2.18.0
+orjson==3.10.7
 ujson==5.10.0
-urllib3==2.2.2
-uvicorn==0.30.6
-watchfiles==0.24.0
-websockets==13.0.1
-wrapt==1.16.0
-XlsxWriter==3.2.0
-zipp==3.20.1
+email_validator
+dnspython==2.8.0
+pyparsing==3.1.4
+python-dateutil==2.9.0.post0
+shellingham==1.5.4
+greenlet==3.1.1
+linecache2==1.0.0
+traceback2==1.4.0
