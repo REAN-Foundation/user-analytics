@@ -42,20 +42,18 @@ class MySQLConnector:
         read_only_query = self.is_read_only_query(query)
         try:
             connection = self.connect()
-            with connection.cursor() as cursor:
+            with connection.cursor(buffered=True) as cursor:
                 cursor.execute(query, params)
                 if read_only_query:
                     rows = cursor.fetchall()
                     column_names = [i[0] for i in cursor.description]
                     result = [dict(zip(column_names, row)) for row in rows]
-                    cursor.close()
                     self.close_connection(connection)
                     return result
                 else:
                     connection.commit()
                     rowcount = cursor.rowcount
                     self.close_connection(connection)
-                    cursor.close()
                     return rowcount
         except (Exception, mysql.connector.Error) as error:
             print("Error executing the query:", error)
@@ -71,12 +69,11 @@ class MySQLConnector:
             return None
         try:
             connection = self.connect()
-            with connection.cursor() as cursor:
+            with connection.cursor(buffered=True) as cursor:
                 cursor.execute(query, params)
                 rows = cursor.fetchall()
                 column_names = [i[0] for i in cursor.description]
                 result = [dict(zip(column_names, row)) for row in rows]
-                cursor.close()
                 self.close_connection(connection)
                 return result
         except (Exception, mysql.connector.Error) as error:
@@ -91,12 +88,11 @@ class MySQLConnector:
             return None
         try:
             connection = self.connect()
-            with connection.cursor() as cursor:
+            with connection.cursor(buffered=True) as cursor:
                 cursor.execute(query, params)
                 connection.commit()
                 rowcount = cursor.rowcount
                 self.close_connection(connection)
-                cursor.close()
                 return rowcount
         except (Exception, mysql.connector.Error) as error:
             print("Error executing the write query:", error)
