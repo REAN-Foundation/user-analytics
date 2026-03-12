@@ -13,10 +13,12 @@ RUN apk update && \
     texlive-xetex \
     bash \
     build-base \
-    mariadb-dev && \
+    mariadb-dev \
+    aws-cli && \
     python3 -m ensurepip --upgrade && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install awscli
+    pip install --no-cache-dir --upgrade pip
+    # pip install awscli
+
 
 WORKDIR /app
 
