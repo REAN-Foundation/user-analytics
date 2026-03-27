@@ -1,5 +1,5 @@
 # Use the latest stable Python 3.10 and Alpine image
-FROM python:3.13.9-alpine3.22
+FROM python:3.14.2-alpine3.22
 
 # Set environment variables to avoid writing bytecode and unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1
