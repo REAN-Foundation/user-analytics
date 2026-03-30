@@ -81,7 +81,7 @@
 # pydantic-extra-types==2.9.0
 # pydantic-settings==2.4.0
 # pydantic_core==2.20.1
-# Pygments==2.18.0
+# Pygments==2.20.0
 # PyMySQL==1.1.1
 # pypandoc==1.13
 # pyparsing==3.1.4
@@ -231,7 +231,7 @@ Deprecated==1.2.14
 wrapt==1.17.0
 markdown-it-py==3.0.0
 mdurl==0.1.2
-Pygments==2.18.0
+Pygments==2.20.0
 orjson==3.10.7
 ujson==5.10.0
 email_validator
