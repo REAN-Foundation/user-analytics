@@ -1,4 +1,4 @@
-# Python 3.13 (original). psycopg2 2.9.10+ builds fine on 3.13.
+# Use the latest stable Python 3.10 and Alpine image
 FROM python:3.13.9-alpine3.22
 
 # Set environment variables to avoid writing bytecode and unbuffered output
@@ -23,16 +23,14 @@ RUN apk update && \
 
 WORKDIR /app
 
-# Layer 1: dependencies (cached unless requirements.txt changes)
 COPY requirements.txt /app/
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Layer 2: entrypoint (cached unless entrypoint.sh changes)
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
-# Layer 3: app code (only this layer re-uploads on code changes)
 COPY . /app/
+
+# Ensure that entrypoint.sh has executable permissions
+RUN chmod +x /app/entrypoint.sh
 
 # Expose the application port
 EXPOSE 3000
