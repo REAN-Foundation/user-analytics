@@ -2,21 +2,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from app.config.config import get_settings
 from .base import Base
-from .mysql_connector import MySQLConnector
 
 ###############################################################################
 
 settings = get_settings()
 
 print(settings.DB_CONNECTION_STRING)
-connector = MySQLConnector(
-    host=settings.DB_HOST,
-    user=settings.DB_USER_NAME,
-    password=settings.DB_USER_PASSWORD,
-    database=settings.DB_NAME
-)
-connector.create_db()
-
 engine = create_engine(settings.DB_CONNECTION_STRING, echo=False)
 # or
 # engine = create_engine(

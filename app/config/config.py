@@ -1,5 +1,6 @@
 from dotenv import find_dotenv, load_dotenv
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from functools import lru_cache
 
 load_dotenv(find_dotenv('.env'))
@@ -23,14 +24,14 @@ class Settings(BaseSettings):
     DB_USER_NAME    : str = "dbuser"
     DB_USER_PASSWORD: str = "dbpassword"
     DB_HOST         : str = "localhost"
-    DB_PORT         : int = 3306
+    DB_PORT         : int = 5432
     DB_NAME         : str = "user_analytics"
     DB_POOL_SIZE    : int = 10
     DB_POOL_RECYCLE : int = 1800
     DB_POOL_TIMEOUT : int = 30
-    DB_DIALECT      : str = "mysql"
-    DB_DRIVER       : str = "pymysql"
-    DB_CONNECTION_STRING: str = f"{DB_DIALECT}+{DB_DRIVER}://{DB_USER_NAME}:{DB_USER_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DB_DIALECT      : str = "postgres"
+    DB_DRIVER       : str = "psycopg2"
+    DB_CONNECTION_STRING: str = ""
 
 
     REANCARE_DB_HOST         : str = "localhost"
@@ -56,9 +57,23 @@ class Settings(BaseSettings):
     AZURE_STORAGE_CONNECTION_STRING: str = 'unspecified'
     AZURE_CONTAINER_NAME           : str = 'unspecified'
 
+    @model_validator(mode="after")
+    def _normalize_db_and_connection_string(self):
+        dialect = (self.DB_DIALECT or "").strip().lower() or "postgres"
+        sqlalchemy_dialect = "postgresql" if dialect == "postgres" else dialect
+
+        if not self.DB_CONNECTION_STRING:
+            self.DB_CONNECTION_STRING = (
+                f"{sqlalchemy_dialect}+{self.DB_DRIVER}://"
+                f"{self.DB_USER_NAME}:{self.DB_USER_PASSWORD}@"
+                f"{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+            )
+
+        return self
+
     class Config:
         env_file = ".env"
-        extra="forbid"
+        extra="ignore"
 
 @lru_cache()
 def get_settings():

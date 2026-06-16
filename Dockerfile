@@ -1,5 +1,5 @@
-# Use the latest stable Python 3.10 and Alpine image
-FROM python:3.13.9-alpine3.22
+# Use Python 3.12 Alpine; psycopg2 currently fails to build on Python 3.13 in this stack.
+FROM python:3.12-alpine
 
 # Set environment variables to avoid writing bytecode and unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -14,6 +14,7 @@ RUN apk update && \
     bash \
     build-base \
     mariadb-dev \
+    postgresql-dev \
     aws-cli && \
     python3 -m ensurepip --upgrade && \
     pip install --no-cache-dir --upgrade pip
@@ -22,14 +23,16 @@ RUN apk update && \
 
 WORKDIR /app
 
+# Layer 1: dependencies (cached unless requirements.txt changes)
 COPY requirements.txt /app/
-
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /app/
-
-# Ensure that entrypoint.sh has executable permissions
+# Layer 2: entrypoint (cached unless entrypoint.sh changes)
+COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
+
+# Layer 3: app code (only this layer re-uploads on code changes)
+COPY . /app/
 
 # Expose the application port
 EXPOSE 3000
