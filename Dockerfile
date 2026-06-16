@@ -1,5 +1,5 @@
-# Use Python 3.12 Alpine; psycopg2 currently fails to build on Python 3.13 in this stack.
-FROM python:3.12-alpine
+# Python 3.13 (original). psycopg2 2.9.10+ builds fine on 3.13.
+FROM python:3.13.9-alpine3.22
 
 # Set environment variables to avoid writing bytecode and unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1
