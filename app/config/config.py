@@ -1,4 +1,5 @@
 from dotenv import find_dotenv, load_dotenv
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -23,14 +24,27 @@ class Settings(BaseSettings):
     DB_USER_NAME    : str = "dbuser"
     DB_USER_PASSWORD: str = "dbpassword"
     DB_HOST         : str = "localhost"
-    DB_PORT         : int = 3306
+    DB_PORT         : int = 5432
     DB_NAME         : str = "user_analytics"
     DB_POOL_SIZE    : int = 10
     DB_POOL_RECYCLE : int = 1800
     DB_POOL_TIMEOUT : int = 30
-    DB_DIALECT      : str = "mysql"
-    DB_DRIVER       : str = "pymysql"
-    DB_CONNECTION_STRING: str = f"{DB_DIALECT}+{DB_DRIVER}://{DB_USER_NAME}:{DB_USER_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DB_DIALECT      : str = "postgresql"
+    DB_DRIVER       : str = "psycopg2"
+    DB_CONNECTION_STRING: str = ""
+
+    @model_validator(mode="after")
+    def _normalize_connection_string(self):
+
+        if not self.DB_CONNECTION_STRING:
+            dialect = "postgresql" if self.DB_DIALECT.strip().lower() in ("postgres", "postgresql") else self.DB_DIALECT
+            self.DB_CONNECTION_STRING = (
+                f"{dialect}+{self.DB_DRIVER}://{self.DB_USER_NAME}:{self.DB_USER_PASSWORD}"
+                f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+            )
+        if self.DB_CONNECTION_STRING.startswith("postgres+"):
+            self.DB_CONNECTION_STRING = "postgresql+" + self.DB_CONNECTION_STRING[len("postgres+"):]
+        return self
 
 
     REANCARE_DB_HOST         : str = "localhost"

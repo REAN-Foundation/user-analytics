@@ -1,5 +1,8 @@
 from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
+from app.database.services.analytics.sql_dialect import (
+    current_date, datediff_days, day_str, field_order, last_day, month_str,
+)
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector
 from app.modules.data_sync.data_synchronizer import DataSynchronizer
@@ -20,7 +23,7 @@ async def get_all_registered_users(filters: AnalyticsFilters) -> int:
         query = f"""
             SELECT
                 COUNT(*) as user_count
-            FROM users as user
+            FROM users u
             WHERE
                 RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
@@ -52,7 +55,7 @@ async def get_all_registered_patients(filters: AnalyticsFilters) -> int:
         query = f"""
             SELECT
                 COUNT(*) as user_count
-            FROM users as user
+            FROM users u
             WHERE
                 RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
@@ -84,7 +87,7 @@ async def get_current_active_patients(filters: AnalyticsFilters) -> int:
         query = f"""
             SELECT
                 COUNT(*) as user_count
-            FROM users as user
+            FROM users u
             WHERE
                 RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 AND
@@ -117,11 +120,13 @@ async def get_patient_registration_hisory_by_months(filters: AnalyticsFilters) -
 
         connector = get_analytics_db_connector()
 
+        is_postgres = connector.is_postgres
+        month_expr = month_str('RegistrationDate', is_postgres)
         query = f"""
             SELECT
-                DATE_FORMAT(RegistrationDate, '%Y-%m') as month,
+                {month_expr} as month,
                 COUNT(*) as user_count
-            FROM users as user
+            FROM users u
             WHERE
                 RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
@@ -153,11 +158,13 @@ async def get_patient_deregistration_history_by_months(filters: AnalyticsFilters
 
         connector = get_analytics_db_connector()
 
+        is_postgres = connector.is_postgres
+        month_expr = month_str('DeletedAt', is_postgres)
         query = f"""
             SELECT
-                DATE_FORMAT(DeletedAt, '%Y-%m') as month,
+                {month_expr} as month,
                 COUNT(*) as user_count
-            FROM users as user
+            FROM users u
             WHERE
                 DeletedAt BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
@@ -188,27 +195,33 @@ async def get_patient_age_demographics(filters: AnalyticsFilters) -> list:
         role_id    = filters.RoleId
 
         connector = get_analytics_db_connector()
+        is_postgres = connector.is_postgres
+        age_years = f"FLOOR({datediff_days(current_date(is_postgres), 'BirthDate', is_postgres)} / 365)"
+        age_buckets = ['0-18', '19-30', '31-45', '46-60', '61-75', '76-90', '91-105', '106-120', 'Unknown']
+        age_order = field_order('age_group', age_buckets, is_postgres)
         query = f"""
-            SELECT CASE
-                    WHEN BirthDate IS NULL THEN 'Unknown'
-                    WHEN FLOOR(DATEDIFF(CURDATE(), BirthDate)/365) BETWEEN 0 AND 18 THEN '0-18'
-                    WHEN FLOOR(DATEDIFF(CURDATE(), BirthDate)/365) BETWEEN 19 AND 30 THEN '19-30'
-                    WHEN FLOOR(DATEDIFF(CURDATE(), BirthDate)/365) BETWEEN 31 AND 45 THEN '31-45'
-                    WHEN FLOOR(DATEDIFF(CURDATE(), BirthDate)/365) BETWEEN 46 AND 60 THEN '46-60'
-                    WHEN FLOOR(DATEDIFF(CURDATE(), BirthDate)/365) BETWEEN 61 AND 75 THEN '61-75'
-                    WHEN FLOOR(DATEDIFF(CURDATE(), BirthDate)/365) BETWEEN 76 AND 90 THEN '76-90'
-                    WHEN FLOOR(DATEDIFF(CURDATE(), BirthDate)/365) BETWEEN 91 AND 105 THEN '91-105'
-                    WHEN FLOOR(DATEDIFF(CURDATE(), BirthDate)/365) BETWEEN 106 AND 120 THEN '106-120'
-                    ELSE 'Unknown'
-                END AS age_group,
-                COUNT(*) AS count
-            FROM user_metadata
-            INNER JOIN users as user ON user_metadata.UserId = user.id
-            WHERE
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                __CHECKS__
+            SELECT age_group, COUNT(*) AS count
+            FROM (
+                SELECT CASE
+                        WHEN BirthDate IS NULL THEN 'Unknown'
+                        WHEN {age_years} BETWEEN 0 AND 18 THEN '0-18'
+                        WHEN {age_years} BETWEEN 19 AND 30 THEN '19-30'
+                        WHEN {age_years} BETWEEN 31 AND 45 THEN '31-45'
+                        WHEN {age_years} BETWEEN 46 AND 60 THEN '46-60'
+                        WHEN {age_years} BETWEEN 61 AND 75 THEN '61-75'
+                        WHEN {age_years} BETWEEN 76 AND 90 THEN '76-90'
+                        WHEN {age_years} BETWEEN 91 AND 105 THEN '91-105'
+                        WHEN {age_years} BETWEEN 106 AND 120 THEN '106-120'
+                        ELSE 'Unknown'
+                    END AS age_group
+                FROM user_metadata
+                INNER JOIN users u ON user_metadata.UserId = u.id
+                WHERE
+                    u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                    __CHECKS__
+            ) AS age_data
             GROUP BY age_group
-            ORDER BY FIELD(age_group, '0-18', '19-30', '31-45', '46-60', '61-75', '76-90', '91-105', '106-120', 'Unknown');
+            ORDER BY {age_order};
             """
 
         checks_str = add_common_checks(tenant_id, role_id)
@@ -242,9 +255,9 @@ async def get_patient_gender_demographics(filters: AnalyticsFilters) -> list:
                 END AS gender,
                 COUNT(*) AS count
             FROM user_metadata
-            INNER JOIN users as user ON user_metadata.UserId = user.id
+            INNER JOIN users u ON user_metadata.UserId = u.id
             WHERE
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
             GROUP BY gender;
             """
@@ -279,9 +292,9 @@ async def get_patient_ethnicity_demographics(filters: AnalyticsFilters) -> list:
             END AS ethnicity,
             COUNT(*) AS count
             FROM user_metadata
-            INNER JOIN users as user ON user_metadata.UserId = user.id
+            INNER JOIN users u ON user_metadata.UserId = u.id
             WHERE
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
             GROUP BY ethnicity;
             """
@@ -315,9 +328,9 @@ async def get_patient_race_demographics(filters: AnalyticsFilters) -> list:
                 END AS race,
                 COUNT(*) AS count
             FROM user_metadata
-            INNER JOIN users as user ON user_metadata.UserId = user.id
+            INNER JOIN users u ON user_metadata.UserId = u.id
             WHERE
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
             GROUP BY race;
             """
@@ -352,9 +365,9 @@ async def get_patient_healthsystem_distribution(filters: AnalyticsFilters) -> li
                 END AS health_system,
                 COUNT(*) AS count
             FROM user_metadata
-            INNER JOIN users as user ON user_metadata.UserId = user.id
+            INNER JOIN users u ON user_metadata.UserId = u.id
             WHERE
-                user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
             GROUP BY health_system;
             """
@@ -389,9 +402,9 @@ async def get_patient_hospital_distribution(filters: AnalyticsFilters) -> list:
                     END AS hospital,
                     COUNT(*) AS count
                 FROM user_metadata
-                INNER JOIN users as user ON user_metadata.UserId = user.id
+                INNER JOIN users u ON user_metadata.UserId = u.id
                 WHERE
-                    user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                    u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__
                 GROUP BY hospital;
             """
@@ -422,15 +435,15 @@ async def get_patient_survivor_or_caregiver_distribution(filters: AnalyticsFilte
         query = f"""
                 SELECT CASE
                         WHEN IsCareGiver IS NULL THEN 'Unknown'
-                        WHEN IsCareGiver = 1 THEN 'Yes'
-                        WHEN IsCareGiver = 0 THEN 'No'
+                        WHEN IsCareGiver = TRUE THEN 'Yes'
+                        WHEN IsCareGiver = FALSE THEN 'No'
                         ELSE 'Unknown'
                     END AS caregiver_status,
                     COUNT(*) AS count
                 FROM user_metadata
-                INNER JOIN users as user ON user_metadata.UserId = user.id
+                INNER JOIN users u ON user_metadata.UserId = u.id
                 WHERE
-                    user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                    u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__
                 GROUP BY caregiver_status;
             """
@@ -462,7 +475,7 @@ async def get_users_distribution_by_role(filters: AnalyticsFilters) -> list:
                     RoleId,
                     count(*) AS registration_count
                 FROM 
-                    users AS user
+                    users u
                 WHERE
                     RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__
@@ -492,32 +505,33 @@ async def get_active_users_count_at_end_of_every_month(filters: AnalyticsFilters
         role_id    = filters.RoleId
 
         connector = get_analytics_db_connector()
+        is_postgres = connector.is_postgres
         query = f"""
-                SELECT 
-                    DATE_FORMAT(LAST_DAY(RegistrationDate), '%Y-%m-%d') AS month_end,
-                    (SELECT 
-                        COUNT(*) 
-                    FROM 
-                        users AS u2 
-                    WHERE 
-                        u2.RegistrationDate <= LAST_DAY(user.RegistrationDate)
+                SELECT
+                    {day_str('months.month_end', is_postgres)} AS month_end,
+                    (SELECT
+                        COUNT(*)
+                    FROM
+                        users AS u2
+                    WHERE
+                        u2.RegistrationDate <= months.month_end
                         AND
-                        RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                        AND 
+                        u2.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                        AND
                         u2.DeletedAt IS NULL
                         {f'AND u2.RoleId = {role_id}' if role_id else '' }
-                        {f'AND u2.TenantId = "{tenant_id}"' if tenant_id else '' }
+                        {f"AND u2.TenantId = '{tenant_id}'" if tenant_id else '' }
                         ) AS active_user_count
-                FROM 
-                    users as user
-                WHERE 
-                    RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
-                    AND
-                    DeletedAt IS NULL
-                    __CHECKS__
-                GROUP BY 
-                    month_end
-                ORDER BY 
+                FROM (
+                    SELECT DISTINCT {last_day('u.RegistrationDate', is_postgres)} AS month_end
+                    FROM users u
+                    WHERE
+                        u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                        AND
+                        u.DeletedAt IS NULL
+                        __CHECKS__
+                ) months
+                ORDER BY
                     month_end
             """
 
