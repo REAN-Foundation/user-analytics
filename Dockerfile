@@ -14,6 +14,7 @@ RUN apk update && \
     bash \
     build-base \
     mariadb-dev \
+    postgresql-dev \
     aws-cli && \
     python3 -m ensurepip --upgrade && \
     pip install --no-cache-dir --upgrade pip
