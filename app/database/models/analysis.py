@@ -18,7 +18,7 @@ class Analysis(Base):
     DateStr    = Column(String(64), default=None, nullable=False)
     StartDate  = Column(DateTime(timezone=True), default=None, nullable=False)
     EndDate    = Column(DateTime(timezone=True), default=None, nullable=False)
-    Data       = Column(MEDIUMTEXT, default=None, nullable=True)
+    Data       = Column(Text().with_variant(MEDIUMTEXT, "mysql"), default=None, nullable=True)
     JsonUrl    = Column(String(256), default=None, nullable=True)
     ExcelUrl   = Column(String(256), default=None, nullable=True)
     PdfUrl     = Column(String(256), default=None, nullable=True)

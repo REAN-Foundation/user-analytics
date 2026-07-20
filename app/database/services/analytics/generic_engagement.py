@@ -1,5 +1,9 @@
 from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks, find_matching_first_chars
+from app.database.services.analytics.sql_dialect import (
+    add_days, current_date, day_str, diff_seconds, month_str, ratio_pct,
+    week_end, week_start, yearweek,
+)
 from app.domain_types.enums.event_categories import EventCategory
 from app.domain_types.enums.event_types import EventType
 from app.domain_types.schemas.analytics import AnalyticsFilters
@@ -23,7 +27,7 @@ async def get_daily_active_patients(filters: AnalyticsFilters):
             SELECT
                 DATE(e.Timestamp) AS activity_date, COUNT(DISTINCT e.UserId) AS daily_active_users
             FROM events e
-            JOIN users as user ON e.UserId = user.id
+            JOIN users u ON e.UserId = u.id
             WHERE
                 e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
@@ -65,7 +69,7 @@ async def get_weekly_active_patients(filters: AnalyticsFilters):
         #     SELECT
         #         YEARWEEK(e.Timestamp, 1) AS activity_week, COUNT(DISTINCT e.UserId) AS weekly_active_users
         #     FROM events e
-        #     JOIN users user ON e.UserId = user.id
+        #     JOIN users u ON e.UserId = u.id
         #     WHERE
         #         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
         #         __CHECKS__
@@ -73,18 +77,21 @@ async def get_weekly_active_patients(filters: AnalyticsFilters):
         #     ORDER BY activity_week;
         # """
 
+        is_postgres = connector.is_postgres
+        week_start_str = day_str(week_start('e.Timestamp', is_postgres), is_postgres)
+        week_end_str = day_str(week_end('e.Timestamp', is_postgres), is_postgres)
         query = f"""
             SELECT
-                DATE_FORMAT(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), '%Y-%m-%d') AS week_start_date,
-                DATE_FORMAT(DATE_ADD(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), INTERVAL 6 DAY), '%Y-%m-%d') AS week_end_date,
+                {week_start_str} AS week_start_date,
+                {week_end_str} AS week_end_date,
                 COUNT(DISTINCT e.UserId) AS weekly_active_users
             FROM events e
-            JOIN users as user ON e.UserId = user.id
+            JOIN users u ON e.UserId = u.id
             WHERE
                 e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
-            GROUP BY DATE_FORMAT(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), '%Y-%m-%d'),
-                    DATE_FORMAT(DATE_ADD(DATE_SUB(e.Timestamp, INTERVAL (WEEKDAY(e.Timestamp)) DAY), INTERVAL 6 DAY), '%Y-%m-%d')
+            GROUP BY {week_start_str},
+                    {week_end_str}
             ORDER BY week_start_date;
         """
 
@@ -112,14 +119,16 @@ async def get_monthly_active_patients(filters: AnalyticsFilters):
 
         connector = get_analytics_db_connector()
 
+        is_postgres = connector.is_postgres
+        month_expr = month_str('e.Timestamp', is_postgres)
         query = f"""
-            SELECT DATE_FORMAT(e.Timestamp, '%Y-%m') AS activity_month, COUNT(DISTINCT e.UserId) AS monthly_active_users
+            SELECT {month_expr} AS activity_month, COUNT(DISTINCT e.UserId) AS monthly_active_users
             FROM events e
-            JOIN users as user ON e.UserId = user.id
+            JOIN users u ON e.UserId = u.id
             WHERE
                 e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                 __CHECKS__
-            GROUP BY DATE_FORMAT(e.Timestamp, '%Y-%m')
+            GROUP BY {month_expr}
             ORDER BY activity_month;
         """
 
@@ -148,20 +157,25 @@ async def get_patients_active_dau_wau_mau(filters: AnalyticsFilters):
 
         connector = get_analytics_db_connector()
 
+        is_postgres = connector.is_postgres
+        yw_ts = yearweek('e.Timestamp', is_postgres)
+        yw_now = yearweek(current_date(is_postgres), is_postgres)
+        month_ts = month_str('e.Timestamp', is_postgres)
+        month_now = month_str(current_date(is_postgres), is_postgres)
         query = f"""
                 SELECT
                     DATE(e.Timestamp) AS activity_date,
                     COUNT(DISTINCT e.UserId) AS daily_active_users,
-                    YEARWEEK(e.Timestamp, 1) AS activity_week,
-                    COUNT(DISTINCT CASE WHEN YEARWEEK(e.Timestamp, 1) = YEARWEEK(CURDATE(), 1) THEN e.UserId END) AS weekly_active_users,
-                    DATE_FORMAT(e.Timestamp, '%Y-%m') AS activity_month,
-                    COUNT(DISTINCT CASE WHEN DATE_FORMAT(e.Timestamp, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m') THEN e.UserId END) AS monthly_active_users
+                    {yw_ts} AS activity_week,
+                    COUNT(DISTINCT CASE WHEN {yw_ts} = {yw_now} THEN e.UserId END) AS weekly_active_users,
+                    {month_ts} AS activity_month,
+                    COUNT(DISTINCT CASE WHEN {month_ts} = {month_now} THEN e.UserId END) AS monthly_active_users
                 FROM events e
-                JOIN users user ON e.UserId = user.id
+                JOIN users u ON e.UserId = u.id
                 WHERE
                     e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__
-                GROUP BY DATE(e.Timestamp), YEARWEEK(e.Timestamp, 1), DATE_FORMAT(e.Timestamp, '%Y-%m')
+                GROUP BY DATE(e.Timestamp), {yw_ts}, {month_ts}
                 ORDER BY activity_date;
             """
 
@@ -194,18 +208,20 @@ async def get_patients_average_session_length_in_minutes(filters: AnalyticsFilte
         # PLEASE NOTE: Since the sessionId is not available for the existing synched data,
         # the query will return an empty list for the time being. But once we start recording sessionId
         # in the events table, this query will be able to calculate the average session length.
+        is_postgres = connector.is_postgres
+        session_length_expr = diff_seconds('MIN(e.Timestamp)', 'MAX(e.Timestamp)', is_postgres)
         query = f"""
                 SELECT
                     AVG(session_length) AS avg_session_length_seconds
                 FROM (
                     SELECT
-                        TIMESTAMPDIFF(SECOND, MIN(e.Timestamp), MAX(e.Timestamp)) AS session_length
+                        {session_length_expr} AS session_length
                     FROM events e
-                    JOIN users AS user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                         WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         __CHECKS__
-                    GROUP BY user.id
+                    GROUP BY u.id
                 ) AS session_durations;
             """
 
@@ -239,12 +255,14 @@ async def get_patients_login_frequency(filters: AnalyticsFilters):
         #         EventType.UserLoginWithPassword.value,
         #         EventType.UserLoginWithOtp.value)
 
+        is_postgres = connector.is_postgres
+        month_expr = month_str('e.Timestamp', is_postgres)
         query = f"""
                 SELECT
-                    DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
+                    {month_expr} AS month,
                     COUNT(e.EventName) AS login_count
                 FROM events e
-                JOIN users AS user ON e.UserId = user.id
+                JOIN users u ON e.UserId = u.id
                 WHERE
                     e.EventName LIKE 'user-login%'
                     AND e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
@@ -282,119 +300,124 @@ async def get_patients_retention_rate_on_specific_days(filters: AnalyticsFilters
 
         connector = get_analytics_db_connector()
 
+        is_postgres = connector.is_postgres
+        reg = "DATE(u.RegistrationDate)"
+        d = {n: add_days(reg, n, is_postgres) for n in (1, 3, 7, 10, 15, 20, 25, 30)}
+        rate = {n: ratio_pct(f"SELECT COUNT(*) FROM retention_{n}d", "SELECT COUNT(*) FROM registered_users")
+                for n in (1, 3, 7, 10, 15, 20, 25, 30)}
         query = f"""
                 WITH registered_users AS (
-                    SELECT user.id
-                    FROM users as user
+                    SELECT u.id
+                    FROM users u
                     __CHECKS__
                 ),
 
                 retention_1d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users as user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
+                        AND DATE(e.Timestamp) = {d[1]}
                 ),
 
                 retention_3d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users as user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
+                        AND DATE(e.Timestamp) = {d[3]}
                 ),
 
                 retention_7d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
+                        AND DATE(e.Timestamp) = {d[7]}
                 ),
 
                 retention_10d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
+                        AND DATE(e.Timestamp) = {d[10]}
                 ),
 
                 retention_15d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
+                        AND DATE(e.Timestamp) = {d[15]}
                 ),
 
                 retention_20d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
+                        AND DATE(e.Timestamp) = {d[20]}
                 ),
 
                 retention_25d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
+                        AND DATE(e.Timestamp) = {d[25]}
                 ),
 
                 retention_30d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) = DATE_ADD(DATE(user.RegistrationDate), INTERVAL 30 DAY)
+                        AND DATE(e.Timestamp) = {d[30]}
                 )
 
                 SELECT
                     (SELECT COUNT(*) FROM registered_users) AS active_users,
 
                     (SELECT COUNT(*) FROM retention_1d) AS returning_on_day_1,
-                    (SELECT COUNT(*) FROM retention_1d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_1d_rate,
+                    {rate[1]} AS retention_1d_rate,
 
                     (SELECT COUNT(*) FROM retention_3d) AS returning_on_day_3,
-                    (SELECT COUNT(*) FROM retention_3d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_3d_rate,
+                    {rate[3]} AS retention_3d_rate,
 
                     (SELECT COUNT(*) FROM retention_7d) AS returning_on_day_7,
-                    (SELECT COUNT(*) FROM retention_7d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_7d_rate,
+                    {rate[7]} AS retention_7d_rate,
 
                     (SELECT COUNT(*) FROM retention_10d) AS returning_on_day_10,
-                    (SELECT COUNT(*) FROM retention_10d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_10d_rate,
+                    {rate[10]} AS retention_10d_rate,
 
                     (SELECT COUNT(*) FROM retention_15d) AS returning_on_day_15,
-                    (SELECT COUNT(*) FROM retention_15d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_15d_rate,
+                    {rate[15]} AS retention_15d_rate,
 
                     (SELECT COUNT(*) FROM retention_20d) AS returning_on_day_20,
-                    (SELECT COUNT(*) FROM retention_20d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_20d_rate,
+                    {rate[20]} AS retention_20d_rate,
 
                     (SELECT COUNT(*) FROM retention_25d) AS returning_on_day_25,
-                    (SELECT COUNT(*) FROM retention_25d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_25d_rate,
+                    {rate[25]} AS retention_25d_rate,
 
                     (SELECT COUNT(*) FROM retention_30d) AS returning_on_day_30,
-                    (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
+                    {rate[30]} AS retention_30d_rate;
             """
 
         checks_str = add_common_checks(tenant_id, role_id)
@@ -470,127 +493,132 @@ async def get_patients_retention_rate_in_specific_time_interval(filters: Analyti
         role_id    = filters.RoleId
 
         connector = get_analytics_db_connector()
+        is_postgres = connector.is_postgres
+        reg = "DATE(u.RegistrationDate)"
+        d = {n: add_days(reg, n, is_postgres) for n in (1, 3, 7, 10, 15, 20, 25, 30)}
+        rate = {n: ratio_pct(f"SELECT COUNT(*) FROM retention_{n}d", "SELECT COUNT(*) FROM registered_users")
+                for n in (1, 3, 7, 10, 15, 20, 25, 30)}
         query = f"""
                 WITH registered_users AS (
-                    SELECT user.id
-                    FROM users as user
+                    SELECT u.id
+                    FROM users u
                     __CHECKS__
                 ),
 
                 retention_1d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users as user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
-                        AND DATE(e.Timestamp) >= DATE(user.RegistrationDate)
+                        AND DATE(e.Timestamp) < {d[1]}
+                        AND DATE(e.Timestamp) >= {reg}
                 ),
 
                 retention_3d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users as user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
-                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 1 DAY)
+                        AND DATE(e.Timestamp) < {d[3]}
+                        AND DATE(e.Timestamp) >= {d[1]}
                 ),
 
                 retention_7d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
-                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 3 DAY)
+                        AND DATE(e.Timestamp) < {d[7]}
+                        AND DATE(e.Timestamp) >= {d[3]}
                 ),
 
                 retention_10d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
-                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 7 DAY)
+                        AND DATE(e.Timestamp) < {d[10]}
+                        AND DATE(e.Timestamp) >= {d[7]}
                 ),
 
                 retention_15d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
-                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 10 DAY)
+                        AND DATE(e.Timestamp) < {d[15]}
+                        AND DATE(e.Timestamp) >= {d[10]}
                 ),
 
                 retention_20d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
-                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 15 DAY)
+                        AND DATE(e.Timestamp) < {d[20]}
+                        AND DATE(e.Timestamp) >= {d[15]}
                 ),
 
                 retention_25d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
-                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 20 DAY)
+                        AND DATE(e.Timestamp) < {d[25]}
+                        AND DATE(e.Timestamp) >= {d[20]}
                 ),
 
                 retention_30d AS (
                     SELECT DISTINCT e.UserId
                     FROM events e
-                    JOIN users user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         AND e.UserId IN (SELECT id FROM registered_users)
-                        AND DATE(e.Timestamp) < DATE_ADD(DATE(user.RegistrationDate), INTERVAL 30 DAY)
-                        AND DATE(e.Timestamp) >= DATE_ADD(DATE(user.RegistrationDate), INTERVAL 25 DAY)
+                        AND DATE(e.Timestamp) < {d[30]}
+                        AND DATE(e.Timestamp) >= {d[25]}
                 )
 
                 SELECT
                     (SELECT COUNT(*) FROM registered_users) AS active_users,
 
                     (SELECT COUNT(*) FROM retention_1d) AS returning_before_day_1,
-                    (SELECT COUNT(*) FROM retention_1d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_1d_rate,
+                    {rate[1]} AS retention_1d_rate,
 
                     (SELECT COUNT(*) FROM retention_3d) AS returning_between_day_1_and_day_3,
-                    (SELECT COUNT(*) FROM retention_3d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_3d_rate,
+                    {rate[3]} AS retention_3d_rate,
 
                     (SELECT COUNT(*) FROM retention_7d) AS returning_between_day_3_and_day_7,
-                    (SELECT COUNT(*) FROM retention_7d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_7d_rate,
+                    {rate[7]} AS retention_7d_rate,
 
                     (SELECT COUNT(*) FROM retention_10d) AS returning_between_day_7_and_day_10,
-                    (SELECT COUNT(*) FROM retention_10d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_10d_rate,
+                    {rate[10]} AS retention_10d_rate,
 
                     (SELECT COUNT(*) FROM retention_15d) AS returning_between_day_10_and_day_15,
-                    (SELECT COUNT(*) FROM retention_15d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_15d_rate,
+                    {rate[15]} AS retention_15d_rate,
 
                     (SELECT COUNT(*) FROM retention_20d) returning_between_day_15_and_day_20,
-                    (SELECT COUNT(*) FROM retention_20d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_20d_rate,
+                    {rate[20]} AS retention_20d_rate,
 
                     (SELECT COUNT(*) FROM retention_25d) AS returning_between_day_20_and_day_25,
-                    (SELECT COUNT(*) FROM retention_25d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_25d_rate,
+                    {rate[25]} AS retention_25d_rate,
 
                     (SELECT COUNT(*) FROM retention_30d) AS returning_between_day_25_and_day_30,
-                    (SELECT COUNT(*) FROM retention_30d) / (SELECT COUNT(*) FROM registered_users) * 100 AS retention_30d_rate;
+                    {rate[30]} AS retention_30d_rate;
             """
 
         checks_str = add_common_checks(tenant_id, role_id)
@@ -664,27 +692,30 @@ async def get_patient_stickiness_dau_mau(filters: AnalyticsFilters):
 
         connector = get_analytics_db_connector()
 
+        is_postgres = connector.is_postgres
+        day_expr = day_str('e.Timestamp', is_postgres)
+        month_expr = month_str('e.Timestamp', is_postgres)
         query = f"""
                     WITH ActiveUsers AS (
                         SELECT
-                            DATE_FORMAT(e.Timestamp, '%Y-%m-%d') AS event_date,
+                            {day_expr} AS event_date,
                             COUNT(DISTINCT e.UserId) AS daily_active_users,
-                            DATE_FORMAT(e.Timestamp, '%Y-%m') AS month
+                            {month_expr} AS month
                         FROM events e
-                        JOIN users user ON e.UserId = user.id
+                        JOIN users u ON e.UserId = u.id
                         WHERE
-                            user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                            u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                             __CHECKS__
                         GROUP BY event_date, month
                     ),
                     MonthlyActiveUsers AS (
                         SELECT
-                            DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
+                            {month_expr} AS month,
                             COUNT(DISTINCT e.UserId) AS monthly_active_users
                         FROM events e
-                        JOIN users user ON e.UserId = user.id
+                        JOIN users u ON e.UserId = u.id
                         WHERE
-                            user.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
+                            u.RegistrationDate BETWEEN '{start_date}' AND '{end_date}'
                             __CHECKS__
                         GROUP BY month
                     )
@@ -734,17 +765,19 @@ async def get_patients_most_commonly_used_features(filters: AnalyticsFilters) ->
 
         connector = get_analytics_db_connector()
 
+        is_postgres = connector.is_postgres
+        month_expr = month_str('e.Timestamp', is_postgres)
         query = f"""
                     -- Step 1: Aggregate feature usage (EventCategory) by month
                     SELECT t1.month, t1.feature, t1.feature_usage_count
                     FROM (
                         SELECT
-                            DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
+                            {month_expr} AS month,
                             e.EventCategory AS feature,
                             COUNT(e.id) AS feature_usage_count
                         FROM events e
                         JOIN
-                        users user ON e.UserId = user.id
+                        users u ON e.UserId = u.id
                         WHERE
                             e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                             __CHECKS__
@@ -755,7 +788,7 @@ async def get_patients_most_commonly_used_features(filters: AnalyticsFilters) ->
                         SELECT COUNT(*)
                         FROM (
                             SELECT
-                                DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
+                                {month_expr} AS month,
                                 e.EventCategory AS feature,
                                 COUNT(e.id) AS feature_usage_count
                             FROM events e
@@ -763,7 +796,7 @@ async def get_patients_most_commonly_used_features(filters: AnalyticsFilters) ->
                             ORDER BY feature_usage_count DESC
                             LIMIT {top_features_count}
                         ) AS top_features
-                    )
+                    ) > 0
                     ORDER BY month, feature_usage_count DESC;
         """
 
@@ -796,6 +829,8 @@ async def get_patients_most_commonly_visited_screens(filters: AnalyticsFilters) 
         event_name = EventType.ScreenEntry.value # EventName for screen-entry events
         # Please note that we are treating the EventSubject as the screen name in this case.
 
+        is_postgres = connector.is_postgres
+        month_expr = month_str('e.Timestamp', is_postgres)
         query = f"""
                 SELECT
                     sv.month,
@@ -803,11 +838,11 @@ async def get_patients_most_commonly_visited_screens(filters: AnalyticsFilters) 
                     sv.screen_visit_count
                 FROM (
                     SELECT
-                        DATE_FORMAT(e.Timestamp, '%Y-%m') AS month,
+                        {month_expr} AS month,
                         e.EventSubject AS screen_name,
                         COUNT(e.id) AS screen_visit_count
                     FROM events e
-                    JOIN users AS user ON e.UserId = user.id
+                    JOIN users u ON e.UserId = u.id
                     WHERE
                         e.EventCategory = '{event_category}'
                         AND e.EventName = '{event_name}'
@@ -816,7 +851,7 @@ async def get_patients_most_commonly_visited_screens(filters: AnalyticsFilters) 
                     GROUP BY month, screen_name
                     ORDER BY screen_visit_count DESC
                 ) AS sv
-                GROUP BY sv.month, sv.screen_name
+                GROUP BY sv.month, sv.screen_name, sv.screen_visit_count
                 HAVING COUNT(*) <= {top_screens_count}
                 ORDER BY sv.month ASC, sv.screen_visit_count DESC;
             """
@@ -851,7 +886,7 @@ async def get_most_fired_events(filters: AnalyticsFilters) -> list:
                 FROM 
                     events AS e
                 JOIN
-                    users user ON e.UserId = user.id
+                    users u ON e.UserId = u.id
                     WHERE
                         e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                         __CHECKS__
@@ -892,7 +927,7 @@ async def get_most_fired_events_by_event_category(filters: AnalyticsFilters) -> 
                 FROM 
                     events e
                 JOIN
-                users user ON e.UserId = user.id
+                users u ON e.UserId = u.id
                 WHERE
                     e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__
@@ -926,18 +961,20 @@ async def get_user_engagement_over_last_8_days(filters) -> list:
         role_id    = filters.RoleId
 
         connector = get_analytics_db_connector()
+        is_postgres = connector.is_postgres
+        last_8_days = "NOW() - INTERVAL '8 day'" if is_postgres else "NOW() - INTERVAL 8 DAY"
 
         query = f"""
-                SELECT 
-                    EventCategory as event_category, 
-                    EventName as event_name, 
+                SELECT
+                    EventCategory as event_category,
+                    EventName as event_name,
                     COUNT(*) AS event_count
-                FROM 
+                FROM
                     events e
                 JOIN
-                    users user ON e.UserId = user.id
+                    users u ON e.UserId = u.id
                 WHERE
-                    e.Timestamp >= NOW() - INTERVAL 8 DAY
+                    e.Timestamp >= {last_8_days}
                     AND
                     e.Timestamp BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__

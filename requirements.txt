@@ -197,6 +197,7 @@ itsdangerous==2.2.0
 mysql-connector-python==9.1.0
 mysqlclient==2.2.6
 PyMySQL==1.1.1
+psycopg2-binary==2.9.10
 SQLAlchemy==2.0.44
 
 # Data processing / analytics
