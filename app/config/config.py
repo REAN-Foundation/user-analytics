@@ -2,6 +2,7 @@ from dotenv import find_dotenv, load_dotenv
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from urllib.parse import quote_plus
 
 load_dotenv(find_dotenv('.env'))
 class Settings(BaseSettings):
@@ -38,8 +39,10 @@ class Settings(BaseSettings):
 
         if not self.DB_CONNECTION_STRING:
             dialect = "postgresql" if self.DB_DIALECT.strip().lower() in ("postgres", "postgresql") else self.DB_DIALECT
+            user = quote_plus(self.DB_USER_NAME)
+            password = quote_plus(self.DB_USER_PASSWORD)
             self.DB_CONNECTION_STRING = (
-                f"{dialect}+{self.DB_DRIVER}://{self.DB_USER_NAME}:{self.DB_USER_PASSWORD}"
+                f"{dialect}+{self.DB_DRIVER}://{user}:{password}"
                 f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
             )
         if self.DB_CONNECTION_STRING.startswith("postgres+"):
