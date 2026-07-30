@@ -4,7 +4,6 @@
 # To use this workflow, you will need to set up a .github/labeler.yml
 # file with configuration.  For more information, see:
 # https://github.com/actions/labeler
-
 name: PROD-CI-CD
 
 
@@ -62,9 +61,6 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-
-      - name: Copy env file
-        run: aws s3 cp s3://${{ secrets.ENV_FILE_BUCKET_PATH }}/.env ./.env
 
       - name: Build and push
         id: docker_build
