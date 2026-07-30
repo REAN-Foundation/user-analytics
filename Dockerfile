@@ -1,5 +1,5 @@
 # Use the latest stable Python 3.10 and Alpine image
-FROM python:3.10-alpine3.19
+FROM python:3.13.9-alpine3.22
 
 # Set environment variables to avoid writing bytecode and unbuffered output
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -13,10 +13,12 @@ RUN apk update && \
     texlive-xetex \
     bash \
     build-base \
-    mariadb-dev && \
+    mariadb-dev \
+    aws-cli && \
     python3 -m ensurepip --upgrade && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install awscli
+    pip install --no-cache-dir --upgrade pip
+    # pip install awscli
+
 
 WORKDIR /app
 

@@ -2,12 +2,21 @@
 import os
 import uuid
 from app.common.cache import LocalMemoryCache
-from app.database.mysql_connector import MySQLConnector
+from app.database.db_connector import DatabaseConnector
 import mysql.connector
 
 from app.domain_types.enums.event_types import EventType
 from app.domain_types.schemas.event import EventCreateModel
 from app.modules.data_sync.connectors import get_analytics_db_connector, get_reancare_db_connector
+
+############################################################
+
+def to_bool(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value.strip().lower() not in ("", "0", "false")
+    return bool(value)
 
 ############################################################
 
@@ -71,7 +80,7 @@ class DataSynchronizer:
             query = f"""
             SELECT * from users
             WHERE
-                id = "{user_id}"
+                id = '{user_id}'
             """
             rows = analytics_db_connector.execute_read_query(query)
             if len(rows) > 0:
@@ -262,9 +271,9 @@ class DataSynchronizer:
                     user["AssociatedHospital"] if user.get('AssociatedHospital') is not None else None,
                     True if user.get('StrokeSurvivorOrCaregiver') == 'Caregiver' else False,
                     user["MajorAilment"] if user.get('MajorAilment') is not None else None,
-                    user["IsSmoker"] if user.get('IsSmoker') is not None else None,
-                    user["IsDrinker"] if user.get('IsDrinker') is not None else None,
-                    user["SubstanceAbuse"] if user.get('SubstanceAbuse') is not None else None
+                    to_bool(user.get('IsSmoker')),
+                    to_bool(user.get('IsDrinker')),
+                    to_bool(user.get('SubstanceAbuse'))
                 )
             row_count = analytics_db_connector.execute_write_query(insert_query, row)
             if row_count is None:
@@ -315,7 +324,7 @@ class DataSynchronizer:
             query = f"""
             SELECT * from tenants
             WHERE
-                id = "{tenant_id}"
+                id = '{tenant_id}'
             """
             rows = analytics_db_connector.execute_read_query(query)
             if len(rows) > 0:
@@ -411,7 +420,7 @@ class DataSynchronizer:
             query = f"""
             SELECT * from tenants
             WHERE
-                TenantCode = "{tenant_code}"
+                TenantCode = '{tenant_code}'
             """
             rows = analytics_db_connector.execute_read_query(query)
             if len(rows) > 0:
@@ -574,11 +583,11 @@ class DataSynchronizer:
             query = f"""
             SELECT * from events
             WHERE
-                UserId = "{user_id}"
+                UserId = '{user_id}'
                 AND
-                ResourceId = "{resource_id}"
+                ResourceId = '{resource_id}'
                 AND
-                EventName = "{event_name}"
+                EventName = '{event_name}'
             """
             rows = analytics_db_connector.execute_read_query(query)
             if len(rows) > 0:

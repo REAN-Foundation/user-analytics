@@ -13,12 +13,12 @@ REPORTS_DIR = "analytics_reports"
 def tenant_check(tenant_id: UUID4|None) -> str:
     if tenant_id is None:
         return ""
-    return f"user.TenantId = '{tenant_id}'"
+    return f"u.TenantId = '{tenant_id}'"
 
 def role_check(role_id: int|None) -> str:
     if role_id is None:
         return ""
-    return f"user.RoleId = {role_id}"
+    return f"u.RoleId = {role_id}"
 
 def event_source_check(event_source: str|None) -> str:
     if event_source is None:

@@ -27,3 +27,11 @@ def print_exception(e):
     colored = highlight(text, lexers.PythonLexer(), formatters.TerminalFormatter())
     print(colored)
     # print(f"Error: {e} \nFile: {filename}, Function: {function_name}, Line: {line_number}")
+
+def print_clean_json(obj):
+    try:
+        data = obj.__dict__
+    except AttributeError:
+        data = obj  # fallback if already a dict or serializable
+
+    print(json.dumps(data, default=str, indent=2))

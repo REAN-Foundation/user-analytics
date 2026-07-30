@@ -376,3 +376,6 @@ class EventType(str, Enum):
     EncounterUpdate = "encounter-update"
     EncounterDelete = "encounter-delete"
 
+    # Bot wrapper service events
+    BotMessageSent     = "bot-message-sent"
+    BotMessageReceived = "bot-message-received"
