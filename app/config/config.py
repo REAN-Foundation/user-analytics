@@ -52,8 +52,11 @@ class Settings(BaseSettings):
 
     REANCARE_DB_HOST         : str = "localhost"
     REANCARE_DB_NAME         : str = "reancare"
-    REANCARE_DB_USER_NAME    : str = "root"
-    REANCARE_DB_USER_PASSWORD: str = "root"
+    REANCARE_DB_USER_NAME    : str = "dbuser"
+    REANCARE_DB_USER_PASSWORD: str = "dbpassword"
+    REANCARE_DB_DIALECT      : str = "mysql"
+    REANCARE_DB_DRIVER       : str = "pymysql"
+    REANCARE_DB_PORT         : int | None = None
 
     # Open-telemetry
     TRACING_ENABLED           : bool = False
