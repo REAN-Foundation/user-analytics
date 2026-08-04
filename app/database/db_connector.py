@@ -15,8 +15,8 @@ _STRING_LITERAL_RE = re.compile(r"('(?:[^']|'')*')")
 
 def _pg_identifier_regex():
     """Lazily build a regex matching the mixed-case column names of every model."""
-    global _PG_IDENTIFIER_RE
-    if _PG_IDENTIFIER_RE is None:
+    global PG_IDENTIFIER_RE
+    if PG_IDENTIFIER_RE is None:
         names = set()
         try:
             from app.database.base import Base
@@ -30,10 +30,10 @@ def _pg_identifier_regex():
             print("Could not build PostgreSQL identifier map:", error)
         if names:
             alternation = "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
-            _PG_IDENTIFIER_RE = re.compile(r'(?<![\w"])(' + alternation + r')(?![\w"])')
+            PG_IDENTIFIER_RE = re.compile(r'(?<![\w"])(' + alternation + r')(?![\w"])')
         else:
-            _PG_IDENTIFIER_RE = re.compile(r"(?!x)x")  # matches nothing
-    return _PG_IDENTIFIER_RE
+            PG_IDENTIFIER_RE = re.compile(r"(?!x)x")  # matches nothing
+    return PG_IDENTIFIER_RE
 
 
 def quote_pg_identifiers(query):
@@ -128,7 +128,12 @@ class DatabaseConnector:
                 password=self.password,
             )
         except Exception as error:
-            print("Error connecting to the database:", error)
+            print(
+                f"Error connecting to the database "
+                f"[dialect={self.dialect} driver={self.driver} host={self.host} "
+                f"port={self.port} db={target_db} user={self.user}]:",
+                error,
+            )
             return None
 
     def _new_cursor(self, connection):
