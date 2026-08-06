@@ -45,7 +45,7 @@ class NutritionEventsSynchronizer:
             from nutrition_food_consumption as nutrition
             JOIN users as user ON nutrition.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -173,7 +173,7 @@ class NutritionEventsSynchronizer:
             from nutrition_food_consumption as nutrition
             JOIN users as user ON nutrition.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 nutrition.CreatedAt <> nutrition.UpdatedAt
                 {selection_condition}
@@ -303,7 +303,7 @@ class NutritionEventsSynchronizer:
             from nutrition_food_consumption as nutrition
             JOIN users as user ON nutrition.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 nutrition.EndTime IS NOT null
                 {selection_condition}
@@ -430,7 +430,7 @@ class NutritionEventsSynchronizer:
             from nutrition_food_consumption as nutrition
             JOIN users as user ON nutrition.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 nutrition.DeletedAt IS NOT null
                 {selection_condition}
@@ -547,7 +547,7 @@ class NutritionEventsSynchronizer:
             from nutrition_water_consumption as waterIntake
             JOIN users as user ON waterIntake.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -656,7 +656,7 @@ class NutritionEventsSynchronizer:
             from nutrition_water_consumption as waterIntake
             JOIN users as user ON waterIntake.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 waterIntake.CreatedAt <> waterIntake.UpdatedAt
                 {selection_condition}
@@ -765,7 +765,7 @@ class NutritionEventsSynchronizer:
             from nutrition_water_consumption as waterIntake
             JOIN users as user ON waterIntake.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 waterIntake.DeletedAt IS NOT NULL
                 {selection_condition}

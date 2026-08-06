@@ -43,7 +43,7 @@ class CareplanEventsSynchronizer:
             from careplan_enrollments as careplanEnrollment
             JOIN users as user ON careplanEnrollment.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -172,7 +172,7 @@ class CareplanEventsSynchronizer:
     #         from careplan_enrollments as careplanEnrollment
     #         JOIN users as user ON careplanEnrollment.PatientUserId = user.id
     #         WHERE
-    #             user.IsTestUser = 0
+    #             user.IsTestUser = FALSE
     #             {selection_condition}
     #         """
     #         rows = rean_db_connector.execute_read_query(query)
@@ -294,7 +294,7 @@ class CareplanEventsSynchronizer:
             from careplan_enrollments as careplanEnrollment
             JOIN users as user ON careplanEnrollment.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -433,7 +433,7 @@ class CareplanEventsSynchronizer:
     #         JOIN user_tasks as user_task ON user_task.ActionId = careplan_activity.id
     #         JOIN users as user ON careplan_activity.PatientUserId = user.id
     #         WHERE
-    #             user.IsTestUser = 0
+    #             user.IsTestUser = FALSE
     #             AND
     #             user_task.StartedAt IS NOT null
     #             {selection_condition}
@@ -575,7 +575,7 @@ class CareplanEventsSynchronizer:
     #         JOIN user_tasks as user_task ON user_task.ActionId = careplan_activity.id
     #         JOIN users as user ON careplan_activity.PatientUserId = user.id
     #         WHERE
-    #             user.IsTestUser = 0
+    #             user.IsTestUser = FALSE
     #             AND
     #             user_task.FinishedAt IS NOT null
     #             {selection_condition}
@@ -718,7 +718,7 @@ class CareplanEventsSynchronizer:
     #         JOIN user_tasks as user_task ON user_task.ActionId = careplan_activity.id
     #         JOIN users as user ON careplan_activity.PatientUserId = user.id
     #         WHERE
-    #             user.IsTestUser = 0
+    #             user.IsTestUser = FALSE
     #             AND
     #             user_task.CancelledAt IS NOT null
     #             {selection_condition}
@@ -851,7 +851,7 @@ class CareplanEventsSynchronizer:
             from careplan_enrollments as careplanEnrollment
             JOIN users as user ON careplanEnrollment.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 careplanEnrollment.StoppedAt IS NOT null;
                 {selection_condition}

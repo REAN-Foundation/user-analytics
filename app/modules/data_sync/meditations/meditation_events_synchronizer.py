@@ -37,7 +37,7 @@ class MeditationEventsSynchronizer:
             from exercise_meditations as meditation
             JOIN users as user ON meditation.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -148,7 +148,7 @@ class MeditationEventsSynchronizer:
             from exercise_meditations as meditation
             JOIN users as user ON meditation.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 meditation.EndTime IS NOT null
                 {selection_condition}
