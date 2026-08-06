@@ -49,7 +49,7 @@ class UserTaskEventsSynchronizer:
             FROM user_tasks AS userTask
             JOIN users as user ON userTask.UserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 userTask.StartedAt IS NOT null
                 {selection_condition}
@@ -186,7 +186,7 @@ class UserTaskEventsSynchronizer:
             FROM user_tasks AS userTask
             JOIN users as user ON userTask.UserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 userTask.FinishedAt IS NOT null
                 {selection_condition}
@@ -323,7 +323,7 @@ class UserTaskEventsSynchronizer:
             FROM user_tasks AS userTask
             JOIN users as user ON userTask.UserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 userTask.CancelledAt IS NOT null
                 {selection_condition}

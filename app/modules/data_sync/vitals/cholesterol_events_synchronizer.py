@@ -40,7 +40,7 @@ class CholesterolEventsSynchronizer:
             from biometrics_blood_cholesterol as cholesterol
             JOIN users as user ON cholesterol.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -157,7 +157,7 @@ class CholesterolEventsSynchronizer:
             from biometrics_blood_cholesterol as cholesterol
             JOIN users as user ON cholesterol.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 cholesterol.DeletedAt IS NOT NULL
                 {selection_condition}

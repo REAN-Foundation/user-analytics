@@ -50,7 +50,7 @@ class AssessmentEventsSynchronizer:
             from assessments as assessment
             JOIN users as user ON assessment.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -187,7 +187,7 @@ class AssessmentEventsSynchronizer:
             from assessments as assessment
             JOIN users as user ON assessment.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 assessment.DeletedAt IS NOT NULL
                 {selection_condition}
@@ -326,7 +326,7 @@ class AssessmentEventsSynchronizer:
             from assessments as assessment
             JOIN users as user ON assessment.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 assessment.StartedAt IS NOT null
                 {selection_condition}
@@ -465,7 +465,7 @@ class AssessmentEventsSynchronizer:
             from assessments as assessment
             JOIN users as user ON assessment.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 assessment.FinishedAt IS NOT null
                 {selection_condition}
@@ -597,7 +597,7 @@ class AssessmentEventsSynchronizer:
             JOIN assessments as assessment ON assessmentQueryResponse.AssessmentId = assessment.id
             JOIN users as user ON user.id = assessment.PatientUserId
             WHERE 
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)

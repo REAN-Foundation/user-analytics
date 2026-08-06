@@ -36,7 +36,7 @@ class StepEventsSynchronizer:
             from daily_records_step_count as step
             JOIN users as user ON step.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             print(query)

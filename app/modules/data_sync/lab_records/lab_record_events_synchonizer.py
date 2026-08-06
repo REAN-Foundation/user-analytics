@@ -40,7 +40,7 @@ class LabRecordEventsSynchronizer:
             from lab_records as labRecord
             JOIN users as user ON labRecord.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -157,7 +157,7 @@ class LabRecordEventsSynchronizer:
             from lab_records as labRecord
             JOIN users as user ON labRecord.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 labRecord.DeletedAt IS NOT NULL
                 {selection_condition}

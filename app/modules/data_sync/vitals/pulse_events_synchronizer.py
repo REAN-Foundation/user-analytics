@@ -37,7 +37,7 @@ class PulseEventsSynchronizer:
             from biometrics_pulse as pulse
             JOIN users as user ON pulse.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -148,7 +148,7 @@ class PulseEventsSynchronizer:
             from biometrics_pulse as pulse
             JOIN users as user ON pulse.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 pulse.DeletedAt IS NOT NULL
                 {selection_condition}
