@@ -34,7 +34,7 @@ class SleepEventsSynchronizer:
             from daily_records_sleep as sleep
             JOIN users as user ON sleep.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             print(query)

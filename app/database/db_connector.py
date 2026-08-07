@@ -7,41 +7,30 @@ try:
 except ImportError:  # psycopg2 is only required when using PostgreSQL
     psycopg2 = None
 
-
-PG_IDENTIFIER_RE = None
-
 _STRING_LITERAL_RE = re.compile(r"('(?:[^']|'')*')")
+_IDENTIFIER_RE = re.compile(r'(?<![\w"])([A-Za-z_][A-Za-z0-9_]*)(?![\w"])')
+_PG_RESERVED = {"user"}
 
 
-def _pg_identifier_regex():
-    """Lazily build a regex matching the mixed-case column names of every model."""
-    global PG_IDENTIFIER_RE
-    if PG_IDENTIFIER_RE is None:
-        names = set()
-        try:
-            from app.database.base import Base
-            import app.database.models  # noqa: F401  -- registers all tables
-            for table in Base.metadata.tables.values():
-                for column in table.columns:
-                    # Only names that PostgreSQL would fold need quoting.
-                    if column.name != column.name.lower():
-                        names.add(column.name)
-        except Exception as error:  # pragma: no cover - defensive
-            print("Could not build PostgreSQL identifier map:", error)
-        if names:
-            alternation = "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
-            PG_IDENTIFIER_RE = re.compile(r'(?<![\w"])(' + alternation + r')(?![\w"])')
-        else:
-            PG_IDENTIFIER_RE = re.compile(r"(?!x)x")  # matches nothing
-    return PG_IDENTIFIER_RE
+def _needs_quoting(word):
+    if word in _PG_RESERVED:
+        return True
+    return any(c.isupper() for c in word) and any(c.islower() for c in word)
 
 
 def quote_pg_identifiers(query):
-    """Double-quote known mixed-case column names outside of string literals."""
-    regex = _pg_identifier_regex()
+    """
+    Double-quote PascalCase identifiers (and the reserved word `user`) so the raw
+    MySQL-style SQL runs unchanged on PostgreSQL. Applied only when talking to
+    PostgreSQL (see the execute_* methods); MySQL queries are never touched.
+    Text inside single-quoted string literals is preserved.
+    """
     parts = _STRING_LITERAL_RE.split(query)
-    for i in range(0, len(parts), 2):
-        parts[i] = regex.sub(r'"\1"', parts[i])
+    for i in range(0, len(parts), 2):  # even indices are outside string literals
+        parts[i] = _IDENTIFIER_RE.sub(
+            lambda m: f'"{m.group(1)}"' if _needs_quoting(m.group(1)) else m.group(1),
+            parts[i],
+        )
     return "".join(parts)
 
 # endregion

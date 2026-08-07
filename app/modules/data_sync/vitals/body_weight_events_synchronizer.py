@@ -35,7 +35,7 @@ class BodyWeightEventsSynchronizer:
             from biometrics_body_weight as bodyWeight
             JOIN users as user ON bodyWeight.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -142,7 +142,7 @@ class BodyWeightEventsSynchronizer:
             from biometrics_body_weight as bodyWeight
             JOIN users as user ON bodyWeight.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 bodyWeight.DeletedAt IS NOT NULL
                 {selection_condition}

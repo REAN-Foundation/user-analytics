@@ -30,7 +30,7 @@ class UserAccountEventSynchronizer:
                 user.CreatedAt as UserRegistrationDate
             from users as user
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -132,7 +132,7 @@ class UserAccountEventSynchronizer:
                 user.CreatedAt as UserRegistrationDate
             from users as user
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 user.DeletedAt IS NOT NULL
                 {selection_condition}
@@ -237,7 +237,7 @@ class UserAccountEventSynchronizer:
             FROM otp as otp
             JOIN users user ON user.id = otp.UserId
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 otp.Purpose = 'PasswordReset'
                 {selection_condition}
