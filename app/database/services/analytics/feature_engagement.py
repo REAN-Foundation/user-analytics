@@ -1,7 +1,7 @@
 from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
 from app.database.services.analytics.sql_dialect import (
-    add_days, diff_minutes, month_str, ratio_pct,
+    add_days, cast_int, cast_text, diff_minutes, month_str, ratio_pct,
 )
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector, get_reancare_db_connector
@@ -719,16 +719,16 @@ async def get_medication_management_matrix(filters: AnalyticsFilters):
                     AND medication_consumption.TakenAt IS NOT NULL 
                     AND medication_consumption.DeletedAt IS NULL 
                     AND medication_consumption.IsMissed = FALSE THEN 1 END) * 100.0 / 
-                    COUNT(
-                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END)) AS medication_taken_percentage,
+                    NULLIF(COUNT(
+                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END), 0)) AS medication_taken_percentage,
                     
                     (COUNT(
                     CASE WHEN medication_consumption.IsMissed = TRUE 
                     AND medication_consumption.IsTaken = FALSE 
                     AND medication_consumption.TakenAt IS null 
                     AND medication_consumption.DeletedAt IS NULL THEN 1 END) * 100.0 / 
-                    COUNT(
-                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END)) AS medication_missed_percentage
+                    NULLIF(COUNT(
+                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END), 0)) AS medication_missed_percentage
                 
                 FROM medication_consumptions AS medication_consumption
                 JOIN users u ON u.id = medication_consumption.PatientUserId
@@ -1019,7 +1019,7 @@ async def get_category_wise_health_journey_task_count(filters: AnalyticsFilters)
             userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
         GROUP BY
             careplanActivity.PatientUserId,
-            userTask.Category,
+            careplanActivity.Category,
             careplanActivity.PlanCode
         """
         
@@ -1439,6 +1439,7 @@ async def get_assessment_query_response_details(filters: AnalyticsFilters):
         role_id    = filters.RoleId
 
         connector = get_reancare_db_connector()
+        is_postgres = connector.is_postgres
 
         query = f"""
                 SELECT
@@ -1448,8 +1449,8 @@ async def get_assessment_query_response_details(filters: AnalyticsFilters):
                     an.Title AS node_title,
                     aqr.Type AS query_response_type,
                     -- Use CASE to select the appropriate response column
-                    CASE 
-                        WHEN aqr.Type = 'Single Choice Selection' THEN CAST(aqr.IntegerValue AS CHAR) 
+                    CASE
+                        WHEN aqr.Type = 'Single Choice Selection' THEN {cast_text('aqr.IntegerValue', is_postgres)}
                         WHEN aqr.Type IN ('Text', 'Multi Choice Selection') THEN aqr.TextValue
                         ELSE NULL
                     END AS response,
@@ -1466,19 +1467,21 @@ async def get_assessment_query_response_details(filters: AnalyticsFilters):
                     AND (
                         (aqr.Type = 'Single Choice Selection' AND aqo.Sequence = aqr.IntegerValue) 
                         OR 
-                        (aqr.Type IN ('Text', 'Multi Choice Selection') AND aqo.Sequence = CAST(aqr.TextValue AS UNSIGNED))
+                        (aqr.Type IN ('Text', 'Multi Choice Selection') AND aqo.Sequence = {cast_int('aqr.TextValue', is_postgres)})
                     )
                 WHERE
                     an.NodeType <> 'Node list'
-                    AND 
+                    AND
                     aqr.Type IS NOT NULL
-                    AND 
+                    AND
                     at.DeletedAt IS NULL
-                GROUP BY 
-                    at.id, 
-                    an.id, 
-                    aqr.Type, 
-                    response, 
+                GROUP BY
+                    at.id,
+                    an.id,
+                    at.Title,
+                    an.Title,
+                    aqr.Type,
+                    response,
                     aqo.Text
                 ORDER BY 
                     at.id, 
@@ -1543,11 +1546,12 @@ async def get_quarter_wise_task_completion_metrics(filters: AnalyticsFilters):
         role_id    = filters.RoleId
 
         connector = get_reancare_db_connector()
+        pct = ratio_pct("SUM(CASE WHEN Finished = TRUE THEN 1 ELSE 0 END)", "COUNT(*)")
 
         query = f"""
-                SELECT 
+                SELECT
                     UserId as user_id,
-                    ROUND((SUM(CASE WHEN Finished = TRUE THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) AS task_completion_percentage
+                    ROUND({pct}, 2) AS task_completion_percentage
                 FROM 
                     user_tasks userTask
                 JOIN
