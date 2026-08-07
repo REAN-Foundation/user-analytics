@@ -100,3 +100,13 @@ def field_order(column, values, is_postgres):
     if is_postgres:
         return f"array_position(ARRAY[{quoted}], {column})"
     return f"FIELD({column}, {quoted})"
+
+def cast_text(expr, is_postgres):
+    if is_postgres:
+        return f"CAST({expr} AS TEXT)"
+    return f"CAST({expr} AS CHAR)"
+
+def cast_int(expr, is_postgres):
+    if is_postgres:
+        return f"CASE WHEN {expr} ~ '^[0-9]+$' THEN CAST({expr} AS INTEGER) END"
+    return f"CAST({expr} AS UNSIGNED)"
