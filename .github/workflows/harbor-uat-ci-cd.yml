@@ -10,8 +10,7 @@ name: UAT-CI-CD
 # Controls when the workflow will run
 on:
 
-  # pull_request:
-  #   branches: develop
+
     
   push:
     branches:
@@ -93,7 +92,7 @@ jobs:
       # ECR push or the ECS deploy below. continue-on-error so a Harbor hiccup
       # never blocks the ECS deployment.
       - name: Mirror image to Harbor (keep 5 latest)
-        continue-on-error: true
+        continue-on-error: false
         shell: bash
         env:
           HARBOR: https://artifacts.reanfoundation.org
