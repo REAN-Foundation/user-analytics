@@ -91,7 +91,7 @@
 # python-multipart==0.0.9
 # pytz==2024.1
 # PyYAML==6.0.2
-# requests==2.32.3
+# requests==2.33.0
 # rich==13.8.0
 # rsa==4.9
 # s3transfer==0.10.2
@@ -178,7 +178,7 @@ opentelemetry-exporter-jaeger-proto-grpc==1.21.0
 opentelemetry-instrumentation-fastapi
 
 # Web + parsing + networking
-requests==2.32.3
+requests==2.33.0
 urllib3==2.3.0
 charset-normalizer==3.4.2
 idna==3.8
