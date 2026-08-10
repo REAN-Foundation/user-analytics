@@ -179,7 +179,7 @@ opentelemetry-instrumentation-fastapi
 
 # Web + parsing + networking
 requests==2.32.3
-urllib3==2.3.0
+urllib3==2.6.3
 charset-normalizer==3.4.2
 idna==3.8
 h11==0.16.0
