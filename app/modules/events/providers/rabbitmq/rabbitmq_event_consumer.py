@@ -60,12 +60,14 @@ class RabbitMqEventConsumer(IEventConsumer):
                 self._channel.basic_qos(prefetch_count=1)
                 self._channel.queue_declare(queue=self._queue_name, passive=True)
                 self._channel.basic_consume(queue=self._queue_name, on_message_callback=self._on_message, auto_ack=False)
+                print(f"[EVENTS] RabbitMQ consumer started, consuming {self._queue_name}")
                 logger.info(f"Started consuming events from existing queue: {self._queue_name}")
                 backoff = 1
                 self._channel.start_consuming()
             except Exception as e:
                 if self._stop_event.is_set():
                     break
+                print(f"[EVENTS] RabbitMQ error on {self._queue_name}: {type(e).__name__}: {e}. Reconnecting in {backoff}s")
                 logger.error(f"Consumer connection error on {self._queue_name}: {type(e).__name__} {e}. Reconnecting in {backoff}s")
                 self._stop_event.wait(backoff)
                 backoff = min(backoff * 2, self._max_backoff_seconds)
@@ -73,6 +75,7 @@ class RabbitMqEventConsumer(IEventConsumer):
                 self._close_connection()
 
     def _on_message(self, channel, method, properties, body: bytes) -> None:
+        print(f"[EVENTS] RabbitMQ message received, DeliveryTag={method.delivery_tag}")
         outcome = EventHandler.process(body.decode("utf-8", errors="replace"))
         if outcome == Outcome.ACK:
             channel.basic_ack(delivery_tag=method.delivery_tag)

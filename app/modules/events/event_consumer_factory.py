@@ -13,5 +13,6 @@ def get_event_consumer() -> IEventConsumer | None:
     if provider == MessagingProvider.AWS_SNS_SQS.value:
         from app.modules.events.providers.aws_sqs.sqs_event_consumer import AwsSqsEventConsumer
         return AwsSqsEventConsumer()
+    print(f"[EVENTS] Unsupported messaging provider: {provider}")
     logger.warning(f"Unsupported messaging provider: {provider}. Event consumer not started")
     return None

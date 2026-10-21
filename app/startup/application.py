@@ -41,15 +41,20 @@ def start():
     return server
 
 def start_event_consumer(server: FastAPI):
-    if not get_settings().MESSAGING_ENABLED:
+    settings = get_settings()
+    print(f"[EVENTS] MESSAGING_ENABLED={settings.MESSAGING_ENABLED}, MESSAGING_PROVIDER={settings.MESSAGING_PROVIDER}")
+    if not settings.MESSAGING_ENABLED:
+        print("[EVENTS] Event consumer is disabled, not starting")
         return
     try:
         consumer = get_event_consumer()
         if consumer is None:
+            print("[EVENTS] No consumer created for this provider")
             return
         consumer.start_listening()
         server.add_event_handler("shutdown", consumer.close)
     except Exception as e:
+        print(f"[EVENTS] Error starting event consumer: {type(e).__name__}: {e}")
         logger.error(f"Error starting event consumer: {e}")
 
 app = start()
