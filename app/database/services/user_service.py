@@ -2,6 +2,10 @@ import datetime as dt
 import json
 from app.common.utils import print_colorized_json
 from app.database.models.user import User
+from app.database.models.user_metadata import UserMetadata
+from app.database.models.event import Event
+from app.database.models.user_milestone import UserMilestone
+from app.database.models.cohort_users import CohortUser
 from app.domain_types.schemas.user import UserCreateModel, UserMetadataUpdateModel, UserResponseModel, UserSearchFilter, UserSearchResults
 from sqlalchemy.orm import Session
 from app.domain_types.miscellaneous.exceptions import Conflict, NotFound
@@ -116,3 +120,19 @@ def delete_user(session: Session, user_id: str) -> bool:
         update_data, synchronize_session="auto")
     session.commit()
     return True
+
+@trace_span("service: delete_user_data")
+def delete_user_data(session: Session, user_id: str) -> dict:
+    try:
+        counts = {
+            "events"         : session.query(Event).filter(Event.UserId == user_id).delete(synchronize_session=False),
+            "user_milestones": session.query(UserMilestone).filter(UserMilestone.UserId == user_id).delete(synchronize_session=False),
+            "cohort_users"   : session.query(CohortUser).filter(CohortUser.UserId == user_id).delete(synchronize_session=False),
+            "user_metadata"  : session.query(UserMetadata).filter(UserMetadata.UserId == user_id).delete(synchronize_session=False),
+            "users"          : session.query(User).filter(User.id == user_id).delete(synchronize_session=False),
+        }
+        session.commit()
+        return counts
+    except Exception:
+        session.rollback()
+        raise
