@@ -14,23 +14,29 @@ class EventHandler:
 
     @staticmethod
     def process(raw_body: str) -> Outcome:
+        print(f"[EVENTS] Message body: {raw_body}")
         try:
             event = EventMessage.model_validate(json.loads(raw_body))
         except (json.JSONDecodeError, ValidationError, TypeError) as e:
+            print(f"[EVENTS] Could not parse message, discarding: {type(e).__name__}: {e}")
             logger.error(f"Discarding malformed event message: {e}")
             return Outcome.ACK
 
+        print(f"[EVENTS] EventId={event.EventId}, EventType={event.EventType}, Payload={event.Payload}")
         logger.info(f"Received {event.EventType} event {event.EventId}")
         try:
             if event.EventType == MessageEventType.USER_DELETE.value:
                 EventHandler.handle_user_deletion(event)
             else:
+                print(f"[EVENTS] No handler for EventType={event.EventType}, skipping")
                 logger.warning(f"No handler found for event type: {event.EventType}, skipping event {event.EventId}")
                 return Outcome.ACK
         except Exception as e:
+            print(f"[EVENTS] Error handling event {event.EventId}: {type(e).__name__}: {e}. Will retry")
             logger.error(f"Handler error for {event.EventType} event {event.EventId}: {e}")
             return Outcome.RETRY
 
+        print(f"[EVENTS] Event {event.EventId} processed successfully")
         logger.info(f"Processed {event.EventType} event {event.EventId} successfully")
         return Outcome.ACK
 
@@ -46,15 +52,18 @@ class EventHandler:
             logger.warning(f"Invalid payload for user deletion event {event.EventId}: {e}")
             return
         if not payload.PatientUserId:
+            print(f"[EVENTS] PatientUserId missing in payload, nothing deleted. Payload={event.Payload}")
             logger.warning(f"Patient user id is required for user deletion event {event.EventId}")
             return
 
+        print(f"[EVENTS] Deleting data for PatientUserId={payload.PatientUserId}")
         session = get_db_session()
         try:
             counts = delete_user_data(session, payload.PatientUserId)
         finally:
             session.close()
         DataSynchronizer._user_cache.delete(payload.PatientUserId)
+        print(f"[EVENTS] Deleted rows for PatientUserId={payload.PatientUserId}: {counts}")
 
         logger.info(
             f"Deleted analytics data for user {payload.PatientUserId} "
