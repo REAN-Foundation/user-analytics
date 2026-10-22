@@ -37,7 +37,7 @@ class OxygenSaturationEventsSynchronizer:
             from biometrics_blood_oxygen_saturation as oxygenSaturation
             JOIN users as user ON oxygenSaturation.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -148,7 +148,7 @@ class OxygenSaturationEventsSynchronizer:
             from biometrics_blood_oxygen_saturation as oxygenSaturation
             JOIN users as user ON oxygenSaturation.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 oxygenSaturation.DeletedAt IS NOT NULL
                 {selection_condition}

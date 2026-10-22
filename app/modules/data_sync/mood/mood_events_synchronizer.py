@@ -35,7 +35,7 @@ class MoodEventsSynchronizer:
             from daily_assessments as mood
             JOIN users as user ON mood.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -146,7 +146,7 @@ class MoodEventsSynchronizer:
             WHERE
                 mood.UpdatedAt <> mood.CreatedAt
                 AND
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -257,7 +257,7 @@ class MoodEventsSynchronizer:
             WHERE
                 mood.DeletedAt IS NOT null
                 AND
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)

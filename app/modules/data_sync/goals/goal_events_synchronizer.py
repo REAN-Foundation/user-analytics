@@ -43,7 +43,7 @@ class GoalEventsSynchronizer:
             from patient_goals as goal
             JOIN users as user ON goal.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -168,7 +168,7 @@ class GoalEventsSynchronizer:
             from patient_goals as goal
             JOIN users as user ON goal.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 goal.CreatedAt <> goal.UpdatedAt
                 {selection_condition}
@@ -293,7 +293,7 @@ class GoalEventsSynchronizer:
             from patient_goals as goal
             JOIN users as user ON goal.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 goal.StartedAt IS NOT null
                 {selection_condition}
@@ -418,7 +418,7 @@ class GoalEventsSynchronizer:
             from patient_goals as goal
             JOIN users as user ON goal.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 goal.CompletedAt IS NOT null
                 {selection_condition}
@@ -543,7 +543,7 @@ class GoalEventsSynchronizer:
             from patient_goals as goal
             JOIN users as user ON goal.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 goal.DeletedAt IS NOT null
                 {selection_condition}

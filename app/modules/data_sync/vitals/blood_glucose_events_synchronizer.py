@@ -38,7 +38,7 @@ class BloodGlucoseEventsSynchronizer:
             from biometrics_blood_glucose as bloodGlucose
             JOIN users as user ON bloodGlucose.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -151,7 +151,7 @@ class BloodGlucoseEventsSynchronizer:
             from biometrics_blood_glucose as bloodGlucose
             JOIN users as user ON bloodGlucose.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 bloodGlucose.DeletedAt IS NOT NULL
                 {selection_condition}

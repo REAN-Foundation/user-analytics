@@ -1,36 +1,37 @@
-from dotenv import load_dotenv
-import os
+from app.config.config import get_settings
 from app.database.db_connector import DatabaseConnector
-load_dotenv()
 
 ############################################################
 
-# The source (REANCARE) database is always MySQL.
-reancare_db_host     = os.getenv("REANCARE_DB_HOST")
-reancare_db_database = os.getenv("REANCARE_DB_NAME")
-reancare_db_user     = os.getenv("REANCARE_DB_USER_NAME")
-reancare_db_password = os.getenv("REANCARE_DB_USER_PASSWORD")
+settings = get_settings()
 
-# The analytics (destination) database follows DB_DIALECT (mysql or postgresql).
-analytics_db_host     = os.getenv("DB_HOST")
-analytics_db_database = os.getenv("DB_NAME")
-analytics_db_user     = os.getenv("DB_USER_NAME")
-analytics_db_password = os.getenv("DB_USER_PASSWORD")
-analytics_db_port     = os.getenv("DB_PORT")
-analytics_db_dialect  = os.getenv("DB_DIALECT", "mysql")
-analytics_db_driver   = os.getenv("DB_DRIVER")
+print(
+    f"[connectors] analytics DB -> dialect={settings.DB_DIALECT} host={settings.DB_HOST} "
+    f"port={settings.DB_PORT} db={settings.DB_NAME} | "
+    f"reancare DB -> dialect={settings.REANCARE_DB_DIALECT} host={settings.REANCARE_DB_HOST} "
+    f"port={settings.REANCARE_DB_PORT} db={settings.REANCARE_DB_NAME}"
+)
 
 ############################################################
 
 def get_reancare_db_connector():
     return DatabaseConnector(
-        reancare_db_host, reancare_db_user, reancare_db_password, reancare_db_database,
-        dialect="mysql")
+        settings.REANCARE_DB_HOST,
+        settings.REANCARE_DB_USER_NAME,
+        settings.REANCARE_DB_USER_PASSWORD,
+        settings.REANCARE_DB_NAME,
+        port=settings.REANCARE_DB_PORT,
+        dialect=settings.REANCARE_DB_DIALECT,
+        driver=settings.REANCARE_DB_DRIVER)
 
 def get_analytics_db_connector():
     return DatabaseConnector(
-        analytics_db_host, analytics_db_user, analytics_db_password, analytics_db_database,
-        port=analytics_db_port, dialect=analytics_db_dialect, driver=analytics_db_driver)
+        settings.DB_HOST,
+        settings.DB_USER_NAME,
+        settings.DB_USER_PASSWORD,
+        settings.DB_NAME,
+        port=settings.DB_PORT,
+        dialect=settings.DB_DIALECT,
+        driver=settings.DB_DRIVER)
 
     #endregion
-

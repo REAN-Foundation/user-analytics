@@ -52,8 +52,11 @@ class Settings(BaseSettings):
 
     REANCARE_DB_HOST         : str = "localhost"
     REANCARE_DB_NAME         : str = "reancare"
-    REANCARE_DB_USER_NAME    : str = "root"
-    REANCARE_DB_USER_PASSWORD: str = "root"
+    REANCARE_DB_USER_NAME    : str = "dbuser"
+    REANCARE_DB_USER_PASSWORD: str = "dbpassword"
+    REANCARE_DB_DIALECT      : str = "mysql"
+    REANCARE_DB_DRIVER       : str = "pymysql"
+    REANCARE_DB_PORT         : int | None = None
 
     # Open-telemetry
     TRACING_ENABLED           : bool = False
@@ -72,6 +75,16 @@ class Settings(BaseSettings):
 
     AZURE_STORAGE_CONNECTION_STRING: str = 'unspecified'
     AZURE_CONTAINER_NAME           : str = 'unspecified'
+
+    # Messaging (event consumer)
+    MESSAGING_ENABLED         : bool = False
+    MESSAGING_PROVIDER        : str  = "AWS-SNS-SQS"  # AWS-SNS-SQS | RabbitMQ
+    EVENT_QUEUE_URL           : str  = ""             # AWS SQS queue url
+    EVENT_QUEUE_NAME          : str  = ""             # RabbitMQ queue name
+    RABBITMQ_CONNECTION_STRING: str  = ""
+    SQS_POLLING_INTERVAL_MS   : int  = 1000
+    SQS_MAX_MESSAGES          : int  = 10
+    SQS_WAIT_TIME_SECONDS     : int  = 20
 
     class Config:
         env_file = ".env"

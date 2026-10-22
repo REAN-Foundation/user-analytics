@@ -41,7 +41,7 @@ class MedicationEventsSynchronizer:
             from medications as medication
             JOIN users as user ON medication.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -163,7 +163,7 @@ class MedicationEventsSynchronizer:
             from medications as medication
             JOIN users as user ON medication.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 medication.DeletedAt IS NOT NULL
                 {selection_condition}
@@ -282,11 +282,11 @@ class MedicationEventsSynchronizer:
             from medication_consumptions as consumption
             JOIN users as user ON consumption.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 consumption.DeletedAt IS NULL
                 AND
-                consumption.IsTaken = 1
+                consumption.IsTaken = TRUE
                 AND
                 consumption.TakenAt IS NOT NULL
                 {selection_condition}
@@ -404,15 +404,15 @@ class MedicationEventsSynchronizer:
             from medication_consumptions as consumption
             JOIN users as user ON consumption.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 consumption.DeletedAt IS NULL
                 AND
-                consumption.IsTaken = 0
+                consumption.IsTaken = FALSE
                 AND
                 consumption.TakenAt IS NULL
                 AND
-                consumption.IsMissed = 1
+                consumption.IsMissed = TRUE
                 {selection_condition}
             ORDER BY consumption.CreatedAt ASC
             LIMIT 10000
@@ -533,7 +533,7 @@ class MedicationEventsSynchronizer:
             FROM medication_consumptions as medication_consumption
             JOIN users user on medication_consumption.PatientUserId = user.id
             WHERE 
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -659,7 +659,7 @@ class MedicationEventsSynchronizer:
             FROM medication_consumptions as medication_consumption
             JOIN users user on medication_consumption.PatientUserId = user.id
             WHERE 
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 medication_consumption.DeletedAt is not null
                 {selection_condition}

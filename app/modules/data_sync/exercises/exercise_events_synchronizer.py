@@ -44,7 +44,7 @@ class ExerciseEventsSynchronizer:
             from exercise_physical_activities as exercise
             JOIN users as user ON exercise.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)
@@ -171,7 +171,7 @@ class ExerciseEventsSynchronizer:
             from exercise_physical_activities as exercise
             JOIN users as user ON exercise.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 exercise.CreatedAt <> exercise.UpdatedAt
                 {selection_condition}
@@ -300,7 +300,7 @@ class ExerciseEventsSynchronizer:
             from exercise_physical_activities as exercise
             JOIN users as user ON exercise.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 exercise.EndTime IS NOT null
                 {selection_condition}
@@ -426,7 +426,7 @@ class ExerciseEventsSynchronizer:
             from exercise_physical_activities as exercise
             JOIN users as user ON exercise.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 exercise.DeletedAt IS NOT null
                 {selection_condition}

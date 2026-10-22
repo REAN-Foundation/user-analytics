@@ -98,7 +98,7 @@ class DataSynchronizer:
             query = f"""
             SELECT RoleId from users
             WHERE
-                id = "{user_id}"
+                id = '{user_id}'
             """
             rows = rean_db_connector.execute_read_query(query)
             if len(rows) > 0:
@@ -143,9 +143,9 @@ class DataSynchronizer:
             JOIN patient_health_profiles as health_profile ON user.id = health_profile.PatientUserId
             JOIN patients as patient ON user.id = patient.UserId
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
-                user.id = "{user_id}"
+                user.id = '{user_id}'
             """
             # KK: Removing 'user.DeletedAt IS null' from where clause to fetch deleted users
 
@@ -163,9 +163,9 @@ class DataSynchronizer:
                 from users as user
                 JOIN persons as person ON user.PersonId = person.id
                 WHERE
-                    user.IsTestUser = 0
+                    user.IsTestUser = FALSE
                     AND
-                    user.id = "{user_id}"
+                    user.id = '{user_id}'
                 """
             # KK: Removing 'user.DeletedAt IS null' from where clause to fetch deleted users
 
@@ -343,7 +343,7 @@ class DataSynchronizer:
             query = f"""
             SELECT * from tenants
             WHERE
-                id = "{tenant_id}"
+                id = '{tenant_id}'
             """
             rows = rean_db_connector.execute_read_query(query)
             if len(rows) > 0:
@@ -477,7 +477,7 @@ class DataSynchronizer:
             query = f"""
             SELECT id from users
             WHERE
-                IsTestUser = 0
+                IsTestUser = FALSE
             """
             rows = rean_db_connector.execute_read_query(query)
             return rows

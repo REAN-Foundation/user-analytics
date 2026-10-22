@@ -43,7 +43,7 @@ class SymptomEventsSynchronizer:
             from symptoms as symptom
             JOIN users as user ON symptom.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             print(query)
@@ -168,7 +168,7 @@ class SymptomEventsSynchronizer:
             from symptoms as symptom
             JOIN users as user ON symptom.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 symptom.CreatedAt <> symptom.UpdatedAt
                 {selection_condition}
@@ -294,7 +294,7 @@ class SymptomEventsSynchronizer:
             from symptoms as symptom
             JOIN users as user ON symptom.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 symptom.DeletedAt IS NOT null
                 {selection_condition}

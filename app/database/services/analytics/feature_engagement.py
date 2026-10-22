@@ -1,7 +1,7 @@
 from app.common.utils import print_exception
 from app.database.services.analytics.common import add_common_checks
 from app.database.services.analytics.sql_dialect import (
-    add_days, diff_minutes, month_str, ratio_pct,
+    add_days, cast_int, cast_text, diff_minutes, month_str, ratio_pct,
 )
 from app.domain_types.schemas.analytics import AnalyticsFilters
 from app.modules.data_sync.connectors import get_analytics_db_connector, get_reancare_db_connector
@@ -697,43 +697,43 @@ async def get_medication_management_matrix(filters: AnalyticsFilters):
                     CASE WHEN medication_consumption.DeletedAt IS NOT NULL THEN 1 END) AS total_deleted_medications,
                     
                     COUNT(
-                    CASE WHEN medication_consumption.IsTaken = 1 
+                    CASE WHEN medication_consumption.IsTaken = TRUE 
                     AND medication_consumption.TakenAt IS NOT NULL 
                     AND medication_consumption.DeletedAt IS NULL 
-                    AND medication_consumption.IsMissed = 0 THEN 1 END) AS medication_taken_count,
+                    AND medication_consumption.IsMissed = FALSE THEN 1 END) AS medication_taken_count,
                     
                     COUNT(
-                    CASE WHEN medication_consumption.IsMissed = 1 
-                    AND medication_consumption.IsTaken = 0 
+                    CASE WHEN medication_consumption.IsMissed = TRUE 
+                    AND medication_consumption.IsTaken = FALSE 
                     AND medication_consumption.TakenAt IS null 
                     AND medication_consumption.DeletedAt IS NULL THEN 1 END) AS medication_missed_count,
 
                     COUNT(
-                    CASE WHEN medication_consumption.IsMissed = 0 
-                    AND medication_consumption.IsTaken = 0 
+                    CASE WHEN medication_consumption.IsMissed = FALSE 
+                    AND medication_consumption.IsTaken = FALSE 
                     AND medication_consumption.TakenAt IS null 
                     AND medication_consumption.DeletedAt IS NULL THEN 1 END) AS medication_not_answered_count,
                     
                     (COUNT(
-                    CASE WHEN medication_consumption.IsTaken = 1 
+                    CASE WHEN medication_consumption.IsTaken = TRUE 
                     AND medication_consumption.TakenAt IS NOT NULL 
                     AND medication_consumption.DeletedAt IS NULL 
-                    AND medication_consumption.IsMissed = 0 THEN 1 END) * 100.0 / 
-                    COUNT(
-                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END)) AS medication_taken_percentage,
+                    AND medication_consumption.IsMissed = FALSE THEN 1 END) * 100.0 / 
+                    NULLIF(COUNT(
+                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END), 0)) AS medication_taken_percentage,
                     
                     (COUNT(
-                    CASE WHEN medication_consumption.IsMissed = 1 
-                    AND medication_consumption.IsTaken = 0 
+                    CASE WHEN medication_consumption.IsMissed = TRUE 
+                    AND medication_consumption.IsTaken = FALSE 
                     AND medication_consumption.TakenAt IS null 
                     AND medication_consumption.DeletedAt IS NULL THEN 1 END) * 100.0 / 
-                    COUNT(
-                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END)) AS medication_missed_percentage
+                    NULLIF(COUNT(
+                    CASE WHEN medication_consumption.DeletedAt IS NULL THEN 1 END), 0)) AS medication_missed_percentage
                 
                 FROM medication_consumptions AS medication_consumption
                 JOIN users u ON u.id = medication_consumption.PatientUserId
                 WHERE
-                    u.IsTestUser = 0
+                    u.IsTestUser = FALSE
                     AND
                     medication_consumption.CreatedAt BETWEEN '{start_date}' AND '{end_date}'
                     __CHECKS__
@@ -774,7 +774,7 @@ async def get_health_journey_completed_task_count(filters: AnalyticsFilters):
                 AND
                 userTask.FinishedAt IS NOT NULL
                 AND
-                u.IsTestUser = 0
+                u.IsTestUser = FALSE
                 AND
                 u.RoleId = '{role_id}'
                 AND
@@ -809,7 +809,7 @@ async def get_patient_completed_task_count(filters: AnalyticsFilters):
             AND
             userTask.FinishedAt IS NOT NULL
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -846,7 +846,7 @@ async def get_category_wise_patient_completed_task_count(filters: AnalyticsFilte
             AND
             userTask.FinishedAt IS NOT NULL
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -890,7 +890,7 @@ async def get_health_journey_specific_completed_task_count(filters: AnalyticsFil
             AND
             userTask.FinishedAt IS NOT NULL
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -932,7 +932,7 @@ async def get_health_journey_specific_completed_task_count(filters: AnalyticsFil
             AND
             userTask.FinishedAt IS NOT NULL
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -972,7 +972,7 @@ async def get_user_wise_health_journey_completed_task_count(filters: AnalyticsFi
             AND
             userTask.FinishedAt IS NOT NULL
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -1010,7 +1010,7 @@ async def get_category_wise_health_journey_task_count(filters: AnalyticsFilters)
         WHERE 
             userTask.ActionType = 'Careplan' 
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -1019,7 +1019,7 @@ async def get_category_wise_health_journey_task_count(filters: AnalyticsFilters)
             userTask.ScheduledEndTime BETWEEN '{start_date}' and now()
         GROUP BY
             careplanActivity.PatientUserId,
-            userTask.Category,
+            careplanActivity.Category,
             careplanActivity.PlanCode
         """
         
@@ -1054,7 +1054,7 @@ async def get_health_journey_custom_assessment_completed_task_count(filters: Ana
             AND
             assessment.FinishedAt IS NOT NULL
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -1087,7 +1087,7 @@ async def get_health_journey_task_count(filters: AnalyticsFilters):
         WHERE 
             userTask.ActionType = 'Careplan' 
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -1117,7 +1117,7 @@ async def get_patient_task_count(filters: AnalyticsFilters):
         FROM user_tasks AS userTask
         JOIN users u ON u.id = userTask.UserId
         WHERE 
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -1149,7 +1149,7 @@ async def get_category_wise_patient_task_count(filters: AnalyticsFilters):
         FROM user_tasks AS userTask
         JOIN users u ON u.id = userTask.UserId
         WHERE 
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -1186,7 +1186,7 @@ async def get_health_journey_specific_task_count(filters: AnalyticsFilters):
         WHERE 
             userTask.ActionType = 'Careplan' 
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -1222,7 +1222,7 @@ async def get_health_journey_custom_assessment_task_count(filters: AnalyticsFilt
         WHERE 
             userTask.ActionType = 'Careplan' 
             AND
-            u.IsTestUser = 0
+            u.IsTestUser = FALSE
             AND
             u.RoleId = '{role_id}'
             AND
@@ -1351,7 +1351,7 @@ async def get_custom_assessment_completion_count(filters: AnalyticsFilters):
         WHERE 
             userTask.Category = 'Assessment'
             AND
-            u.IsTestUser = 0 
+            u.IsTestUser = FALSE 
             AND
             userTask.ScheduledEndTime < now()
             AND
@@ -1403,7 +1403,7 @@ async def get_care_plan_wise_assessment_completion_count(filters: AnalyticsFilte
         WHERE 
             userTask.Category = 'Assessment'
             AND
-            u.IsTestUser = 0 
+            u.IsTestUser = FALSE 
             AND
             userTask.ScheduledEndTime < now()
             AND
@@ -1439,6 +1439,7 @@ async def get_assessment_query_response_details(filters: AnalyticsFilters):
         role_id    = filters.RoleId
 
         connector = get_reancare_db_connector()
+        is_postgres = connector.is_postgres
 
         query = f"""
                 SELECT
@@ -1448,8 +1449,8 @@ async def get_assessment_query_response_details(filters: AnalyticsFilters):
                     an.Title AS node_title,
                     aqr.Type AS query_response_type,
                     -- Use CASE to select the appropriate response column
-                    CASE 
-                        WHEN aqr.Type = 'Single Choice Selection' THEN CAST(aqr.IntegerValue AS CHAR) 
+                    CASE
+                        WHEN aqr.Type = 'Single Choice Selection' THEN {cast_text('aqr.IntegerValue', is_postgres)}
                         WHEN aqr.Type IN ('Text', 'Multi Choice Selection') THEN aqr.TextValue
                         ELSE NULL
                     END AS response,
@@ -1466,19 +1467,21 @@ async def get_assessment_query_response_details(filters: AnalyticsFilters):
                     AND (
                         (aqr.Type = 'Single Choice Selection' AND aqo.Sequence = aqr.IntegerValue) 
                         OR 
-                        (aqr.Type IN ('Text', 'Multi Choice Selection') AND aqo.Sequence = CAST(aqr.TextValue AS UNSIGNED))
+                        (aqr.Type IN ('Text', 'Multi Choice Selection') AND aqo.Sequence = {cast_int('aqr.TextValue', is_postgres)})
                     )
                 WHERE
                     an.NodeType <> 'Node list'
-                    AND 
+                    AND
                     aqr.Type IS NOT NULL
-                    AND 
+                    AND
                     at.DeletedAt IS NULL
-                GROUP BY 
-                    at.id, 
-                    an.id, 
-                    aqr.Type, 
-                    response, 
+                GROUP BY
+                    at.id,
+                    an.id,
+                    at.Title,
+                    an.Title,
+                    aqr.Type,
+                    response,
                     aqo.Text
                 ORDER BY 
                     at.id, 
@@ -1543,17 +1546,18 @@ async def get_quarter_wise_task_completion_metrics(filters: AnalyticsFilters):
         role_id    = filters.RoleId
 
         connector = get_reancare_db_connector()
+        pct = ratio_pct("SUM(CASE WHEN Finished = TRUE THEN 1 ELSE 0 END)", "COUNT(*)")
 
         query = f"""
-                SELECT 
+                SELECT
                     UserId as user_id,
-                    ROUND((SUM(CASE WHEN Finished = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100, 2) AS task_completion_percentage
+                    ROUND({pct}, 2) AS task_completion_percentage
                 FROM 
                     user_tasks userTask
                 JOIN
                     users u ON u.id = userTask.UserId
                 WHERE 
-                    u.IsTestUser = 0
+                    u.IsTestUser = FALSE
                     AND u.RoleId = '{role_id}'
                     AND userTask.DeletedAt IS NULL
                     AND userTask.CreatedAt BETWEEN '{start_date}' AND '{end_date}'

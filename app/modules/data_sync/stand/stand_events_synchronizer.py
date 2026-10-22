@@ -34,7 +34,7 @@ class StandEventsSynchronizer:
             from daily_records_stand as stand
             JOIN users as user ON stand.PatientUserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 {selection_condition}
             """
             rows = rean_db_connector.execute_read_query(query)

@@ -28,7 +28,7 @@ class LoginEventsSynchronizer:
             from user_login_sessions as session
             JOIN users as user ON session.UserId = user.id
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 session.DeletedAt IS NULL
             """
@@ -129,7 +129,7 @@ class LoginEventsSynchronizer:
             FROM otp as otp
             JOIN users user ON user.id = otp.UserId
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 otp.Purpose = 'Login'
                 {selection_condition}
@@ -234,7 +234,7 @@ class LoginEventsSynchronizer:
             FROM user_device_details userDeviceDetail
             JOIN users user ON user.id = userDeviceDetail.UserId
             WHERE
-                user.IsTestUser = 0
+                user.IsTestUser = FALSE
                 AND
                 userDeviceDetail.DeletedAt IS NOT null
                 {selection_condition}
